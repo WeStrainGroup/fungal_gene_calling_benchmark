@@ -12,7 +12,7 @@ The primary question is short-contig performance. Reference CDS are clipped to e
 | --- | ---: | --- | --- |
 | ANNEVO fungal test species | 2 | Complete: 24 primary runs + 48 single-record runs | Both species are in Tiberius's published training list. |
 | Tiberius primary fungal test species | 6 | Inputs verified; GPU runs queued/running | Tiberius's benchmark documentation states that none trained Tiberius or ANNEVO. |
-| Carbon-A official fungal evaluation set | 5 | Five assemblies identified; four new inputs being prepared | The official data description lists all five as `seen`; no unseen fungi. |
+| Carbon-A official fungal evaluation set | 5 | Inputs verified; 12 yeast cases reused; 48 new runs waiting | The official data description lists all five as `seen`; no unseen fungi. |
 
 These are independently rerun comparisons on the authors' selected species, **not a reproduction of their published headline scores**. We use one common evaluator and explicit reference screening. The sets remain separate; means give each species equal weight, with **no SD or error bars**. Per-species tables are always retained. Incomplete sets are not averaged or filled with zeros.
 

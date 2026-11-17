@@ -14,7 +14,7 @@ data$level <- factor(data$level, c('nucleotide','exon','gene'), c('Nucleotide','
 colors <- c('ANNEVO'='#6E89A6','Tiberius'='#91AA9D','Carbon-A'='#C78180')
 p <- ggplot(data, aes(group, mean, fill=tool)) +
   geom_col(position=position_dodge(.82), width=.74, alpha=.9) +
-  geom_text(aes(label=sprintf('%.1f',mean)), position=position_dodge(.82), vjust=-.4, size=2.6) +
+  geom_text(aes(label=sprintf('%.1f',mean)), position=position_dodge(.82), vjust=-.4, size=2.3) +
   facet_wrap(~level, nrow=1) +
   scale_fill_manual(values=colors) +
   scale_y_continuous(breaks=seq(0,100,25), expand=expansion(mult=c(.02,.07))) +
