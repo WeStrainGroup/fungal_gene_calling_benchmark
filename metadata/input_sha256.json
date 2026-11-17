@@ -1,0 +1,18 @@
+{
+  "inputs/Saccharomyces_cerevisiae/genome.fna": "689756756091f0835b6296ee102b267b73e6eca666adb3aa7400f44e89b67797",
+  "inputs/Saccharomyces_cerevisiae/codon_table.json": "5966272678ab4e944bacb690e535fd23d3ebaa4cdff59c0700327e02d97377bf",
+  "inputs/Saccharomyces_cerevisiae/1-2kb.fna": "e4332ad943ce00461547f60549dd1502deeaa55368fa146ca71d24f5b095a0a7",
+  "inputs/Saccharomyces_cerevisiae/1-2kb.fragments.tsv": "ce046eb5e9b0dfc13dc7aa47024926fa001847a33cb10998a92a30bf99133ec9",
+  "inputs/Saccharomyces_cerevisiae/5-10kb.fna": "28cf1a11766c9be9491400c8d60c333e9cecab2de85c4d56582613235044922c",
+  "inputs/Saccharomyces_cerevisiae/5-10kb.fragments.tsv": "f63b2c16f00d1103ffc0aaaa17baa17df8d98ee8b32e34f092c817ae2a9cb385",
+  "inputs/Saccharomyces_cerevisiae/50-100kb.fna": "21f35a36a352450fd7ac7be74082c18245d82af79338016fe4c21308705e1fb4",
+  "inputs/Saccharomyces_cerevisiae/50-100kb.fragments.tsv": "82cc7af7017a4dca4f68c9067823105ca8941bf842bc2edb148f62824d7a9284",
+  "inputs/Candida_albicans/genome.fna": "d5ca4e7bb68c388e35f2aefe924efab410a033e9be64bfa6173154a3a9ce4807",
+  "inputs/Candida_albicans/codon_table.json": "92834853550e5b8c8a71e44b822022352d8f4af525bab8b2684a73f8095d368f",
+  "inputs/Candida_albicans/1-2kb.fna": "2ea88d4b4999937ef1603ae459740e7bb17b3a32f78d4880d980a03cc25db0c3",
+  "inputs/Candida_albicans/1-2kb.fragments.tsv": "598dcebd51ac54f05583f82ceafd0e9a11fe6010be582c0021aa80c11dbb6fff",
+  "inputs/Candida_albicans/5-10kb.fna": "99f21d44fc14e86f07aac3202c9abeb33ac9e747129406f703aa6c84bc07a88c",
+  "inputs/Candida_albicans/5-10kb.fragments.tsv": "892a0ba803bb5cb2750b29795e2ce0875c776ab527c4b52e43d889d8b44f9699",
+  "inputs/Candida_albicans/50-100kb.fna": "b2eb237556c65308f838b520c758b6b9770ecdd60e8cf6ae4060c4f07984cc09",
+  "inputs/Candida_albicans/50-100kb.fragments.tsv": "bad9b6ad1b896960801787132b11ac163942d3714dc57b7b7c4969acf9e36ad3"
+}

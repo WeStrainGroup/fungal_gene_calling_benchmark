@@ -1,0 +1,9 @@
+species	group	records	bp	reference_genes	reference_isoforms	partial_isoforms
+Saccharomyces_cerevisiae	genome	16	12071326	5955	5955	0
+Saccharomyces_cerevisiae	50-100kb	159	12071326	6063	6063	216
+Saccharomyces_cerevisiae	5-10kb	1625	12071326	7113	7113	2311
+Saccharomyces_cerevisiae	1-2kb	8053	12071326	11746	11746	10011
+Candida_albicans	genome	8	14282666	5974	5974	0
+Candida_albicans	50-100kb	189	14282666	6081	6081	214
+Candida_albicans	5-10kb	1915	14282666	7158	7158	2363
+Candida_albicans	1-2kb	9522	14282666	11945	11945	10356

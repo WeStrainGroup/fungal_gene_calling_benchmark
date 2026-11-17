@@ -1,0 +1,557 @@
+{
+  "source": "https://huggingface.co/buckets/HuggingFaceBio/Carbon-A-training-data/tree/eval/seen",
+  "checked": "2026-11-18",
+  "scope": "Officially selected species and assembly versions; common frozen RefSeq references",
+  "bucket_seen_listing_sha256": "a9826b99c3e7365e09b1bb9882065846f3fa80d16d3afffd5fe899b6bdeddd64",
+  "assemblies": [
+    {
+      "accession": "GCF_000146045.2",
+      "organism": {
+        "tax_id": 559292,
+        "organism_name": "Saccharomyces cerevisiae S288C",
+        "infraspecific_names": {
+          "strain": "S288C"
+        }
+      },
+      "annotation_info": {
+        "name": "SGD R64-5-1",
+        "provider": "SGD",
+        "release_date": "2026-07-10",
+        "stats": {
+          "gene_counts": {
+            "total": 6477,
+            "protein_coding": 6021,
+            "non_coding": 438,
+            "pseudogene": 18
+          }
+        },
+        "busco": {
+          "busco_lineage": "saccharomycetes_odb10",
+          "busco_ver": "5.7.1",
+          "complete": 0.99438465,
+          "single_copy": 0.9723912,
+          "duplicated": 0.021993449,
+          "fragmented": 0.0028076742,
+          "missing": 0.0028076742,
+          "total_count": "2137"
+        },
+        "status": "Full Annotation"
+      },
+      "assembly_info": {
+        "assembly_level": "Complete Genome",
+        "assembly_status": "current",
+        "paired_assembly": {
+          "accession": "GCA_000146045.2",
+          "status": "current",
+          "annotation_name": "SGD R64-5-1",
+          "only_refseq": "chromosome MT",
+          "refseq_genbank_are_different": true,
+          "differences": "Added chromosome MT"
+        },
+        "assembly_name": "R64",
+        "assembly_type": "haploid",
+        "bioproject_lineage": [
+          {
+            "bioprojects": [
+              {
+                "accession": "PRJNA43747",
+                "title": "Third Party Annotation (TPA) genome maintained by SGD"
+              }
+            ]
+          }
+        ],
+        "bioproject_accession": "PRJNA43747",
+        "release_date": "2014-12-17",
+        "submitter": "Saccharomyces Genome Database",
+        "refseq_category": "reference genome",
+        "synonym": "sacCer3",
+        "blast_url": "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastSearch&PROG_DEF=blastn&BLAST_SPEC=GDH_GCF_000146045.2",
+        "comments": "Structural annotation is propagated from INSDC submissions or other annotation providers and processed to follow RefSeq standards. Functional annotation is provided by RefSeq, and is derived from model organism databases, orthologous species, curation, domain architecture analysis, and submitted information."
+      }
+    },
+    {
+      "accession": "GCF_000002945.2",
+      "organism": {
+        "tax_id": 4896,
+        "organism_name": "Schizosaccharomyces pombe",
+        "common_name": "fission yeast",
+        "infraspecific_names": {
+          "strain": "972h-"
+        }
+      },
+      "annotation_info": {
+        "name": "GCF_000002945.2-RS_2026_11",
+        "provider": "PomBase",
+        "release_date": "2026-11-13",
+        "stats": {
+          "gene_counts": {
+            "total": 12645,
+            "protein_coding": 5124,
+            "non_coding": 7489,
+            "pseudogene": 32
+          }
+        },
+        "busco": {
+          "busco_lineage": "ascomycota_odb10",
+          "busco_ver": "5.7.1",
+          "complete": 0.8089097,
+          "single_copy": 0.78018755,
+          "duplicated": 0.028722158,
+          "fragmented": 0.023446659,
+          "missing": 0.1676436,
+          "total_count": "1706"
+        },
+        "pipeline": "NCBI Eukaryotic Annotation Propagation Pipeline",
+        "status": "Full annotation"
+      },
+      "assembly_info": {
+        "assembly_level": "Chromosome",
+        "assembly_status": "current",
+        "paired_assembly": {
+          "accession": "GCA_000002945.3",
+          "status": "current",
+          "annotation_name": "Annotation submitted by S. pombe European Sequencing Consortium (EUPOM)",
+          "only_refseq": "chromosome MT",
+          "refseq_genbank_are_different": true,
+          "differences": "Added chromosome MT"
+        },
+        "assembly_name": "ASM294v3",
+        "assembly_type": "haploid",
+        "bioproject_lineage": [
+          {
+            "bioprojects": [
+              {
+                "accession": "PRJNA13836",
+                "title": "Complete genome maintained by PomBase"
+              }
+            ]
+          }
+        ],
+        "bioproject_accession": "PRJNA13836",
+        "release_date": "2019-07-23",
+        "submitter": "S. pombe European Sequencing Consortium (EUPOM)",
+        "refseq_category": "reference genome",
+        "sequencing_tech": "Sanger sequencing",
+        "assembly_method": "Phred, phrap, Gap4",
+        "biosample": {
+          "accession": "SAMEA3138176",
+          "last_updated": "2024-02-05T02:24:53.000",
+          "publication_date": "2014-11-20T00:00:00.000",
+          "submission_date": "2014-11-21T08:58:16.680",
+          "sample_ids": [
+            {
+              "db": "SRA",
+              "value": "ERS610111"
+            }
+          ],
+          "description": {
+            "title": "BioSample entry for genome collection GCA_000002945",
+            "organism": {
+              "tax_id": 4896,
+              "organism_name": "Schizosaccharomyces pombe"
+            }
+          },
+          "owner": {
+            "name": "EBI"
+          },
+          "models": [
+            "Generic"
+          ],
+          "package": "Generic.1.0",
+          "attributes": [
+            {
+              "name": "ENA-CHECKLIST",
+              "value": "ERC000011"
+            },
+            {
+              "name": "ENA-FIRST-PUBLIC",
+              "value": "2014-11-20T12:20:15Z"
+            },
+            {
+              "name": "ENA-LAST-UPDATE",
+              "value": "2018-03-08T22:38:58Z"
+            },
+            {
+              "name": "External Id",
+              "value": "SAMEA3138176"
+            },
+            {
+              "name": "INSDC center name",
+              "value": "EBI"
+            },
+            {
+              "name": "INSDC first public",
+              "value": "2014-11-20T12:20:15Z"
+            },
+            {
+              "name": "INSDC last update",
+              "value": "2018-03-08T22:38:58Z"
+            },
+            {
+              "name": "INSDC status",
+              "value": "public"
+            },
+            {
+              "name": "Submitter Id",
+              "value": "GCA_000002945"
+            },
+            {
+              "name": "broker name",
+              "value": "ENA"
+            },
+            {
+              "name": "common name",
+              "value": "fission yeast"
+            },
+            {
+              "name": "sample_name",
+              "value": "GCA_000002945"
+            },
+            {
+              "name": "scientific_name",
+              "value": "Schizosaccharomyces pombe"
+            },
+            {
+              "name": "strain",
+              "value": "972h-"
+            }
+          ],
+          "status": {
+            "status": "live",
+            "when": "2014-11-21T08:58:16.680"
+          },
+          "sample_name": "GCA_000002945",
+          "strain": "972h-"
+        },
+        "blast_url": "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastSearch&PROG_DEF=blastn&BLAST_SPEC=GDH_GCF_000002945.2",
+        "comments": "Structural annotation is propagated from INSDC submissions or other annotation providers and processed to follow RefSeq standards. Functional annotation is provided by RefSeq, and is derived from model organism databases, orthologous species, curation, domain architecture analysis, and submitted information."
+      }
+    },
+    {
+      "accession": "GCF_026210795.1",
+      "organism": {
+        "tax_id": 588596,
+        "organism_name": "Rhizophagus irregularis",
+        "infraspecific_names": {
+          "isolate": "DAOM-197198"
+        }
+      },
+      "annotation_info": {
+        "name": "Annotation submitted by Royal Botanic Gardens Kew",
+        "provider": "Royal Botanic Gardens Kew",
+        "release_date": "2024-06-26",
+        "stats": {
+          "gene_counts": {
+            "total": 30147,
+            "protein_coding": 30147
+          }
+        },
+        "pipeline": "NCBI Eukaryotic Annotation Propagation Pipeline",
+        "status": "Full annotation"
+      },
+      "assembly_info": {
+        "assembly_level": "Chromosome",
+        "assembly_status": "current",
+        "paired_assembly": {
+          "accession": "GCA_026210795.1",
+          "status": "current",
+          "annotation_name": "Annotation submitted by Royal Botanic Gardens Kew"
+        },
+        "assembly_name": "ASM2621079v1",
+        "assembly_type": "haploid",
+        "bioproject_lineage": [
+          {
+            "bioprojects": [
+              {
+                "accession": "PRJNA885267",
+                "title": "Rhizophagus irregularis strain:DAOM197198 Genome sequencing and assembly"
+              }
+            ]
+          }
+        ],
+        "bioproject_accession": "PRJNA885267",
+        "release_date": "2022-11-16",
+        "submitter": "Royal Botanic Gardens Kew",
+        "refseq_category": "reference genome",
+        "sequencing_tech": "Oxford Nanopore MiniION",
+        "assembly_method": "Shasta-Linux v. 0.8.0",
+        "biosample": {
+          "accession": "SAMN31081226",
+          "last_updated": "2022-10-20T05:04:02.230",
+          "publication_date": "2022-10-20T00:00:00.000",
+          "submission_date": "2022-09-29T03:14:03.810",
+          "sample_ids": [
+            {
+              "label": "Sample name",
+              "value": "Chr_Rhiir_DAOM197198"
+            },
+            {
+              "db": "SRA",
+              "value": "SRS15469460"
+            }
+          ],
+          "description": {
+            "title": "Rhizophagus irregularis DAOM-197198 chromosome-scale genome assembly",
+            "organism": {
+              "tax_id": 588596,
+              "organism_name": "Rhizophagus irregularis"
+            },
+            "comment": "This work presents the most contiguous and highest-quality nuclear and mitochondrial genome assemblies of an arbuscular mycorrhizal fungus to date, achieved through Nanopore long-read DNA sequencing and Hi-C data. This genome assembly, alongside short- and long-read RNA-Sequencing data, was used to produce a comprehensive annotation catalogue of gene models, repetitive elements, small RNA loci, and DNA cytosine methylome."
+          },
+          "owner": {
+            "name": "Royal Botanic Gardens Kew",
+            "contacts": [
+              {}
+            ]
+          },
+          "models": [
+            "Microbe, viral or environmental"
+          ],
+          "bioprojects": [
+            {
+              "accession": "PRJNA885267"
+            }
+          ],
+          "package": "Microbe.1.0",
+          "attributes": [
+            {
+              "name": "isolate",
+              "value": "DAOM-197198"
+            },
+            {
+              "name": "host",
+              "value": "not applicable"
+            },
+            {
+              "name": "isolation_source",
+              "value": "not applicable"
+            },
+            {
+              "name": "collection_date",
+              "value": "not applicable"
+            },
+            {
+              "name": "geo_loc_name",
+              "value": "not applicable"
+            },
+            {
+              "name": "sample_type",
+              "value": "Spores"
+            }
+          ],
+          "status": {
+            "status": "live",
+            "when": "2022-10-20T05:04:02.230"
+          },
+          "collection_date": "not applicable",
+          "geo_loc_name": "not applicable",
+          "host": "not applicable",
+          "isolate": "DAOM-197198",
+          "isolation_source": "not applicable"
+        },
+        "blast_url": "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastSearch&PROG_DEF=blastn&BLAST_SPEC=GDH_GCF_026210795.1"
+      }
+    },
+    {
+      "accession": "GCF_000182925.2",
+      "organism": {
+        "tax_id": 367110,
+        "organism_name": "Neurospora crassa OR74A",
+        "infraspecific_names": {
+          "strain": "OR74A"
+        }
+      },
+      "annotation_info": {
+        "name": "Annotation submitted by Broad Institute",
+        "provider": "Broad Institute",
+        "release_date": "2023-04-03",
+        "stats": {
+          "gene_counts": {
+            "total": 10590,
+            "protein_coding": 9757,
+            "non_coding": 815,
+            "pseudogene": 18
+          }
+        },
+        "pipeline": "NCBI Eukaryotic Annotation Propagation Pipeline",
+        "status": "Full annotation"
+      },
+      "assembly_info": {
+        "assembly_level": "Chromosome",
+        "assembly_status": "current",
+        "paired_assembly": {
+          "accession": "GCA_000182925.2",
+          "status": "current",
+          "annotation_name": "Annotation submitted by Broad Institute"
+        },
+        "assembly_name": "NC12",
+        "assembly_type": "haploid",
+        "bioproject_lineage": [
+          {
+            "bioprojects": [
+              {
+                "accession": "PRJNA13841",
+                "title": "Neurospora crassa OR74A Genome sequencing and assembly"
+              }
+            ]
+          }
+        ],
+        "bioproject_accession": "PRJNA13841",
+        "release_date": "2013-10-25",
+        "submitter": "Broad Institute",
+        "refseq_category": "reference genome",
+        "sequencing_tech": "Sanger; 454",
+        "assembly_method": "Arachne v. 1.0",
+        "biosample": {
+          "accession": "SAMN02953583",
+          "last_updated": "2014-08-27T11:42:14.727",
+          "publication_date": "2014-08-06T15:30:25.413",
+          "submission_date": "2014-08-06T15:30:25.413",
+          "sample_ids": [
+            {
+              "db": "SRA",
+              "value": "SRS691181"
+            },
+            {
+              "db": "GenBank",
+              "value": "gb|AABX00000000.3"
+            }
+          ],
+          "description": {
+            "title": "Sample from Neurospora crassa OR74A",
+            "organism": {
+              "tax_id": 367110,
+              "organism_name": "Neurospora crassa OR74A"
+            }
+          },
+          "owner": {
+            "name": "Broad Institute of MIT and Harvard"
+          },
+          "models": [
+            "Generic"
+          ],
+          "bioprojects": [
+            {
+              "accession": "PRJNA13841"
+            }
+          ],
+          "package": "Generic.1.0",
+          "attributes": [
+            {
+              "name": "strain",
+              "value": "OR74A"
+            }
+          ],
+          "status": {
+            "status": "live",
+            "when": "2014-08-06T15:30:25.413"
+          },
+          "strain": "OR74A"
+        },
+        "blast_url": "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastSearch&PROG_DEF=blastn&BLAST_SPEC=GDH_GCF_000182925.2",
+        "comments": "Please be aware that the annotation is done automatically with little or no manual curation."
+      }
+    },
+    {
+      "accession": "GCF_000182895.1",
+      "organism": {
+        "tax_id": 240176,
+        "organism_name": "Coprinopsis cinerea okayama7#130",
+        "infraspecific_names": {
+          "strain": "okayama7#130"
+        }
+      },
+      "annotation_info": {
+        "name": "Annotation submitted by Broad Institute",
+        "provider": "Broad Institute",
+        "release_date": "2017-09-05",
+        "stats": {
+          "gene_counts": {
+            "total": 13657,
+            "protein_coding": 13355,
+            "non_coding": 290,
+            "pseudogene": 12
+          }
+        },
+        "pipeline": "NCBI Eukaryotic Annotation Propagation Pipeline",
+        "status": "Full annotation"
+      },
+      "assembly_info": {
+        "assembly_level": "Contig",
+        "assembly_status": "current",
+        "paired_assembly": {
+          "accession": "GCA_000182895.1",
+          "status": "current",
+          "annotation_name": "Annotation submitted by Broad Institute"
+        },
+        "assembly_name": "CC3",
+        "assembly_type": "haploid",
+        "bioproject_lineage": [
+          {
+            "bioprojects": [
+              {
+                "accession": "PRJNA1447",
+                "title": "WGS sequencing by the Broad Institute",
+                "parent_accessions": [
+                  "PRJNA176382"
+                ]
+              },
+              {
+                "accession": "PRJNA176382",
+                "title": "Fungal Genome Initiative"
+              }
+            ]
+          }
+        ],
+        "bioproject_accession": "PRJNA1447",
+        "release_date": "2010-06-16",
+        "submitter": "Broad Institute",
+        "refseq_category": "reference genome",
+        "sequencing_tech": "ABI; lab finishing",
+        "biosample": {
+          "accession": "SAMN02953595",
+          "last_updated": "2019-06-20T17:03:45.645",
+          "publication_date": "2014-08-06T00:00:00.000",
+          "submission_date": "2014-08-06T15:31:25.346",
+          "sample_ids": [
+            {
+              "db": "GenBank",
+              "value": "gb|AACS00000000.2"
+            }
+          ],
+          "description": {
+            "title": "Sample from Coprinopsis cinerea okayama7#130",
+            "organism": {
+              "tax_id": 240176,
+              "organism_name": "Coprinopsis cinerea okayama7#130"
+            }
+          },
+          "owner": {
+            "name": "Broad Institute of MIT and Harvard"
+          },
+          "models": [
+            "Generic"
+          ],
+          "bioprojects": [
+            {
+              "accession": "PRJNA1447"
+            }
+          ],
+          "package": "Generic.1.0",
+          "attributes": [
+            {
+              "name": "strain",
+              "value": "okayama7#130"
+            }
+          ],
+          "status": {
+            "status": "live",
+            "when": "2014-08-06T15:31:25.347"
+          },
+          "strain": "okayama7#130"
+        },
+        "blast_url": "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastSearch&PROG_DEF=blastn&BLAST_SPEC=GDH_GCF_000182895.1"
+      }
+    }
+  ]
+}

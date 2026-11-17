@@ -1,0 +1,9 @@
+{
+  "repository": "HuggingFaceBio/Carbon-A-1.2B",
+  "revision": "ee6359990109eef6adccfd19aba8ca64b48ae514",
+  "sha256": {
+    "evaluation.py": "26da5b42667883348cfc0055125aa64ea467f4128e7f035d0fcab5b45b96d32a",
+    "utils.py": "b009a6108e63045de9ef1c1a0aec4dd459f41f569fcd843139b0c7d855a90f87",
+    "constants.py": "0c4d43c0faa5efe1d00ffb207c32b9fbcc9c1e3f61343f3cef3c1d86017d41cb"
+  }
+}

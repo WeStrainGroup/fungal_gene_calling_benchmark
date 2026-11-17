@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "date": "2026-11-18",
+  "release": "v0.1.0",
+  "archive_sha256": "200528fdfd5fcaaa4440715c4f8597ba34850e2ca076310b1ccea8889f07452e",
+  "source_files_verified": 88,
+  "input_reconstruction": "all_frozen_hashes_match",
+  "metric_rows_reproduced": 72,
+  "single_record_comparisons_reproduced": 4,
+  "validation_location": "Independent extracted release directory",
+  "python_syntax": "PASS",
+  "shell_syntax": "PASS",
+  "local_markdown_links": "PASS",
+  "mean_plot": "rendered_and_visually_checked",
+  "new_cohorts": "Not included in completed results"
+}

@@ -1,0 +1,9 @@
+{
+  "url": "https://bioinf.uni-greifswald.de/bioinf/tiberius/models/fungi.tar.gz",
+  "downloaded_at": "2026-09-27T04:29:04.607711+08:00",
+  "files": {
+    "model_config.json": "e6c708f1702b065d7c6c3bc72e48e9c0dbbe9a31b6f343011bb23f87c0486663",
+    "model_layers.json": "ddfff6ab96e1f719b56076bfa6151cd85712bfb82d592e828c5a66d934e23bf6",
+    "weights.h5": "b8be8c45236226aa46efd537fed9a0ef5b0b53066552b5d7ed11e48fc1d58e88"
+  }
+}

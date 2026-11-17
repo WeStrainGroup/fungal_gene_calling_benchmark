@@ -1,0 +1,58 @@
+{
+  "carbon": {
+    "python": "3.11.16 (main, Sep  2 2026, 23:39:52) [GCC 15.3.0]",
+    "packages": {
+      "torch": "2.13.0+cu126",
+      "transformers": "4.57.6",
+      "numpy": "2.4.6",
+      "numba": "0.68.1",
+      "pandas": "3.1.1",
+      "biopython": "1.88"
+    }
+  },
+  "annevo": {
+    "python": "3.11.16 (main, Sep  2 2026, 23:39:52) [GCC 15.3.0]",
+    "packages": {
+      "torch": "2.13.0+cu126",
+      "transformers": "4.57.6",
+      "numpy": "2.4.6",
+      "numba": "0.68.1",
+      "pandas": "3.1.1",
+      "h5py": "3.14.0",
+      "biopython": "1.88"
+    }
+  },
+  "tiberius": {
+    "python": "3.12.14 (main, Sep  2 2026, 23:27:36) [GCC 15.3.0]",
+    "packages": {
+      "numpy": "2.5.3",
+      "pandas": "3.0.6",
+      "h5py": "3.16.0",
+      "biopython": "1.88",
+      "tiberius": "2.0.7",
+      "tensorflow": "2.20.0",
+      "bricks2marble": "0.1.1"
+    }
+  },
+  "models": {
+    "carbon_a": {
+      "bytes": 4614654504,
+      "sha256": "5e0a58184ac94be5c729b3d94464bb5fd400340c6ab4d2c63f4a3b97a850f71c"
+    },
+    "annevo": {
+      "bytes": 58562884,
+      "sha256": "bb0fa9fe9d9dfda3d7c1b8e96560a24bdf1072282bfd14e520c0f1c9c3c80262"
+    },
+    "tiberius": {
+      "bytes": 32204736,
+      "sha256": "b8be8c45236226aa46efd537fed9a0ef5b0b53066552b5d7ed11e48fc1d58e88"
+    }
+  },
+  "annevo_commit": "42c920f70f52f96c7c06c665a639ec47d9304fff",
+  "carbon_huggingface_revision": "ee6359990109eef6adccfd19aba8ca64b48ae514",
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "gpu_memory_mib": 24564,
+    "driver": "595.45.04"
+  }
+}

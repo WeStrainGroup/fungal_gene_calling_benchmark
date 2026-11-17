@@ -1,0 +1,8 @@
+{
+  "asset": "benchmark_data_v0.1.0.tar.gz",
+  "sha256": "200528fdfd5fcaaa4440715c4f8597ba34850e2ca076310b1ccea8889f07452e",
+  "bytes": 21217871,
+  "files": 88,
+  "prediction_files": 72,
+  "url": "https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/download/v0.1.0/benchmark_data_v0.1.0.tar.gz"
+}

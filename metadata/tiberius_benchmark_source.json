@@ -1,0 +1,10 @@
+{
+  "repository": "Gaius-Augustus/Tiberius",
+  "revision": "b3ea48f263a075260dbf1e91a412e82ccdc96d3c",
+  "path": "model_cfg/fungi.yaml",
+  "selected": "The six-species primary comparison, not the 228-accession further benchmarks",
+  "pilot_training_overlap": [
+    "Saccharomyces_cerevisiae",
+    "Candida_albicans"
+  ]
+}
