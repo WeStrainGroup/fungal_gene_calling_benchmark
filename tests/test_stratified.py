@@ -144,7 +144,7 @@ class StratifiedTests(unittest.TestCase):
         truth = model()
         refs = {e.gene_key(truth): [truth]}
         shifted = model(blocks=((501, 800),))
-        self.assertEqual(e.legacy.sequence(truth, self.genome), e.legacy.sequence(shifted, self.genome))
+        self.assertEqual(e.common.sequence(truth, self.genome), e.common.sequence(shifted, self.genome))
         for m in [shifted, model(strand='-'), model(phase=1)]:
             self.assertEqual(len(e.matching([m], refs)), 0)
         m = model(); m['phase_consistent'] = False

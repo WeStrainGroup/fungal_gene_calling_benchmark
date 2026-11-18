@@ -29,13 +29,13 @@ Metrics are first computed per species. The final summary combines all 12 specie
 
 The unified snapshot currently contains **81/144 unique prediction cases**. The remaining predictions and their CPU validation are pending. Final 12-species mean ± SD tables and figures are withheld until all cases have been validated.
 
-[Per-species metrics](results/v0.2/all_species/metrics.tsv) · [Background and exclusions](results/v0.2/all_species/diagnostics.tsv) · [Completion status](results/v0.2/all_species/STATUS.json) · [Methods](docs/methods_v0.2.md) · [Dataset details](docs/datasets.md) · [Script registry](docs/scripts.md)
+[Per-species metrics](results/metrics.tsv) · [Background and exclusions](results/diagnostics.tsv) · [Completion status](results/STATUS.json) · [Methods](docs/methods.md) · [Dataset details](docs/datasets.md) · [Script registry](docs/scripts.md)
 
 The locked CPU follow-up combines the three validated input directories, verifies that duplicate yeast rows agree, and generates `mean_sd.tsv` and R figures after completion. It does not rerun inference.
 
 ## Reproduce
 
-Install the Python dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [v0.2 release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.2.0) preserves the previous source-specific summary snapshot and its audits. Frozen pilot inputs and native predictions are in the [v0.1 release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.1.0).
+Install the Python dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [current data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.3.0) contains frozen pilot inputs and native predictions, with checksums. Expanded inputs use the accession manifests in `metadata/`.
 
 ```bash
 python scripts/fetch_data.py
@@ -54,7 +54,7 @@ python scripts/summarize_all_species.py \
 Rscript scripts/plot_all_species.R combined_results combined_results/figures
 ```
 
-Use `--wait --rscript Rscript` with live result directories to wait for all three validations and then produce the final summary and plots. Per-species scores and historical results remain available; no historical scores are mixed with the v0.2 scoring protocol.
+Use `--wait --rscript Rscript` with live result directories to wait for all three validations and then produce the final summary and plots. The repository contains only the current analysis. Reusable inputs, native predictions and validation records are retained; obsolete scores, figures and temporary experiments are removed.
 
 ## Sources and license
 

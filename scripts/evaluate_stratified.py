@@ -8,17 +8,16 @@ import gzip
 import hashlib
 import json
 import math
-import statistics
 from pathlib import Path
 from urllib.parse import unquote
 
-import evaluate as legacy
+import common
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import maximum_bipartite_matching
 
 VERSION = '0.2.0'
-GROUPS = legacy.GROUPS
-TOOLS = legacy.TOOLS
+GROUPS = common.GROUPS
+TOOLS = common.TOOLS
 SUBTYPES = ('missing_5prime', 'missing_3prime', 'missing_both')
 LEVELS = ('nucleotide', 'exon', 'gene')
 MIN_RECORD = 1000
@@ -102,7 +101,7 @@ def read_models(path):
         confidence = None if value in (None, 'NA') else float(value)
         if confidence is not None and (not math.isfinite(confidence) or not 0 <= confidence <= 1):
             raise ValueError(f'Invalid confidence: {path}: {tx}: {value}')
-        intervals = legacy.official.merge_intervals([(r[1], r[2]) for r in parts + stops[tx]])
+        intervals = common.official.merge_intervals([(r[1], r[2]) for r in parts + stops[tx]])
         result.append(dict(id=tx, gene=gene, record=parts[0][0], strand=parts[0][3],
                            blocks=intervals, raw_blocks=[(r[1], r[2]) for r in parts], phase=phase, phase_consistent=consistent,
                            partial=any(r[5] for r in parts), confidence=confidence,
@@ -115,7 +114,7 @@ def reference_reason(model, genome, code):
     """Retain the original benchmark's sequence qualification rules."""
     if model['record'] not in genome:
         return 'excluded_record'
-    seq = legacy.sequence(model, genome)
+    seq = common.sequence(model, genome)
     reasons = []
     if model['phase'] != 0:
         reasons.append('nonzero_initial_phase')
@@ -179,17 +178,17 @@ def project_reference(models, original, genome, fragments):
             clipped = clip_model(model, record, start, end)
             if clipped:
                 projected.append(clipped)
-                visible.append(legacy.sequence(clipped, genome))
+                visible.append(common.sequence(clipped, genome))
         if model['strand'] == '-':
             visible.reverse()
-        assert ''.join(visible) == legacy.sequence(model, original), model['id']
+        assert ''.join(visible) == common.sequence(model, original), model['id']
     return projected
 
 
 class Intervals:
     """Sorted disjoint intervals for logarithmic overlap/containment queries."""
     def __init__(self, intervals=()):
-        self.rows = legacy.official.merge_intervals(list(intervals))
+        self.rows = common.official.merge_intervals(list(intervals))
         self.starts = [a for a, _ in self.rows]
         self.ends = [b for _, b in self.rows]
 
@@ -276,7 +275,7 @@ def build_domains(models, genome):
 def prediction_bucket(model, tool, genome, domains):
     if model['record'] not in genome:
         raise ValueError(f'Prediction on unknown input record: {model["record"]}')
-    legacy.sequence(model, genome)  # Validate every coordinate, even for filtered models.
+    common.sequence(model, genome)  # Validate every coordinate, even for filtered models.
     if tool == 'carbon' and not model['confidence_present']:
         raise ValueError(f'Carbon-A model lacks an explicit confidence attribute: {model["id"]}')
     if len(genome[model['record']]) < MIN_RECORD:
@@ -345,7 +344,7 @@ def tracks(models):
 def metric_rows(predictions, references):
     matched = matching(predictions, references)
     longest = [max(models, key=lambda m: (length(m), m['id'])) for models in references.values()]
-    counts = legacy.official.interval_metric_counts(tracks(predictions), tracks(longest))
+    counts = common.official.interval_metric_counts(tracks(predictions), tracks(longest))
     counts.update(gene_tp=len(matched), gene_fp=len(predictions)-len(matched), gene_fn=len(references)-len(matched))
     rows = []
     for level in LEVELS:
@@ -353,7 +352,7 @@ def metric_rows(predictions, references):
         if not references:
             p = r = f = 'NA'
         else:
-            p, r, f = (100*x for x in legacy.official.precision_recall_f1(tp, fp, fn))
+            p, r, f = (100*x for x in common.official.precision_recall_f1(tp, fp, fn))
         rows.append(dict(level=level, tp=tp, fp=fp, fn=fn, predicted=tp+fp, reference=tp+fn,
                          precision=p, recall=r, f1=f, assessment='PASS' if references else 'NO_REFERENCE'))
     return rows, matched
@@ -419,21 +418,6 @@ def score_case(predictions, tool, genome, units, domains):
     return results, stats, audit
 
 
-def summarize(rows, species):
-    grouped = collections.defaultdict(list)
-    for row in rows:
-        grouped[(row['group'], row['tool'], row['stratum'], row['level'])].append(row)
-    output = []
-    for key, items in grouped.items():
-        assert len(items) == len(species) and {r['species'] for r in items} == set(species)
-        for metric in ('precision', 'recall', 'f1'):
-            usable = [r for r in items if r['assessment'] == 'PASS']
-            output.append(dict(group=key[0], tool=key[1], stratum=key[2], level=key[3], metric=metric,
-                               n_species=len(usable), total_species=len(species),
-                               mean=statistics.mean(float(r[metric]) for r in usable) if usable else 'NA'))
-    return output
-
-
 def validate_metric_grid(rows, cases):
     expected = {(c['species'], c['group'], c['tool'], scope, level)
                 for c in cases
@@ -450,11 +434,11 @@ def run(args):
     if args.samples:
         species = [r['species'] for r in csv.DictReader(args.samples.open(), delimiter='\t')]
     else:
-        species = list(legacy.SPECIES)
+        species = list(common.SPECIES)
     source_hashes, metrics, diagnostics, input_rows, ref_rows, pending, validations = {}, [], [], [], [], [], []
     for name in species:
         folder = data/'inputs'/name
-        original = legacy.fasta(folder/'genome.fna')
+        original = common.fasta(folder/'genome.fna')
         code = json.loads((folder/'codon_table.json').read_text())
         source = next((data/'provenance'/name).glob('*_genomic.gff.gz'))
         source_hashes[str(source.relative_to(data))] = digest(source)
@@ -465,7 +449,7 @@ def run(args):
             assert hashlib.md5(reference_file.read_bytes()).hexdigest() == checks[reference_file.name]
             source_hashes[str(reference_file.relative_to(data))] = digest(reference_file)
         with gzip.open(fasta_source, 'rt') as handle:
-            source_genome = {r.id: str(r.seq).upper() for r in legacy.SeqIO.parse(handle, 'fasta')}
+            source_genome = {r.id: str(r.seq).upper() for r in common.SeqIO.parse(handle, 'fasta')}
         assert all(seq == source_genome[record] for record, seq in original.items())
         source_hashes[str((folder/'codon_table.json').relative_to(data))] = digest(folder/'codon_table.json')
         models = read_models(source)
@@ -476,7 +460,7 @@ def run(args):
         write_table(output/'reference'/name/'qualification.tsv', qualification)
         for group in GROUPS:
             path = folder/f'{group}.fna'
-            genome = legacy.fasta(path)
+            genome = common.fasta(path)
             source_hashes[str(path.relative_to(data))] = digest(path)
             if group == 'genome':
                 current = [dict(m, kind='complete', phase_consistent=True, removed_5prime=0, removed_3prime=0)
@@ -528,21 +512,17 @@ def run(args):
     write_table(output/'reference_regions.tsv', ref_rows)
     write_table(output/'validation.tsv', validations)
     (output/'source_sha256.json').write_text(json.dumps(source_hashes, indent=2)+'\n')
-    if not pending:
-        write_table(output/'species_mean.tsv', summarize(metrics, species))
-    elif (output/'species_mean.tsv').exists():
-        raise RuntimeError('Refusing to leave a previous complete mean beside partial results')
     (output/'STATUS.json').write_text(json.dumps(dict(version=VERSION, cohort=args.cohort,
         status='PARTIAL' if pending else 'COMPLETE', expected_cases=len(species)*12,
         completed_cases=len(validations), pending=pending, min_record_bp=MIN_RECORD,
         min_cds_bp=MIN_CDS, confidence_threshold=CONFIDENCE,
         source_files_unchanged=True, fragment_reconstruction='PASS', independent_matching='PASS'), indent=2)+'\n')
-    print(f'{len(validations)}/{len(species)*12} cases; means {"withheld" if pending else "complete"}.')
+    print(f'{len(validations)}/{len(species)*12} cases evaluated.')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--data', type=Path, default=legacy.REPO/'data')
+    parser.add_argument('--data', type=Path, default=common.REPO/'data')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--cohort', required=True)
     parser.add_argument('--samples', type=Path)

@@ -1,9 +1,49 @@
-species	group	records	bp	min_bp	max_bp
-Saccharomyces_cerevisiae	1-2kb	8053	12071326	1000	2000
-Saccharomyces_cerevisiae	5-10kb	1625	12071326	5004	10000
-Saccharomyces_cerevisiae	50-100kb	159	12071326	50459	99915
-Saccharomyces_cerevisiae	genome	16	12071326	230218	1531933
-Candida_albicans	1-2kb	9522	14282666	1000	2000
-Candida_albicans	5-10kb	1915	14282666	5000	10000
-Candida_albicans	50-100kb	189	14282666	50156	99973
-Candida_albicans	genome	8	14282666	949511	3188341
+species	group	total_records	total_bp	scored_records	scored_bp	excluded_records	excluded_bp
+Agaricus_bisporus	1-2kb	22340	32614392	21569	32054072	771	560320
+Agaricus_bisporus	5-10kb	5911	32614392	5140	32054072	771	560320
+Agaricus_bisporus	50-100kb	2354	32614392	1583	32054072	771	560320
+Agaricus_bisporus	genome	2016	32614392	1245	32054072	771	560320
+Candida_albicans	1-2kb	9522	14282666	9522	14282666	0	0
+Candida_albicans	5-10kb	1915	14282666	1915	14282666	0	0
+Candida_albicans	50-100kb	189	14282666	189	14282666	0	0
+Candida_albicans	genome	8	14282666	8	14282666	0	0
+Coprinopsis_cinerea	1-2kb	24113	36150142	24113	36150142	0	0
+Coprinopsis_cinerea	5-10kb	4823	36150142	4823	36150142	0	0
+Coprinopsis_cinerea	50-100kb	539	36150142	539	36150142	0	0
+Coprinopsis_cinerea	genome	67	36150142	67	36150142	0	0
+Cryphonectria_parasitica	1-2kb	29240	43870411	29240	43870411	0	0
+Cryphonectria_parasitica	5-10kb	5858	43870411	5858	43870411	0	0
+Cryphonectria_parasitica	50-100kb	595	43870411	595	43870411	0	0
+Cryphonectria_parasitica	genome	26	43870411	26	43870411	0	0
+Neurospora_crassa	1-2kb	27313	41037538	27313	41037538	0	0
+Neurospora_crassa	5-10kb	5472	41037538	5472	41037538	0	0
+Neurospora_crassa	50-100kb	561	41037538	561	41037538	0	0
+Neurospora_crassa	genome	20	41037538	20	41037538	0	0
+Parastagonospora_nodorum	1-2kb	24792	37164226	24792	37164226	0	0
+Parastagonospora_nodorum	5-10kb	5015	37164226	5015	37164226	0	0
+Parastagonospora_nodorum	50-100kb	558	37164226	558	37164226	0	0
+Parastagonospora_nodorum	genome	107	37164226	107	37164226	0	0
+Puccinia_striiformis	1-2kb	59632	89491239	59632	89491239	0	0
+Puccinia_striiformis	5-10kb	11970	89491239	11970	89491239	0	0
+Puccinia_striiformis	50-100kb	1260	89491239	1260	89491239	0	0
+Puccinia_striiformis	genome	184	89491239	184	89491239	0	0
+Punctularia_strigosozonata	1-2kb	22890	34171901	22890	34171901	0	0
+Punctularia_strigosozonata	5-10kb	4671	34171901	4671	34171901	0	0
+Punctularia_strigosozonata	50-100kb	627	34171901	627	34171901	0	0
+Punctularia_strigosozonata	genome	195	34171901	195	34171901	0	0
+Rhizophagus_irregularis	1-2kb	97854	146773001	97854	146773001	0	0
+Rhizophagus_irregularis	5-10kb	19620	146773001	19620	146773001	0	0
+Rhizophagus_irregularis	50-100kb	1959	146773001	1959	146773001	0	0
+Rhizophagus_irregularis	genome	32	146773001	32	146773001	0	0
+Saccharomyces_cerevisiae	1-2kb	8053	12071326	8053	12071326	0	0
+Saccharomyces_cerevisiae	5-10kb	1625	12071326	1625	12071326	0	0
+Saccharomyces_cerevisiae	50-100kb	159	12071326	159	12071326	0	0
+Saccharomyces_cerevisiae	genome	16	12071326	16	12071326	0	0
+Schizosaccharomyces_pombe	1-2kb	8393	12571820	8393	12571820	0	0
+Schizosaccharomyces_pombe	5-10kb	1677	12571820	1677	12571820	0	0
+Schizosaccharomyces_pombe	50-100kb	170	12571820	170	12571820	0	0
+Schizosaccharomyces_pombe	genome	3	12571820	3	12571820	0	0
+Tilletiopsis_washingtonensis	1-2kb	12511	18761941	12511	18761941	0	0
+Tilletiopsis_washingtonensis	5-10kb	2517	18761941	2517	18761941	0	0
+Tilletiopsis_washingtonensis	50-100kb	264	18761941	264	18761941	0	0
+Tilletiopsis_washingtonensis	genome	38	18761941	38	18761941	0	0

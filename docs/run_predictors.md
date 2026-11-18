@@ -44,7 +44,7 @@ Use separate output directories for new runs so the released predictions remain 
 - Carbon-A: batch size 4, SDPA attention, CPU Viterbi, minimum record length 0, native minimum CDS 96 bp, explicit sample codon table. Initial runs used 2 GPUs per case, or 4 for 1–2 kb; the queued six-species extension uses one GPU per case. The pipeline distributes records over devices. SDPA does not produce the authors' FlashAttention2-identical probabilities.
 - ANNEVO: Fungi model, batch size 32, 4 threads, 2 workers, native decoding thresholds, no `--overlap_pred`.
 - Tiberius: fungi model, batch size 8, minimum input 1,000 bp, native postprocessing. Native protein exports may use the standard code; common evaluation independently extracts CDS from the input and GFF.
-- No external confidence, length or codon-completeness filtering on predictions before evaluation.
+- Native predictions remain unchanged. The common evaluator applies visible CDS >=200 bp and Carbon-A confidence >=0.1 or explicit NA, without filtering by predicted completeness.
 
 Runtime tables record measured allocated GPU seconds and GNU time process RSS; this is not a hardware-normalized speed competition or aggregate peak process-tree memory measurement.
 
@@ -58,9 +58,9 @@ python scripts/prepare_new_inputs.py \
 This downloads only the fixed RefSeq genomic DNA/GFF, assembly reports and checksums, excludes organellar records, and partitions the entire retained assembly. Run each tool over all four inputs for every listed species, using the layout above, then:
 
 ```bash
-python scripts/evaluate.py --data data_tiberius --samples metadata/tiberius_samples.tsv
-python scripts/summarize.py data_tiberius/benchmark.tsv data_tiberius/species_mean.tsv
-Rscript scripts/plot.R data_tiberius/species_mean.tsv data_tiberius/figures
+python scripts/evaluate_stratified.py --data data_tiberius --samples metadata/tiberius_samples.tsv \
+  --cohort tiberius_set --output data_tiberius/evaluation
+python scripts/validate_stratified.py --data data_tiberius --output data_tiberius/evaluation
 ```
 
-All species must finish before computing the set mean. Original records shorter than a target fragmentation range remain unchanged; `inputs.tsv` records their counts and base contributions. No extra singleton experiment is required for the extension; the original two-species singleton results remain separately available.
+All 12 unique species must finish before computing the combined mean and sample SD. Original records shorter than a target fragmentation range remain unchanged; `inputs.tsv` records their counts and base contributions.

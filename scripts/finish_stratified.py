@@ -22,7 +22,13 @@ def main(args):
     cases = [(s, g, t) for s in species for g in GROUPS for t in TOOLS]
     with (output/'followup.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        previous, first = None, True
+        previous = None
+        checked = output/'independent_validation.json'
+        first = not checked.exists()
+        if checked.exists() and (output/'STATUS.json').exists():
+            existing = json.loads((output/'STATUS.json').read_text())
+            receipt = json.loads(checked.read_text())
+            first = receipt['status'] != 'PASS' or receipt['cases'] != existing['completed_cases']
         while True:
             pending = [dict(species=s, group=g, tool=t) for s, g, t in cases
                        if not (data/'out'/t/s/g/'COMPLETE').is_file()]
@@ -40,8 +46,6 @@ def main(args):
                     '--data', str(data), '--output', str(output)], check=True)
                 first = False
                 if json.loads((output/'STATUS.json').read_text())['status'] == 'COMPLETE':
-                    subprocess.run([args.rscript, str(scripts/'plot_stratified.R'),
-                                    str(output), str(output/'figures')], check=True)
                     receipt.update(status='VALIDATED', pending=[],
                                    updated_utc=datetime.now(timezone.utc).isoformat())
                     (output/'followup.json').write_text(json.dumps(receipt, indent=2)+'\n')
@@ -55,5 +59,4 @@ if __name__ == '__main__':
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--samples', type=Path, required=True)
     p.add_argument('--cohort', required=True)
-    p.add_argument('--rscript', default='Rscript')
     main(p.parse_args())

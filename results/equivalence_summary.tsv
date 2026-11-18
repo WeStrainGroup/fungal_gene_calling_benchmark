@@ -1,5 +1,0 @@
-tool	species	records_compared	records_expected	complete	bulk_models	single_models	matching_structures	bulk_only	single_only	phase_differences	cds_differences	protein_differences	status_differences	score_differences	max_score_delta
-annevo	Saccharomyces_cerevisiae	16	16	True	4926	4926	4926	0	0	0	0	0	0	0	0.0
-annevo	Candida_albicans	8	8	True	5291	5291	5291	0	0	0	0	0	0	0	0.0
-tiberius	Saccharomyces_cerevisiae	16	16	True	5613	5613	5612	1	1	0	0	0	0	0	0.0
-tiberius	Candida_albicans	8	8	True	5911	5911	5911	0	0	0	0	0	0	0	0.0

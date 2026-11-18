@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--data', type=Path, default=REPO/'data')
 args = parser.parse_args()
 data = args.data
-records = list(csv.DictReader((REPO/'results/original_records.tsv').open(), delimiter='\t'))
+records = list(csv.DictReader((REPO/'metadata/original_records.tsv').open(), delimiter='\t'))
 for species in ('Saccharomyces_cerevisiae', 'Candida_albicans'):
     source = data/'provenance'/species
     checks = {Path(line.split(None, 1)[1]).name: line.split()[0] for line in (source/'md5checksums.txt').read_text().splitlines()}
@@ -23,7 +23,6 @@ for species in ('Saccharomyces_cerevisiae', 'Candida_albicans'):
         genome = {r.id: str(r.seq).upper() for r in SeqIO.parse(handle, 'fasta')}
     retained = [r for r in records if r['species'] == species]
     folder = data/'inputs'/species
-    (folder/'single').mkdir(exist_ok=True)
     with (folder/'genome.fna').open('w') as output:
         for row in retained:
             record = row['record']
@@ -31,7 +30,6 @@ for species in ('Saccharomyces_cerevisiae', 'Candida_albicans'):
             assert len(seq) == int(row['bp']) and hashlib.sha256(seq.encode()).hexdigest() == row['sha256']
             text = f'>{record}\n{seq}\n'
             output.write(text)
-            (folder/'single'/f'{record}.fna').write_text(text)
     for group in ('1-2kb', '5-10kb', '50-100kb'):
         rows = csv.DictReader((folder/f'{group}.fragments.tsv').open(), delimiter='\t')
         with (folder/f'{group}.fna').open('w') as output:
