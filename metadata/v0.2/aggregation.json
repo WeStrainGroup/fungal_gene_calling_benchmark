@@ -1,0 +1,31 @@
+{
+  "aggregation_version": "0.2.1",
+  "scoring_version": "0.2.0",
+  "unique_species": 12,
+  "expected_cases": 144,
+  "metrics": [
+    "precision",
+    "recall",
+    "f1"
+  ],
+  "conditions": [
+    "genome",
+    "50-100kb",
+    "5-10kb",
+    "1-2kb"
+  ],
+  "weighting": "Equal weight per species",
+  "sample_sd_ddof": 1,
+  "undefined": "Excluded, never zero-filled",
+  "n_zero": "mean and SD are NA",
+  "n_one": "mean defined, SD is NA",
+  "shared_species": "Saccharomyces_cerevisiae counted once",
+  "tests_passed": 30,
+  "source_scoring_unchanged": true,
+  "files_sha256": {
+    "metadata/species.tsv": "f100cfde19ac0f3ea308cd66453d298c208d8a9917b9f1c70e10cda2526fb542",
+    "scripts/summarize_all_species.py": "780f461f24c0435c84f51ff80393d3db241a6fbbc2d432b9df78c0f35193bd14",
+    "scripts/plot_all_species.R": "b481ec8cf9064fe397ecf27e7183b45fde7006896f28b767e685c70f09c9e65f",
+    "tests/test_species_summary.py": "188507b6eabfe5f8e5d8d9bb23b6da0312458ac94d36cd73a4fafa4a57dcd98a"
+  }
+}

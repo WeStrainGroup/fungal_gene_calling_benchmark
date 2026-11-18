@@ -1,0 +1,48 @@
+{
+  "aggregation_version": "0.2.1",
+  "scoring_version": "0.2.0",
+  "status": "PARTIAL",
+  "expected_species": 12,
+  "completed_cases": 81,
+  "expected_cases": 144,
+  "metric_rows": 555,
+  "expected_metric_rows": 1008,
+  "duplicate_metric_rows_removed": 84,
+  "sample_sd_ddof": 1,
+  "missing_values": "excluded, never replaced with zero",
+  "sources": [
+    {
+      "cohort": "annevo_set",
+      "status": "COMPLETE",
+      "completed_cases": 24,
+      "expected_cases": 24,
+      "sha256": {
+        "metrics.tsv": "2af69dc88346649e6f2abad40d7c4163f343e70975c5c621a675bcea713b086b",
+        "diagnostics.tsv": "50620a52cb3449bfb8d7a9b72d605632ad3952abfe2a020cb78b8c204a04e55a",
+        "inputs.tsv": "a2e1fbb1504d0555e010a59b594c40c62dffeaf8fea6151e59e2a5d0813967d8"
+      }
+    },
+    {
+      "cohort": "tiberius_set",
+      "status": "PARTIAL",
+      "completed_cases": 57,
+      "expected_cases": 72,
+      "sha256": {
+        "metrics.tsv": "a30c5e3373aa395f0ef8faa445994106dea5f145763c11a512e2c09274b5fc6d",
+        "diagnostics.tsv": "17edf810d8d220f0f93ea75a19ed3c7efa6bf774d00be1fe86811345ea52eca2",
+        "inputs.tsv": "eb8f7d7fd413d03317f4411ee07c05bab56f20b532257f4a814b9917b194110d"
+      }
+    },
+    {
+      "cohort": "carbon_set",
+      "status": "PARTIAL",
+      "completed_cases": 12,
+      "expected_cases": 60,
+      "sha256": {
+        "metrics.tsv": "de57944cf32bb57d7c18e725ffa09329be4f5522935c6f0bb1faaf73af2d2591",
+        "diagnostics.tsv": "49f3266c1ffbe360685c8820e296a253dec04b857544cf751979c09eb9516dfa",
+        "inputs.tsv": "cde4c5673532f5c6e5d9bf7b7e5ae3f7621797cc2d96bee8ed8fc2426f5c8834"
+      }
+    }
+  ]
+}

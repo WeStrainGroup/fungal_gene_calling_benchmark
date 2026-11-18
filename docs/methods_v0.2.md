@@ -4,7 +4,7 @@ This protocol reuses frozen inputs and native predictions. It does not retrain m
 
 ## Inputs and cohorts
 
-Keep the ANNEVO-selected 2 species, Tiberius-selected 6 species, and Carbon-A-selected 5 species separate. There are 12 distinct genomes: the same Saccharomyces cerevisiae inputs and predictions are reused in two cohorts. Carbon-A's five species are all officially `seen`. See [accessions and training exposure](datasets.md); this is not a three-model unseen-species benchmark.
+The source datasets contain 2 ANNEVO-selected, 6 Tiberius-selected and 5 Carbon-A-selected species. The current summary combines their 12 distinct genomes, counting the shared Saccharomyces cerevisiae inputs and predictions once. Source-specific tables remain provenance records, not the final reporting groups. Carbon-A's five species are all officially `seen`. See [accessions and training exposure](datasets.md); this is not a three-model unseen-species benchmark.
 
 Original assemblies and full-genome random partitions of 1–2 kb, 5–10 kb and 50–100 kb use the existing frozen maps, seeds, annotations and genetic codes. Cut points are not moved to preserve genes. All tools receive identical DNA. Main scoring uses records >=1,000 bp. Smaller original records are retained and reported, not scored: Agaricus bisporus has 771 such records totaling 560,320 bp. Whole-genome reconstruction checks include these records.
 
@@ -54,7 +54,7 @@ Nucleotide and exon metrics keep the frozen official evaluator definitions: choo
 
 Carbon-A truncated precision/F1 are **conditional within truncated-reference regions**, not whole-genome precision/F1. For subtype results, matched predictions follow their globally matched reference gene's subtype. Unmatched predictions wholly attributable to one subtype territory contribute its FP; ambiguous subtype assignments remain in aggregate truncated counts and `subtype_unresolved`. The three named subtype counts therefore need not sum to the aggregate. Background and cross-scope predictions are always reported alongside these scores.
 
-Each cell includes TP, FP, FN, predicted/reference denominator, precision, recall and F1. No eligible reference gives `NA` rates (even if FP are present). A reference with no prediction gives recall/F1 zero. Counts remain available when rates are NA. Means are species-equal, calculated separately for each metric and dataset; `n_species` states how many assessable species contributed. No SD/error bars; no mean for an unfinished cohort. The exact species × input × tool × stratum × level grid is asserted.
+Each cell includes TP, FP, FN, predicted/reference denominator, precision, recall and F1. No eligible reference gives `NA` rates (even if FP are present). A reference with no prediction gives recall/F1 zero. Counts remain available when rates are NA. Under the revised aggregation policy (v0.2.1), each tool, input condition, stratum and metric is summarized across the 12 unique species by arithmetic mean and sample SD (n−1), giving each species equal weight. Undefined values are excluded, never zero-filled; `n_species` states the number of defined values. With zero defined values, mean and SD are NA; with one, mean is retained and SD is NA. Original assemblies are a separate condition. All inference/validation must finish before final summary tables are produced. This supersedes the v0.2.0 source-specific mean-only reporting policy; per-species scoring does not change. The exact species × input × tool × stratum × level grid is asserted.
 
 ## Validation and outputs
 
@@ -65,7 +65,7 @@ Each cell includes TP, FP, FN, predicted/reference denominator, precision, recal
 | File | Contents |
 | --- | --- |
 | `metrics.tsv` | Per-species, input, tool, stratum and level counts/rates. |
-| `species_mean.tsv` | Complete-cohort species-equal means only. |
+| `all_species/mean_sd.tsv` | Final mean and sample SD across the unique species; defined-value count per row. Historical source-specific `species_mean.tsv` files are retained only for provenance. |
 | `diagnostics.tsv` | Filtering, background, cross-scope, ignored and subtype-unresolved predictions. |
 | `inputs.tsv` | Included/excluded record counts and bp. |
 | `reference_regions.tsv` | Reference genes/regions, strata and exclusion reasons. |
@@ -75,4 +75,4 @@ Each cell includes TP, FP, FN, predicted/reference denominator, precision, recal
 | `source_sha256.json` | Exact inputs and native predictions read. |
 | `STATUS.json` | Evaluator version, completion and explicit missing cases. |
 
-Figures use R/ggplot2, `theme_minimal()`, the accepted muted tool palette and species-equal means without error bars. New outputs live under `evaluation_v0.2`/`results/v0.2`; historical v0.1 files remain unchanged. Detailed audits are release assets rather than large tracked Git files. Publication and HPC copy-back use verified artifacts; incomplete cohorts are explicitly labeled and not plotted as complete.
+Current figures use R/ggplot2, `theme_minimal()`, the accepted muted tool palette, species-equal means and sample-SD error bars. `summarize_all_species.py` checks duplicate species for exact agreement, preserves zero values and asserts the final 1,008-row metric grid (144 unique inference cases). New outputs live under `evaluation_v0.2`/`results/v0.2`; historical v0.1 files remain unchanged. Detailed audits are release assets rather than large tracked Git files. Publication and HPC copy-back use verified artifacts; incomplete cohorts are explicitly labeled and not plotted as complete.
