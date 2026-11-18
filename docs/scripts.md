@@ -5,6 +5,7 @@
 | `fetch_data.py` | Download or read the release archive, verify SHA256 and extract regular files. | Validated with the release archive. |
 | `prepare_inputs.py` | Reconstruct the exact completed inputs from frozen maps and public RefSeq DNA. | All inference-time input hashes reproduced. |
 | `evaluate.py` | Rebuild references and calculate nucleotide/exon/gene metrics using the frozen official evaluator. | All 72 initial metric rows reproduced; independent matcher and official entry point agree. Supports additional sample manifests. |
+| `check_output_codons.py` | Audit pilot predicted CDS start/stop, initial phase, internal stops and ambiguity without filtering. | All 24 pilot cases checked. |
 | `compare_inputs.py` | Compare original-genome and single-record annotations, ignoring generated IDs. | All four initial tool/species comparisons reproduced. |
 | `run_predictor.sh` | Run one input in an already installed environment with the tested scientific settings. | Adapted from completed inference; used by the six-species extension. |
 | `prepare_new_inputs.py` | Download fixed RefSeq versions and generate complete nuclear partitions from a sample manifest. | Six extension inputs downloaded and verified. |

@@ -43,3 +43,11 @@ Keep the ANNEVO-selected, Tiberius-selected and any Carbon-A-selected datasets s
 ## Limits
 
 This is an in-silico fragmentation experiment on reference assemblies. It does not test assembly indels, chimeras, contamination, strain mixtures, missing MAG sequence or taxonomically representative fungal sampling. There is one fixed partition per size condition. Training exposure is documented separately: the initial two yeasts trained Tiberius, and Carbon-A's official fungal evaluation set is entirely `seen`. The analysis is informative about fragmentation sensitivity but does not establish universally held-out species generalization.
+
+## Native CDS output policies
+
+The tools do not share a universal completeness filter. In the installed versions, Tiberius postprocessing removes models below 200 coding bp and models with internal stops. ANNEVO applies native score thresholds, with a stricter threshold for short or single-exon predictions. Carbon-A uses a 96 bp native minimum CDS length, explicitly exports edge-truncated models as `status=incomplete` with `confidence=NA`, and checks for internal stops in the specified reading frame.
+
+An independent audit of all 24 pilot outputs is in `results/native_codon_audit.tsv`. Reproduce it after input reconstruction with `python scripts/check_output_codons.py`. CDS is extracted from GFF plus explicit stop-codon features; translation uses initial phase and the sample code. Literal stop codons and stops resolved from ambiguous IUPAC codons are reported separately. An incomplete trailing codon in a boundary model is not automatically a prediction error.
+
+For S. cerevisiae 1–2 kb inputs, ANNEVO has 15,833/15,833 and Tiberius 1,777/1,777 models passing start/stop/internal-stop checks; Carbon-A has 786/5,256, retaining 4,470 models missing start and/or stop. These checks do not validate reference agreement. The reported partial-CDS-inclusive F1 measures visible sequence recovery; it must not be described as full-length protein accuracy. This audit does not change or filter the benchmark results.
