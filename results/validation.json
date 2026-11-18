@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "summary_rows_independently_checked": 252,
+  "mean_sd_engine": "R base mean and sample sd",
+  "paired_cases": 75,
+  "paired_species_conditions": 25,
+  "unit_tests": 31
+}

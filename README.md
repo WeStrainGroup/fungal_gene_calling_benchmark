@@ -25,17 +25,32 @@ The v0.2 scoring protocol is unchanged: compare all three tools on complete refe
 
 Metrics are first computed per species. The final summary combines all 12 species using the arithmetic mean and **sample SD (n−1)** of defined values. Missing values are never replaced with zero; each row reports `n_species`. SD is NA for fewer than two defined species. Original assemblies are a separate condition. This replaces the earlier source-specific means without SD.
 
-## Status and results
+## Interim benchmark
 
-The unified snapshot currently contains **81/144 unique prediction cases**. The remaining predictions and their CPU validation are pending. Final 12-species mean ± SD tables and figures are withheld until all cases have been validated.
+This release includes **25 species × condition pairs (75 prediction cases)** for which all three tools have completed inference and independent validation. It covers 8 distinct species; only completed pairs enter each condition. The final update will include all 12 species.
 
-[Per-species metrics](results/metrics.tsv) · [Background and exclusions](results/diagnostics.tsv) · [Completion status](results/STATUS.json) · [Methods](docs/methods.md) · [Dataset details](docs/datasets.md) · [Script registry](docs/scripts.md)
+Complete-reference gene/CDS F1 (%), species-equal mean ± sample SD:
 
-The locked CPU follow-up combines the three validated input directories, verifies that duplicate yeast rows agree, and generates `mean_sd.tsv` and R figures after completion. It does not rerun inference.
+| Condition | Species | ANNEVO | Tiberius | Carbon-A |
+| --- | ---: | ---: | ---: | ---: |
+| Original assembly | 7 | 57.58 ± 20.93 | 59.67 ± 24.33 | 73.58 ± 18.60 |
+| 50–100 kb | 8 | 55.41 ± 20.10 | 57.60 ± 22.80 | 71.35 ± 18.24 |
+| 5–10 kb | 8 | 52.41 ± 21.06 | 56.52 ± 22.73 | 58.98 ± 21.61 |
+| 1–2 kb | 2 | 44.89 ± 1.89 | 84.33 ± 4.19 | 66.05 ± 12.38 |
+
+![Complete CDS: interim benchmark](figures/complete_cds.png)
+
+**Species composition differs between conditions**, so these cross-condition means are not a paired estimate of fragmentation loss. Within each condition, all three tools use the same species. The species included in each condition are listed in [STATUS.json](results/STATUS.json). Undefined metric values are excluded, with their defined-species counts reported in the summary table.
+
+[Mean ± SD: all metrics](results/mean_sd.tsv) · [Per-species TP/FP/FN and P/R/F1](results/metrics.tsv) · [Background and exclusions](results/diagnostics.tsv) · [Truncated CDS figure](figures/carbon_partial_cds.pdf) · [Independent validation](results/validation.json)
+
+[Methods](docs/methods.md) · [Dataset details](docs/datasets.md) · [Script registry](docs/scripts.md)
+
+The final CPU follow-up remains active. After all native predictions and source validations finish, it will generate the complete 12-species summary for replacement of this interim report.
 
 ## Reproduce
 
-Install the Python dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [current data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.3.0) contains frozen pilot inputs and native predictions, with checksums. Expanded inputs use the accession manifests in `metadata/`.
+Install the Python dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [current data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.3.1) contains frozen pilot inputs and native predictions, with checksums. Expanded inputs use the accession manifests in `metadata/`.
 
 ```bash
 python scripts/fetch_data.py
@@ -45,16 +60,16 @@ python scripts/evaluate_stratified.py --data data --output data/evaluation_v0.2 
 python scripts/validate_stratified.py --data data --output data/evaluation_v0.2
 ```
 
-After independently validating all three source datasets:
+For an interim report using completed species-condition pairs:
 
 ```bash
 python scripts/summarize_all_species.py \
   --inputs annevo_results tiberius_results carbon_results \
-  --output combined_results
+  --output combined_results --paired-conditions
 Rscript scripts/plot_all_species.R combined_results combined_results/figures
 ```
 
-Use `--wait --rscript Rscript` with live result directories to wait for all three validations and then produce the final summary and plots. The repository contains only the current analysis. Reusable inputs, native predictions and validation records are retained; obsolete scores, figures and temporary experiments are removed.
+For the final report, replace `--paired-conditions` with `--wait --rscript Rscript`. This waits for all source validations and produces the complete 12-species summary and plots. The repository contains only the current analysis. Reusable inputs, native predictions and validation records are retained; obsolete scores, figures and temporary experiments are removed.
 
 ## Sources and license
 

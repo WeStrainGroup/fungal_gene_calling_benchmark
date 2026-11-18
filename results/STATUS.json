@@ -1,11 +1,59 @@
 {
   "aggregation_version": "0.2.1",
   "scoring_version": "0.2.0",
-  "status": "PARTIAL",
+  "status": "INTERIM",
   "expected_species": 12,
-  "completed_cases": 81,
+  "included_species": 8,
+  "species": [
+    "Saccharomyces_cerevisiae",
+    "Candida_albicans",
+    "Agaricus_bisporus",
+    "Cryphonectria_parasitica",
+    "Parastagonospora_nodorum",
+    "Puccinia_striiformis",
+    "Punctularia_strigosozonata",
+    "Tilletiopsis_washingtonensis"
+  ],
+  "available_cases": 83,
+  "species_by_condition": {
+    "genome": [
+      "Saccharomyces_cerevisiae",
+      "Candida_albicans",
+      "Cryphonectria_parasitica",
+      "Parastagonospora_nodorum",
+      "Puccinia_striiformis",
+      "Punctularia_strigosozonata",
+      "Tilletiopsis_washingtonensis"
+    ],
+    "50-100kb": [
+      "Saccharomyces_cerevisiae",
+      "Candida_albicans",
+      "Agaricus_bisporus",
+      "Cryphonectria_parasitica",
+      "Parastagonospora_nodorum",
+      "Puccinia_striiformis",
+      "Punctularia_strigosozonata",
+      "Tilletiopsis_washingtonensis"
+    ],
+    "5-10kb": [
+      "Saccharomyces_cerevisiae",
+      "Candida_albicans",
+      "Agaricus_bisporus",
+      "Cryphonectria_parasitica",
+      "Parastagonospora_nodorum",
+      "Puccinia_striiformis",
+      "Punctularia_strigosozonata",
+      "Tilletiopsis_washingtonensis"
+    ],
+    "1-2kb": [
+      "Saccharomyces_cerevisiae",
+      "Candida_albicans"
+    ]
+  },
+  "interim_rule": "All three tools validated within each species-condition pair",
+  "completed_cases": 75,
   "expected_cases": 144,
-  "metric_rows": 555,
+  "metric_rows": 525,
   "expected_metric_rows": 1008,
   "duplicate_metric_rows_removed": 84,
   "sample_sd_ddof": 1,
@@ -36,11 +84,11 @@
     {
       "cohort": "carbon_set",
       "status": "PARTIAL",
-      "completed_cases": 12,
+      "completed_cases": 14,
       "expected_cases": 60,
       "sha256": {
-        "metrics.tsv": "de57944cf32bb57d7c18e725ffa09329be4f5522935c6f0bb1faaf73af2d2591",
-        "diagnostics.tsv": "49f3266c1ffbe360685c8820e296a253dec04b857544cf751979c09eb9516dfa",
+        "metrics.tsv": "6cf11379576a3682aa9e7937a74e704019c5e9c50a3b87710a4d04c83b139d24",
+        "diagnostics.tsv": "a24e1a0e7b6ae5362b45eacbfbb18d4d76c5cc2757e7e2e21e6f52fdf75a0018",
         "inputs.tsv": "cde4c5673532f5c6e5d9bf7b7e5ae3f7621797cc2d96bee8ed8fc2426f5c8834"
       }
     }

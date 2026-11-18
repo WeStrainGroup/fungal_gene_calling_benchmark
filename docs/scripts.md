@@ -10,9 +10,9 @@
 | `evaluate_stratified.py` | Reference strata, common prediction filters, structural matching and metrics. | Pilot and available extension cases verified. |
 | `validate_stratified.py` | Independent coordinate/phase and count checks; rehash inputs. | Verified available cases. |
 | `finish_stratified.py` | Wait for native outputs, then evaluate and validate a source dataset. | CPU follow-ups active; no source-specific summary plots. |
-| `summarize_all_species.py` | Deduplicate species and calculate mean/sample SD; wait for final validation. | 81/144 unique cases in the current snapshot; final summary pending. |
-| `plot_all_species.R` | Final complete/truncated CDS figures with sample-SD error bars. | Synthetic smoke test passed; final data pending. |
+| `summarize_all_species.py` | Deduplicate species and calculate mean/sample SD; wait for final validation. | Interim report: 25 paired species-condition units, 75 cases; final summary waiting. |
+| `plot_all_species.R` | Final complete/truncated CDS figures with sample-SD error bars. | Interim figures validated; actual species counts labeled per condition. |
 | `tests/test_stratified.py` | Scientific scoring boundary tests. | 24 tests passed. |
-| `tests/test_species_summary.py` | Species weighting, deduplication, NA and sample SD. | Six tests passed. |
+| `tests/test_species_summary.py` | Species weighting, deduplication, NA and sample SD. | Seven tests passed. |
 
 The unchanged files in `vendor/carbon_a/` provide the pinned interval definitions and retain their license. Runtime environments, primary inputs and native predictions are reusable assets, not disposable intermediates. Server scheduling is operational: two existing jobs continue, and the extra queue waits for shared locks on GPUs 2 and 3; after the six-species inference finishes it may use GPUs 0–3, up to four jobs total. GPU/CPU scientific parameters remain unchanged.

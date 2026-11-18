@@ -42,6 +42,16 @@ class SummaryTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             s.mean_sd([row('a', '10')], ['a', 'b'])
 
+    def test_interim_requires_all_tools_within_each_condition(self):
+        expected = {(sp,g,t,scope,level) for sp in ('a','b') for g in s.GROUPS for t in s.TOOLS
+                    for scope in (s.SCOPES if t=='carbon' else ('complete',)) for level in s.LEVELS}
+        observed = expected - {('b','1-2kb','tiberius','complete','gene')}
+        units = s.paired_units(observed,expected)
+        self.assertNotIn(('b','1-2kb'), units)
+        self.assertIn(('b','genome'), units)
+        self.assertIn(('a','1-2kb'), units)
+        self.assertEqual(len(units), 7)
+
 
 if __name__ == '__main__':
     unittest.main()

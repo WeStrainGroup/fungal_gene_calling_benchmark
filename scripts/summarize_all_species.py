@@ -43,24 +43,30 @@ def unique_rows(rows, fields):
     return [unique[k] for k in sorted(unique)]
 
 
-def mean_sd(rows, species):
+def mean_sd(rows, species, species_by_group=None):
     groups = collections.defaultdict(list)
     for row in rows:
         groups[tuple(row[k] for k in KEY[1:])].append(row)
     result = []
     for key, items in sorted(groups.items()):
-        assert len(items) == len(species) and {r['species'] for r in items} == set(species)
+        eligible = species_by_group[key[0]] if species_by_group is not None else species
+        assert len(items) == len(eligible) and {r['species'] for r in items} == set(eligible)
         for metric in ('precision', 'recall', 'f1'):
             values = [float(r[metric]) for r in items if r[metric] not in ('', 'NA')]
             assert all(math.isfinite(v) for v in values)
             n = len(values)
             result.append(dict(zip(KEY[1:], key), metric=metric, n_species=n,
-                total_species=len(species), mean=statistics.mean(values) if n else 'NA',
+                total_species=len(eligible), mean=statistics.mean(values) if n else 'NA',
                 sd=statistics.stdev(values) if n > 1 else 'NA'))
     return result
 
 
-def aggregate(roots, manifest, output):
+def paired_units(observed, expected):
+    units = {key[:2] for key in expected}
+    return {unit for unit in units if {key for key in expected if key[:2] == unit} <= observed}
+
+
+def aggregate(roots, manifest, output, paired_conditions=False):
     species = [r['species'] for r in read_table(manifest)]
     assert len(species) == len(set(species)) == 12
     output.mkdir(parents=True, exist_ok=True)
@@ -88,19 +94,35 @@ def aggregate(roots, manifest, output):
     observed = {tuple(r[k] for k in KEY) for r in metrics}
     assert observed <= expected, 'Unexpected species, condition or metric'
     complete = all(s['status'] == 'COMPLETE' for s in snapshots)
+    available_cases = len({tuple(r[k] for k in KEY[:3]) for r in metrics})
+    included = species
+    species_by_group = {g: species for g in GROUPS}
+    if paired_conditions:
+        units = paired_units(observed, expected)
+        if not units:
+            raise ValueError('No species-condition pair has all tools and metrics validated')
+        included = [s for s in species if any(unit[0] == s for unit in units)]
+        species_by_group = {g: [s for s in species if (s, g) in units] for g in GROUPS}
+        metrics = [r for r in metrics if (r['species'], r['group']) in units]
+        diagnostics = [r for r in diagnostics if (r['species'], r['group']) in units]
+        inputs = [r for r in inputs if (r['species'], r['group']) in units]
     if complete:
         assert observed == expected, 'Missing final metric rows'
-    else:
+    elif not paired_conditions:
         assert not (output/'mean_sd.tsv').exists(), 'Do not replace a final summary with partial inputs'
     for name, rows in [('metrics', metrics), ('diagnostics', diagnostics), ('inputs', inputs)]:
         write_table(output/f'{name}.tsv', rows)
-    if complete:
-        write_table(output/'mean_sd.tsv', mean_sd(metrics, species))
+    if complete or paired_conditions:
+        write_table(output/'mean_sd.tsv', mean_sd(metrics, included, species_by_group))
     status = dict(aggregation_version='0.2.1', scoring_version='0.2.0',
-        status='COMPLETE' if complete else 'PARTIAL', expected_species=12,
+        status='COMPLETE' if complete else 'INTERIM' if paired_conditions else 'PARTIAL', expected_species=12,
+        included_species=len(included) if complete or paired_conditions else 0,
+        species=included if complete or paired_conditions else [], available_cases=available_cases,
+        species_by_condition=species_by_group if complete or paired_conditions else {},
+        interim_rule='All three tools validated within each species-condition pair' if paired_conditions else None,
         completed_cases=len({tuple(r[k] for k in KEY[:3]) for r in metrics}), expected_cases=144,
         metric_rows=len(metrics), expected_metric_rows=len(expected),
-        duplicate_metric_rows_removed=len(collected['metrics'])-len(metrics),
+        duplicate_metric_rows_removed=len(collected['metrics'])-len(observed),
         sample_sd_ddof=1, missing_values='excluded, never replaced with zero',
         sources=snapshots)
     (output/'STATUS.json').write_text(json.dumps(status, indent=2)+'\n')
@@ -112,7 +134,7 @@ def run(args):
     output.mkdir(parents=True, exist_ok=True)
     with (output/'summary.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        status = aggregate(args.inputs, args.species, output)
+        status = aggregate(args.inputs, args.species, output, args.paired_conditions)
         print(json.dumps(status, indent=2), flush=True)
         while args.wait and status['status'] != 'COMPLETE':
             time.sleep(60)
@@ -126,7 +148,7 @@ def run(args):
             if ready:
                 status = aggregate(args.inputs, args.species, output)
                 print(json.dumps(status, indent=2), flush=True)
-        if status['status'] == 'COMPLETE' and args.rscript:
+        if status['status'] in ('COMPLETE', 'INTERIM') and args.rscript:
             subprocess.run([args.rscript, str(Path(__file__).with_name('plot_all_species.R')),
                             str(output), str(output/'figures')], check=True)
 
@@ -138,5 +160,10 @@ if __name__ == '__main__':
     parser.add_argument('--species', type=Path, default=Path(__file__).resolve().parents[1]/'metadata/species.tsv')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--wait', action='store_true', help='Wait for final independently validated source tables')
+    parser.add_argument('--paired-conditions', action='store_true',
+                        help='Interim report restricted to species-condition pairs with all three tools validated')
     parser.add_argument('--rscript', help='Optional Rscript executable to draw the completed summary')
-    run(parser.parse_args())
+    args = parser.parse_args()
+    if args.wait and args.paired_conditions:
+        parser.error('Choose either an interim paired-condition report or waiting for the final report')
+    run(args)
