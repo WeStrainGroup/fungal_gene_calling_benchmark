@@ -2,9 +2,14 @@
 
 | Script | Purpose | Status |
 | --- | --- | --- |
+| `evaluate_stratified.py` | v0.2 truth strata, common filters and coordinate/frame matching; all metrics and exclusions. | Pilot 24/24 cases verified; extension snapshots/follow-ups kept separate. |
+| `validate_stratified.py` | Independent raw-GFF gene TP and count reconciliation plus source rehashing. | Pilot PASS; 106,556 assigned gene matches checked. |
+| `plot_stratified.R` | v0.2 complete and conditional truncated F1 plots. | Pilot verified; requires a complete cohort, ggplot2 and jsonlite. |
+| `finish_stratified.py` | Locked CPU snapshot/wait/evaluate/validate/plot follow-up for live native outputs. | Separate extension workers; no inference or automatic publication. |
+| `tests/test_stratified.py` | Scientific boundaries, matching and output-grid regression tests. | 24 tests passed. |
 | `fetch_data.py` | Download or read the release archive, verify SHA256 and extract regular files. | Validated with the release archive. |
 | `prepare_inputs.py` | Reconstruct the exact completed inputs from frozen maps and public RefSeq DNA. | All inference-time input hashes reproduced. |
-| `evaluate.py` | Rebuild references and calculate nucleotide/exon/gene metrics using the frozen official evaluator. | All 72 initial metric rows reproduced; independent matcher and official entry point agree. Supports additional sample manifests. |
+| `evaluate.py` | Historical v0.1 reference and sequence-matching evaluator; shared frozen helpers for v0.2. | All 72 historical metric rows reproduced; retained unchanged. |
 | `check_output_codons.py` | Audit pilot predicted CDS start/stop, initial phase, internal stops and ambiguity without filtering. | All 24 pilot cases checked. |
 | `compare_inputs.py` | Compare original-genome and single-record annotations, ignoring generated IDs. | All four initial tool/species comparisons reproduced. |
 | `run_predictor.sh` | Run one input in an already installed environment with the tested scientific settings. | Adapted from completed inference; used by the six-species extension. |

@@ -1,0 +1,7 @@
+{
+  "filename": "stratified_audits_v0.2.0.tar.gz",
+  "bytes": 32194117,
+  "sha256": "830516a68f85e67547b606ce74fac5ab5dcebb146f678d0271d897165f632823",
+  "url": "https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/download/v0.2.0/stratified_audits_v0.2.0.tar.gz",
+  "contents": "Validated pilot plus explicitly incomplete extension snapshots; per-model audits, references, scores and figures. Native inference inputs remain in the original release archive for the pilot."
+}

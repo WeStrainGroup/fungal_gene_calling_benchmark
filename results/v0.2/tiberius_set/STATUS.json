@@ -1,0 +1,90 @@
+{
+  "version": "0.2.0",
+  "cohort": "tiberius_set",
+  "status": "PARTIAL",
+  "expected_cases": 72,
+  "completed_cases": 57,
+  "pending": [
+    {
+      "species": "Agaricus_bisporus",
+      "group": "genome",
+      "tool": "annevo"
+    },
+    {
+      "species": "Agaricus_bisporus",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Cryphonectria_parasitica",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Parastagonospora_nodorum",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Parastagonospora_nodorum",
+      "group": "1-2kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Parastagonospora_nodorum",
+      "group": "1-2kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Puccinia_striiformis",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Puccinia_striiformis",
+      "group": "1-2kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Puccinia_striiformis",
+      "group": "1-2kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Punctularia_strigosozonata",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Punctularia_strigosozonata",
+      "group": "1-2kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Punctularia_strigosozonata",
+      "group": "1-2kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Tilletiopsis_washingtonensis",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Tilletiopsis_washingtonensis",
+      "group": "1-2kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Tilletiopsis_washingtonensis",
+      "group": "1-2kb",
+      "tool": "tiberius"
+    }
+  ],
+  "min_record_bp": 1000,
+  "min_cds_bp": 200,
+  "confidence_threshold": 0.1,
+  "source_files_unchanged": true,
+  "fragment_reconstruction": "PASS",
+  "independent_matching": "PASS"
+}

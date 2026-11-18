@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "cases": 24,
+  "all_gene_true_positives_checked": 106556,
+  "raw_gff_coordinate_and_phase_agreement": "PASS",
+  "independent_gene_accounting": "PASS",
+  "source_files_rehashed": 44,
+  "source_files_unchanged": true,
+  "examples": 68,
+  "note": "Read native GFF and original reference directly; no evaluator imports."
+}

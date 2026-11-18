@@ -4,29 +4,37 @@
 
 A reproducible comparison of **ANNEVO**, **Tiberius** and **Carbon-A** on identical fungal DNA, with original assemblies and full-genome partitions targeting **1–2 kb**, **5–10 kb** and **50–100 kb**. No RNA or protein evidence is supplied to the predictors.
 
-The primary question is short-contig performance. Reference CDS are clipped to each fragment, so an exact partial-CDS prediction can be a true positive; that does **not** imply recovery of a full-length protein.
+**Current protocol: v0.2 — reference-defined complete and truncated CDS, matched by coordinates and reading frame.** Three tools are compared on complete reference CDS; Carbon-A is additionally evaluated on truncated reference CDS. Mixed fragments are retained. All metrics use the same filtered predictions (visible CDS >=200 bp; Carbon-A confidence >=0.1 or explicit NA) on input records >=1 kb.
+
+The historical v0.1 results used native settings, allowed partial CDS and matched gene/CDS sequences. They remain available unchanged, but **must not be combined with v0.2 scores**.
 
 ## Benchmark sets
 
 | Set | Species | Status | Training overlap |
 | --- | ---: | --- | --- |
-| ANNEVO fungal test species | 2 | Complete: 24 primary runs + 48 single-record runs | Both species are in Tiberius's published training list. |
-| Tiberius primary fungal test species | 6 | Inputs verified; GPU runs queued/running | Tiberius's benchmark documentation states that none trained Tiberius or ANNEVO. |
-| Carbon-A official fungal evaluation set | 5 | Inputs verified; 12 yeast cases reused; 48 new runs waiting | The official data description lists all five as `seen`; no unseen fungi. |
+| ANNEVO fungal test species | 2 | v0.2 complete: 24/24 cases; historical 48 single-record runs retained | Both species are in Tiberius's published training list. |
+| Tiberius primary fungal test species | 6 | v0.2 snapshot: 57/72 cases independently validated; remainder running/queued | Tiberius's benchmark documentation states that none trained Tiberius or ANNEVO. |
+| Carbon-A official fungal evaluation set | 5 | v0.2 snapshot: 12/60 cases independently validated; 48 new runs waiting | The official data description lists all five as `seen`; no unseen fungi. |
 
 These are independently rerun comparisons on the authors' selected species, **not a reproduction of their published headline scores**. We use one common evaluator and explicit reference screening. The sets remain separate; means give each species equal weight, with **no SD or error bars**. Per-species tables are always retained. Incomplete sets are not averaged or filled with zeros.
 
-The completed two-species results are shown below; expanded-set summaries will be released after output verification.
+Snapshot: 2026-11-18 09:56 UTC. [Validation/status](metadata/v0.2/validation.json) · [Tiberius-set partial results](results/v0.2/tiberius_set) · [Carbon-A-set partial results](results/v0.2/carbon_set). The reused yeast metrics were checked for exact equality across cohorts. Partial extension tables are interim outputs; their native predictions will be packaged after the respective cohort finishes.
 
-![ANNEVO-selected fungal species: species-equal means](figures/annevo_set/benchmark_mean.png)
+## Current results and validation
 
-**In this initial set**, Carbon-A has the highest exon and gene F1 in every length condition. On 1–2 kb inputs ANNEVO has higher nucleotide F1 but substantially lower exon and gene F1. This illustrates why coding-base coverage alone is insufficient. These two yeast genomes do not establish a general ranking for fungal MAGs.
+The ANNEVO-selected two-species pilot is complete under v0.2: **24/24 cases**, 24 boundary tests passed, and **106,556 gene matches** were independently checked against raw GFF coordinates and phase. All 44 source hashes remained unchanged. The Tiberius-selected and Carbon-A-selected sets remain incomplete; their species means are withheld.
 
-[Full results](results/benchmark.tsv) · [Mean table](results/annevo_set_mean.tsv) · [PDF figure](figures/annevo_set/benchmark_mean.pdf) · [Per-species figure](figures/benchmark_f1.pdf) · [Methods](docs/methods.md) · [Datasets and training overlap](docs/datasets.md) · [Run predictors](docs/run_predictors.md)
+![Complete CDS, ANNEVO-selected species](figures/v0.2/annevo_set/complete_cds.png)
 
-## Reproduce the completed results
+For complete CDS on 1–2 kb inputs, species-equal gene F1 is **84.33% for Tiberius, 66.05% for Carbon-A and 44.89% for ANNEVO**. These two yeast genomes do not establish a general fungal ranking. Carbon-A's truncated-CDS gene F1 is **68.35%**, conditional on truncated-reference regions; it is not whole-genome precision/F1.
 
-Linux, Python 3.11 and `curl` are sufficient for CPU reevaluation. The release data archive is about **21 MB**; models and GPU inference are not needed.
+[Metrics and counts](results/v0.2/annevo_set/metrics.tsv) · [Species means](results/v0.2/annevo_set/species_mean.tsv) · [Background and exclusions](results/v0.2/annevo_set/diagnostics.tsv) · [Truncated CDS figure](figures/v0.2/annevo_set/carbon_partial_cds.pdf) · [Independent validation](results/v0.2/annevo_set/independent_validation.json)
+
+[Current methods](docs/methods_v0.2.md) · [Datasets and training overlap](docs/datasets.md) · [Run predictors](docs/run_predictors.md) · [Script registry](docs/scripts.md)
+
+## Reproduce v0.2 without GPU inference
+
+The unchanged v0.1 input archive contains the original DNA, annotations, fragment maps and native predictions needed for the v0.2 pilot. The new evaluator reads confidence from native GFFs.
 
 ```bash
 git clone https://github.com/WeStrainGroup/fungal_gene_calling_benchmark.git
@@ -34,30 +42,24 @@ cd fungal_gene_calling_benchmark
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-
 python scripts/fetch_data.py
 python scripts/prepare_inputs.py
-python scripts/evaluate.py
-python scripts/compare_inputs.py
+python -m unittest discover -s tests -v
+python scripts/evaluate_stratified.py --data data --output data/evaluation_v0.2 --cohort annevo_set
+python scripts/validate_stratified.py --data data --output data/evaluation_v0.2
+Rscript -e 'install.packages(c("ggplot2", "jsonlite"), repos="https://cloud.r-project.org")'
+Rscript scripts/plot_stratified.R data/evaluation_v0.2 data/evaluation_v0.2/figures
 ```
 
-The scripts check the release archive, original RefSeq files, exact tested input sequences, official evaluator output and an independent maximum-matching algorithm. Reevaluation must reproduce **all 72 published metric rows exactly**. Single-record comparisons must reproduce all four published tool/species summaries.
+For extensions, supply `--samples metadata/tiberius_samples.tsv` or `metadata/carbon_samples.tsv` and the corresponding frozen input root. `--completed-only` requires native `COMPLETE` markers. `finish_stratified.py` provides a separate, locked CPU follow-up: it evaluates the available cases once, waits for the remaining native outputs, then validates and plots a complete cohort. It never runs inference, publishes to GitHub or changes native outputs.
 
-To redraw the existing figure with R and ggplot2:
+`data/` is excluded from Git. Large per-model audits are distributed in the [v0.2 release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.2.0), with [SHA256 metadata](metadata/v0.2/audit_asset.json); compact verified tables and figures are tracked here. Source URLs, model hashes and inference parameters remain in `metadata/`.
 
-```bash
-Rscript -e 'install.packages("ggplot2", repos="https://cloud.r-project.org")'
-Rscript scripts/plot.R results/annevo_set_mean.tsv figures/annevo_set
-```
+## Historical v0.1
 
-To compute a species-equal summary for a **single complete benchmark set**:
+[Original metrics](results/benchmark.tsv) · [Original means](results/annevo_set_mean.tsv) · [Original figure](figures/annevo_set/benchmark_mean.pdf) · [Original methods](docs/methods.md) · [Frozen release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.1.0)
 
-```bash
-python scripts/summarize.py results/benchmark.tsv data/annevo_set_mean.tsv
-Rscript scripts/plot.R data/annevo_set_mean.tsv data/figures
-```
-
-`data/` contains downloaded and regenerated files and is excluded from Git. Public reference DNA/GFF, frozen fragment maps, and the **72 native prediction GFFs** are in the [release archive](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.1.0). Versioned source URLs, model hashes and parameters are in `metadata/` and the methods documentation.
+To reproduce only that historical protocol, run `python scripts/evaluate.py` and `python scripts/compare_inputs.py` after fetching and preparing the same archive. The original 72 metric rows and four input-equivalence summaries are retained. v0.2 changes the scientific endpoint and can change the ranking; its scores are not a corrected version of the same endpoint.
 
 ## What is included
 

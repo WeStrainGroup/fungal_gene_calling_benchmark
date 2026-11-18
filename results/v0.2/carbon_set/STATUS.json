@@ -1,0 +1,255 @@
+{
+  "version": "0.2.0",
+  "cohort": "carbon_set",
+  "status": "PARTIAL",
+  "expected_cases": 60,
+  "completed_cases": 12,
+  "pending": [
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "genome",
+      "tool": "carbon"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "genome",
+      "tool": "annevo"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "genome",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "50-100kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "50-100kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "50-100kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "5-10kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "5-10kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "5-10kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "1-2kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Schizosaccharomyces_pombe",
+      "group": "1-2kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "genome",
+      "tool": "carbon"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "genome",
+      "tool": "annevo"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "genome",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "50-100kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "50-100kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "50-100kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "5-10kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "5-10kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "5-10kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "1-2kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "1-2kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "genome",
+      "tool": "carbon"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "genome",
+      "tool": "annevo"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "genome",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "50-100kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "50-100kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "50-100kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "5-10kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "5-10kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "5-10kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "1-2kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Coprinopsis_cinerea",
+      "group": "1-2kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "genome",
+      "tool": "carbon"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "genome",
+      "tool": "annevo"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "genome",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "50-100kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "50-100kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "50-100kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "5-10kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "5-10kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "5-10kb",
+      "tool": "tiberius"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "1-2kb",
+      "tool": "carbon"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "1-2kb",
+      "tool": "annevo"
+    },
+    {
+      "species": "Rhizophagus_irregularis",
+      "group": "1-2kb",
+      "tool": "tiberius"
+    }
+  ],
+  "min_record_bp": 1000,
+  "min_cds_bp": 200,
+  "confidence_threshold": 0.1,
+  "source_files_unchanged": true,
+  "fragment_reconstruction": "PASS",
+  "independent_matching": "PASS"
+}
