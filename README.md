@@ -1,6 +1,6 @@
 # Fungal gene calling benchmark
 
-We benchmarked ANNEVO, Tiberius and Carbon-A on 12 fungal species drawn from the three tools’ test datasets. For each tool and fragmentation condition, we report the mean ± SD of each metric across species, with equal weight per species.
+This benchmark compares ANNEVO, Tiberius and Carbon-A on 12 fungal species drawn from the three tools’ test datasets. For each tool and fragmentation condition, we report the mean ± SD of each metric across species, with equal weight per species.
 
 Conditions comprise the **original assembly**, **1–2 kb**, **5–10 kb** and **50–100 kb** full-genome random partitions. All tools receive identical DNA; no RNA or protein evidence is supplied. Saccharomyces cerevisiae is counted once.
 
@@ -27,7 +27,7 @@ Metrics are first computed per species. The final summary combines all 12 specie
 
 ## Interim benchmark
 
-This release includes **25 species × condition pairs (75 prediction cases)** for which all three tools have completed inference and independent validation. It covers 8 distinct species; only completed pairs enter each condition. The final update will include all 12 species.
+Updated **2026-11-19**. This release includes **33 species × condition pairs (99 prediction cases)** for which all three tools have completed inference and independent validation. It covers 11 distinct species; only completed pairs enter each condition. The final update will include all 12 species.
 
 Complete-reference gene/CDS F1 (%), species-equal mean ± sample SD:
 
@@ -35,8 +35,8 @@ Complete-reference gene/CDS F1 (%), species-equal mean ± sample SD:
 | --- | ---: | ---: | ---: | ---: |
 | Original assembly | 7 | 57.58 ± 20.93 | 59.67 ± 24.33 | 73.58 ± 18.60 |
 | 50–100 kb | 8 | 55.41 ± 20.10 | 57.60 ± 22.80 | 71.35 ± 18.24 |
-| 5–10 kb | 8 | 52.41 ± 21.06 | 56.52 ± 22.73 | 58.98 ± 21.61 |
-| 1–2 kb | 2 | 44.89 ± 1.89 | 84.33 ± 4.19 | 66.05 ± 12.38 |
+| 5–10 kb | 10 | 56.48 ± 20.67 | 61.32 ± 22.70 | 63.27 ± 21.17 |
+| 1–2 kb | 8 | 24.88 ± 15.78 | 63.10 ± 19.66 | 43.83 ± 17.66 |
 
 ![Complete CDS: interim benchmark](figures/complete_cds.png)
 
@@ -50,7 +50,7 @@ The final CPU follow-up remains active. After all native predictions and source 
 
 ## Reproduce
 
-Install the Python dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [current data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.3.1) contains frozen pilot inputs and native predictions, with checksums. Expanded inputs use the accession manifests in `metadata/`.
+Install the Python dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [current data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.3.2) contains frozen pilot inputs and native predictions, with checksums. Expanded inputs use the accession manifests in `metadata/`.
 
 ```bash
 python scripts/fetch_data.py

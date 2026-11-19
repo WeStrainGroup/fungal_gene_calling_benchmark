@@ -2,7 +2,34 @@
   "status": "PASS",
   "summary_rows_independently_checked": 252,
   "mean_sd_engine": "R base mean and sample sd",
-  "paired_cases": 75,
-  "paired_species_conditions": 25,
-  "unit_tests": 31
+  "paired_cases": 99,
+  "paired_species_conditions": 33,
+  "unit_tests": 31,
+  "scoring_code_unchanged": true,
+  "validated_at": "2026-11-19 17:54:44 CST",
+  "source_validations": {
+    "tiberius": {
+      "status": "PASS",
+      "cases": 66,
+      "all_gene_true_positives_checked": 303875,
+      "raw_gff_coordinate_and_phase_agreement": "PASS",
+      "independent_gene_accounting": "PASS",
+      "source_files_rehashed": 126,
+      "source_files_unchanged": true,
+      "examples": 216,
+      "note": "Read native GFF and original reference directly; no evaluator imports."
+    },
+    "carbon": {
+      "status": "PASS",
+      "cases": 31,
+      "all_gene_true_positives_checked": 131443,
+      "raw_gff_coordinate_and_phase_agreement": "PASS",
+      "independent_gene_accounting": "PASS",
+      "source_files_rehashed": 81,
+      "source_files_unchanged": true,
+      "examples": 105,
+      "note": "Read native GFF and original reference directly; no evaluator imports."
+    }
+  },
+  "unit_tests_note": "31 existing tests passed for the unchanged registered source; no scoring code changes in this refresh."
 }

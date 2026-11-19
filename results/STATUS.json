@@ -3,7 +3,7 @@
   "scoring_version": "0.2.0",
   "status": "INTERIM",
   "expected_species": 12,
-  "included_species": 8,
+  "included_species": 11,
   "species": [
     "Saccharomyces_cerevisiae",
     "Candida_albicans",
@@ -12,9 +12,12 @@
     "Parastagonospora_nodorum",
     "Puccinia_striiformis",
     "Punctularia_strigosozonata",
-    "Tilletiopsis_washingtonensis"
+    "Tilletiopsis_washingtonensis",
+    "Schizosaccharomyces_pombe",
+    "Neurospora_crassa",
+    "Coprinopsis_cinerea"
   ],
-  "available_cases": 83,
+  "available_cases": 109,
   "species_by_condition": {
     "genome": [
       "Saccharomyces_cerevisiae",
@@ -43,17 +46,25 @@
       "Parastagonospora_nodorum",
       "Puccinia_striiformis",
       "Punctularia_strigosozonata",
-      "Tilletiopsis_washingtonensis"
+      "Tilletiopsis_washingtonensis",
+      "Schizosaccharomyces_pombe",
+      "Neurospora_crassa"
     ],
     "1-2kb": [
       "Saccharomyces_cerevisiae",
-      "Candida_albicans"
+      "Candida_albicans",
+      "Agaricus_bisporus",
+      "Cryphonectria_parasitica",
+      "Parastagonospora_nodorum",
+      "Schizosaccharomyces_pombe",
+      "Neurospora_crassa",
+      "Coprinopsis_cinerea"
     ]
   },
   "interim_rule": "All three tools validated within each species-condition pair",
-  "completed_cases": 75,
+  "completed_cases": 99,
   "expected_cases": 144,
-  "metric_rows": 525,
+  "metric_rows": 693,
   "expected_metric_rows": 1008,
   "duplicate_metric_rows_removed": 84,
   "sample_sd_ddof": 1,
@@ -73,22 +84,22 @@
     {
       "cohort": "tiberius_set",
       "status": "PARTIAL",
-      "completed_cases": 57,
+      "completed_cases": 66,
       "expected_cases": 72,
       "sha256": {
-        "metrics.tsv": "a30c5e3373aa395f0ef8faa445994106dea5f145763c11a512e2c09274b5fc6d",
-        "diagnostics.tsv": "17edf810d8d220f0f93ea75a19ed3c7efa6bf774d00be1fe86811345ea52eca2",
+        "metrics.tsv": "df6528c356a1d70c68867b3445dcf2047ea59ff11c19b9e7254fe99d4f8210c0",
+        "diagnostics.tsv": "ddb130f33ce71ef8615411b062f331892d41ca5b76cc4f0d936d95d1b7ce6b6d",
         "inputs.tsv": "eb8f7d7fd413d03317f4411ee07c05bab56f20b532257f4a814b9917b194110d"
       }
     },
     {
       "cohort": "carbon_set",
       "status": "PARTIAL",
-      "completed_cases": 14,
+      "completed_cases": 31,
       "expected_cases": 60,
       "sha256": {
-        "metrics.tsv": "6cf11379576a3682aa9e7937a74e704019c5e9c50a3b87710a4d04c83b139d24",
-        "diagnostics.tsv": "a24e1a0e7b6ae5362b45eacbfbb18d4d76c5cc2757e7e2e21e6f52fdf75a0018",
+        "metrics.tsv": "ae054d375470c6831124c92adf93d0b9adbd543b3694e18826a6f2d6a65b26b8",
+        "diagnostics.tsv": "30dccb5826e8a336a52fae037499ca9af955185865f2aeeeca4048a54fc932b9",
         "inputs.tsv": "cde4c5673532f5c6e5d9bf7b7e5ae3f7621797cc2d96bee8ed8fc2426f5c8834"
       }
     }
