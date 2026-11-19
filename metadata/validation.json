@@ -22,7 +22,8 @@
     "scripts/common.py": "f1648f0599755bc041e490a8a90d732aefaa964b214351cf869a9784ab7fc40c",
     "scripts/evaluate_stratified.py": "34b13198af0d632c6f5fbf6d0b685f66aab50c6115ee4da42e790a5bd61f02db",
     "tests/test_species_summary.py": "c515b737c623638d19c4f728dc4492c70e2d35c1485450163e0e360c2380ff10",
-    "tests/test_stratified.py": "89b7c98dcf911f8d20aaadfb1342102cff92cdbb3ef83db15c2972a2c96d70b8"
+    "tests/test_stratified.py": "89b7c98dcf911f8d20aaadfb1342102cff92cdbb3ef83db15c2972a2c96d70b8",
+    "scripts/run_queue.py": "33e89ab854557c6e11335728ae8567b4dbe402dc534cb2878a518fef6dc1984a"
   },
   "interim_summary_rows_checked_in_R": 252
 }
