@@ -4,8 +4,8 @@ title: "Fungal gene calling benchmark: full genomes and fragmented inputs"
 authors:
   - name: WeStrainGroup
 type: software
-version: 0.3.2
-date-released: 2026-11-19
+version: 0.3.3
+date-released: 2026-11-20
 url: "https://github.com/WeStrainGroup/fungal_gene_calling_benchmark"
 repository-code: "https://github.com/WeStrainGroup/fungal_gene_calling_benchmark"
 license: MIT

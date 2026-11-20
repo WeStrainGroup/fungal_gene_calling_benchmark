@@ -3,7 +3,7 @@
   "scoring_version": "0.2.0",
   "status": "INTERIM",
   "expected_species": 12,
-  "included_species": 11,
+  "included_species": 12,
   "species": [
     "Saccharomyces_cerevisiae",
     "Candida_albicans",
@@ -15,18 +15,24 @@
     "Tilletiopsis_washingtonensis",
     "Schizosaccharomyces_pombe",
     "Neurospora_crassa",
-    "Coprinopsis_cinerea"
+    "Coprinopsis_cinerea",
+    "Rhizophagus_irregularis"
   ],
-  "available_cases": 109,
+  "available_cases": 143,
   "species_by_condition": {
     "genome": [
       "Saccharomyces_cerevisiae",
       "Candida_albicans",
+      "Agaricus_bisporus",
       "Cryphonectria_parasitica",
       "Parastagonospora_nodorum",
       "Puccinia_striiformis",
       "Punctularia_strigosozonata",
-      "Tilletiopsis_washingtonensis"
+      "Tilletiopsis_washingtonensis",
+      "Schizosaccharomyces_pombe",
+      "Neurospora_crassa",
+      "Coprinopsis_cinerea",
+      "Rhizophagus_irregularis"
     ],
     "50-100kb": [
       "Saccharomyces_cerevisiae",
@@ -36,7 +42,11 @@
       "Parastagonospora_nodorum",
       "Puccinia_striiformis",
       "Punctularia_strigosozonata",
-      "Tilletiopsis_washingtonensis"
+      "Tilletiopsis_washingtonensis",
+      "Schizosaccharomyces_pombe",
+      "Neurospora_crassa",
+      "Coprinopsis_cinerea",
+      "Rhizophagus_irregularis"
     ],
     "5-10kb": [
       "Saccharomyces_cerevisiae",
@@ -48,7 +58,9 @@
       "Punctularia_strigosozonata",
       "Tilletiopsis_washingtonensis",
       "Schizosaccharomyces_pombe",
-      "Neurospora_crassa"
+      "Neurospora_crassa",
+      "Coprinopsis_cinerea",
+      "Rhizophagus_irregularis"
     ],
     "1-2kb": [
       "Saccharomyces_cerevisiae",
@@ -56,15 +68,18 @@
       "Agaricus_bisporus",
       "Cryphonectria_parasitica",
       "Parastagonospora_nodorum",
+      "Puccinia_striiformis",
+      "Punctularia_strigosozonata",
+      "Tilletiopsis_washingtonensis",
       "Schizosaccharomyces_pombe",
       "Neurospora_crassa",
       "Coprinopsis_cinerea"
     ]
   },
   "interim_rule": "All three tools validated within each species-condition pair",
-  "completed_cases": 99,
+  "completed_cases": 141,
   "expected_cases": 144,
-  "metric_rows": 693,
+  "metric_rows": 987,
   "expected_metric_rows": 1008,
   "duplicate_metric_rows_removed": 84,
   "sample_sd_ddof": 1,
@@ -83,25 +98,42 @@
     },
     {
       "cohort": "tiberius_set",
-      "status": "PARTIAL",
-      "completed_cases": 66,
+      "status": "COMPLETE",
+      "completed_cases": 72,
       "expected_cases": 72,
       "sha256": {
-        "metrics.tsv": "df6528c356a1d70c68867b3445dcf2047ea59ff11c19b9e7254fe99d4f8210c0",
-        "diagnostics.tsv": "ddb130f33ce71ef8615411b062f331892d41ca5b76cc4f0d936d95d1b7ce6b6d",
+        "metrics.tsv": "2c9286f3e2ab62075fc7b453d6c9000678f8a9e3707395e0c7fe014b0fdd19f7",
+        "diagnostics.tsv": "80c464904e3967f26f39a37b283b5fa2067b98afd6f826d11fd57b6f6ca59b4b",
         "inputs.tsv": "eb8f7d7fd413d03317f4411ee07c05bab56f20b532257f4a814b9917b194110d"
       }
     },
     {
       "cohort": "carbon_set",
       "status": "PARTIAL",
-      "completed_cases": 31,
+      "completed_cases": 59,
       "expected_cases": 60,
       "sha256": {
-        "metrics.tsv": "ae054d375470c6831124c92adf93d0b9adbd543b3694e18826a6f2d6a65b26b8",
-        "diagnostics.tsv": "30dccb5826e8a336a52fae037499ca9af955185865f2aeeeca4048a54fc932b9",
+        "metrics.tsv": "72dca512a8d5359b8f69f9406e90e382edeb3a231101c783b8d88c2d591d95dc",
+        "diagnostics.tsv": "10a12b0d29098739baedb3d4604a6df0184ec4e28f22afb2959b3c78955aee74",
         "inputs.tsv": "cde4c5673532f5c6e5d9bf7b7e5ae3f7621797cc2d96bee8ed8fc2426f5c8834"
       }
     }
-  ]
+  ],
+  "run_progress": {
+    "snapshot_at": "2026-11-20T16:14:52.997867+08:00",
+    "native_cases_completed": 143,
+    "expected_cases": 144,
+    "validated_unique_cases": 143,
+    "paired_cases_included": 141,
+    "pending": 0,
+    "failed": 0,
+    "active": [
+      {
+        "dataset": "carbon_fungi_set",
+        "tool": "carbon",
+        "species": "Rhizophagus_irregularis",
+        "condition": "1-2kb"
+      }
+    ]
+  }
 }

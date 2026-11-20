@@ -27,20 +27,22 @@ Metrics are first computed per species. The final summary combines all 12 specie
 
 ## Interim benchmark
 
-Updated **2026-11-19**. This release includes **33 species × condition pairs (99 prediction cases)** for which all three tools have completed inference and independent validation. It covers 11 distinct species; only completed pairs enter each condition. The final update will include all 12 species.
+Updated **2026-11-20**. This release includes **47 species × condition pairs (141 prediction cases)** for which all three tools have completed inference and independent validation. It covers all 12 species; only completed pairs enter each condition. The final update will include all 12 species in all four conditions.
+
+At this snapshot, **143/144 independent predictions are complete and validated**. Only Carbon-A on *Rhizophagus irregularis*, 1–2 kb, remains in progress. Its two completed companion predictions are held out of the paired comparison. No failed or queued cases remain.
 
 Complete-reference gene/CDS F1 (%), species-equal mean ± sample SD:
 
 | Condition | Species | ANNEVO | Tiberius | Carbon-A |
 | --- | ---: | ---: | ---: | ---: |
-| Original assembly | 7 | 57.58 ± 20.93 | 59.67 ± 24.33 | 73.58 ± 18.60 |
-| 50–100 kb | 8 | 55.41 ± 20.10 | 57.60 ± 22.80 | 71.35 ± 18.24 |
-| 5–10 kb | 10 | 56.48 ± 20.67 | 61.32 ± 22.70 | 63.27 ± 21.17 |
-| 1–2 kb | 8 | 24.88 ± 15.78 | 63.10 ± 19.66 | 43.83 ± 17.66 |
+| Original assembly | 12 | 58.49 ± 18.97 | 61.47 ± 21.50 | 73.95 ± 16.70 |
+| 50–100 kb | 12 | 57.87 ± 19.02 | 60.73 ± 21.29 | 73.67 ± 16.88 |
+| 5–10 kb | 12 | 54.27 ± 19.46 | 59.46 ± 20.99 | 61.37 ± 19.66 |
+| 1–2 kb | 11 | 20.83 ± 14.93 | 56.38 ± 20.28 | 38.07 ± 18.18 |
 
 ![Complete CDS: interim benchmark](figures/complete_cds.png)
 
-**Species composition differs between conditions**, so these cross-condition means are not a paired estimate of fragmentation loss. Within each condition, all three tools use the same species. The species included in each condition are listed in [STATUS.json](results/STATUS.json). Undefined metric values are excluded, with their defined-species counts reported in the summary table.
+The original assembly, 50–100 kb and 5–10 kb conditions use the same 12 species. **The 1–2 kb condition excludes Rhizophagus irregularis**, so its mean cannot yet be compared directly with the other conditions as a paired estimate of fragmentation loss. Within each condition, all three tools use the same species. The species included in each condition are listed in [STATUS.json](results/STATUS.json). Undefined metric values are excluded, with their defined-species counts reported in the summary table.
 
 [Mean ± SD: all metrics](results/mean_sd.tsv) · [Per-species TP/FP/FN and P/R/F1](results/metrics.tsv) · [Background and exclusions](results/diagnostics.tsv) · [Truncated CDS figure](figures/carbon_partial_cds.pdf) · [Independent validation](results/validation.json)
 
@@ -50,7 +52,7 @@ The final CPU follow-up remains active. After all native predictions and source 
 
 ## Reproduce
 
-Install the Python dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [current data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.3.2) contains frozen pilot inputs and native predictions, with checksums. Expanded inputs use the accession manifests in `metadata/`.
+Install the Python dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [current data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v0.3.3) contains frozen pilot inputs and native predictions, with checksums. Expanded inputs use the accession manifests in `metadata/`.
 
 ```bash
 python scripts/fetch_data.py

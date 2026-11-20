@@ -5,13 +5,13 @@
 | `fetch_data.py` | Fetch and verify the current frozen pilot input/prediction bundle. | Current archive validated. |
 | `prepare_inputs.py` | Reconstruct pilot inputs from frozen source records and fragment maps. | Input hashes checked. |
 | `prepare_new_inputs.py` | Prepare fixed RefSeq accessions and whole-genome partitions. | Twelve-species inputs prepared. |
-| `run_queue.py` | Schedule both expansion datasets on shared GPUs 0–7; adopt existing processes and skip completed cases. | Current: one controller, up to eight simultaneous cases; four earlier inference processes retained. |
+| `run_queue.py` | Schedule both expansion datasets on shared GPUs 0–7; adopt existing processes and skip completed cases. | Current: one controller, one remaining Carbon-A case on GPU 2; no queued or failed cases. |
 | `run_predictor.sh` | Run one native predictor on one input. | Existing outputs retained; expanded inference running. |
 | `common.py` | Shared FASTA helpers and the pinned interval evaluator. | Used by the current evaluator. |
 | `evaluate_stratified.py` | Reference strata, common prediction filters, structural matching and metrics. | Pilot and available extension cases verified. |
-| `validate_stratified.py` | Independent coordinate/phase and count checks; rehash inputs. | Latest refresh: 66 Tiberius-set and 31 Carbon-A-set cases verified; pilot 24 cases retained. |
-| `finish_stratified.py` | Wait for native outputs, then evaluate and validate a source dataset. | CPU follow-ups active; no source-specific summary plots. |
-| `summarize_all_species.py` | Deduplicate species and calculate mean/sample SD; wait for final validation. | Interim report: 33 paired species-condition units, 99 cases; final summary waiting. |
+| `validate_stratified.py` | Independent coordinate/phase and count checks; rehash inputs. | Latest snapshot: all 72 Tiberius-set and 59 Carbon-A-set cases verified; pilot 24 cases retained. |
+| `finish_stratified.py` | Wait for native outputs, then evaluate and validate a source dataset. | Tiberius-set validation complete; Carbon-A follow-up awaits the last native case. |
+| `summarize_all_species.py` | Deduplicate species and calculate mean/sample SD; wait for final validation. | Interim report: 47 paired species-condition units, 141 cases; final summary waiting. |
 | `plot_all_species.R` | Final complete/truncated CDS figures with sample-SD error bars. | Interim figures validated; actual species counts labeled per condition. |
 | `tests/test_stratified.py` | Scientific scoring boundary tests. | 24 tests passed. |
 | `tests/test_species_summary.py` | Species weighting, deduplication, NA and sample SD. | Seven tests passed. |
