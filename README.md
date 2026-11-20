@@ -29,7 +29,7 @@ Metrics are first computed per species. The final summary combines all 12 specie
 
 Updated **2026-11-20**. This release includes **47 species × condition pairs (141 prediction cases)** for which all three tools have completed inference and independent validation. It covers all 12 species; only completed pairs enter each condition. The final update will include all 12 species in all four conditions.
 
-At this snapshot, **143/144 independent predictions are complete and validated**. Only Carbon-A on *Rhizophagus irregularis*, 1–2 kb, remains in progress. Its two completed companion predictions are held out of the paired comparison. No failed or queued cases remain.
+At this snapshot, **143/144 independent predictions are complete and validated**. Only Carbon-A on *Rhizophagus irregularis*, 1–2 kb, remains in progress; it now runs on eight GPUs using native dynamic scheduling. Its two completed companion predictions are held out of the paired comparison. No failed or queued cases remain.
 
 Complete-reference gene/CDS F1 (%), species-equal mean ± sample SD:
 
