@@ -1,93 +1,131 @@
 # Fungal gene calling benchmark
 
-This benchmark compares ANNEVO, Tiberius and Carbon-A on 12 fungal species drawn from the three tools’ test datasets. For each tool and fragmentation condition, we report the mean ± SD of each metric across species, with equal weight per species.
+## Introduction
 
-Conditions comprise the original assembly, 1–2 kb, 5–10 kb and 50–100 kb full-genome random partitions. All tools receive identical DNA; no RNA or protein evidence is supplied. Saccharomyces cerevisiae is counted once.
-
-| Species | Assembly | Source |
-| --- | --- | --- |
-| *Saccharomyces cerevisiae* | GCF_000146045.2 | ANNEVO, Carbon-A |
-| *Candida albicans* | GCF_000182965.3 | ANNEVO |
-| *Agaricus bisporus* | GCF_000300555.1 | Tiberius |
-| *Cryphonectria parasitica* | GCF_011745365.1 | Tiberius |
-| *Parastagonospora nodorum* | GCF_000146915.1 | Tiberius |
-| *Puccinia striiformis* | GCF_021901695.1 | Tiberius |
-| *Punctularia strigosozonata* | GCF_000264995.1 | Tiberius |
-| *Tilletiopsis washingtonensis* | GCF_003144115.1 | Tiberius |
-| *Schizosaccharomyces pombe* | GCF_000002945.2 | Carbon-A |
-| *Neurospora crassa* | GCF_000182925.2 | Carbon-A |
-| *Coprinopsis cinerea* | GCF_000182895.1 | Carbon-A |
-| *Rhizophagus irregularis* | GCF_026210795.1 | Carbon-A |
+We compare three deep learning–based *ab initio* gene predictors—[ANNEVO](https://github.com/xjtu-omics/ANNEVO), [Tiberius](https://github.com/Gaius-Augustus/Tiberius) and [Carbon-A](https://huggingface.co/HuggingFaceBio/Carbon-A-1.2B)—on 12 fungal genomes, from original assemblies to short random fragments. The benchmark evaluates complete CDS for all three tools and truncated CDS separately for Carbon-A. Frozen inputs, native predictions and evaluation scripts are provided for reproduction.
 
 ## Evaluation
 
-The v0.2 scoring protocol is unchanged: compare all three tools on complete reference CDS, and assess Carbon-A separately on truncated reference CDS. Gene/CDS matches require identical visible CDS coordinates, strand and reading frame. Main scoring uses input records >=1 kb and visible CDS >=200 bp; Carbon-A retains confidence >=0.1 or explicit NA.
+### Genomes and fragmentation
 
-Metrics are first computed per species. The final summary combines all 12 species using the arithmetic mean and sample SD (n−1) of defined values. Missing values are never replaced with zero; each row reports `n_species`. SD is NA for fewer than two defined species. Original assemblies are a separate condition.
+The 12 fungal RefSeq assemblies, accession versions and source datasets are listed in the [species table](metadata/species.tsv). The shared *Saccharomyces cerevisiae* assembly is counted once. Training overlap is documented in [Datasets](docs/datasets.md); these are not uniformly unseen species.
+
+Each genome is evaluated as its original assembly and as full-genome random partitions of 50–100 kb, 5–10 kb and 1–2 kb. Cut points are independent of gene positions. All tools receive identical DNA without RNA-seq or protein evidence. Exact inputs, annotations, genetic codes, seeds and fragment maps are included in the [data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v1.0.0).
+
+Only records ≥1 kb enter scoring. Shorter original records remain in the release; *A. bisporus* has 771 such records totaling 560,320 bp.
+
+### Complete and truncated reference CDS
+
+A CDS is the spliced coding region of one transcript. Original reference CDS are qualified for complete coding structure, valid introns, start/stop codons and reading frame under each genome’s genetic code, then mapped onto the fragments.
+
+| Class | Definition | Comparison |
+| --- | --- | --- |
+| Complete (C) | All original coding bases remain in the fragment. | ANNEVO, Tiberius and Carbon-A. |
+| Truncated (T) | Some original coding bases fall outside the fragment. | Carbon-A: Overall, missing 5′ end, missing 3′ end and missing both ends. |
+
+Completeness follows reference coordinates, not predicted status. A fragment may contain both classes, and a cut within an intron can truncate a CDS when coding exons lie outside the fragment.
+
+The table summarizes reference gene–fragment instances across all 12 species after qualification, the ≥200 bp visible-CDS cutoff and scoring-region exclusions. Isoforms are not counted separately. One original gene may contribute truncated instances in several fragments, so C + T need not equal the original gene count.
+
+| Input condition | Complete (C) | Truncated (T) |
+| --- | ---: | ---: |
+| Original assembly | 136,800 | 0 |
+| 50–100 kb | 134,064 | 4,579 |
+| 5–10 kb | 108,852 | 46,687 |
+| 1–2 kb | 36,733 | 195,008 |
+
+Per-species counts are available in the [metrics table](results/metrics.tsv), using `level=gene` and `reference`. Complete counts agree across all three tools; truncated totals use Carbon-A’s aggregate `stratum=partial`.
+
+### Prediction filters
+
+Released models and native postprocessing are retained. The benchmark applies a visible, spliced CDS cutoff of ≥200 bp to references and predictions, including retained terminal-stop bases and boundary residues. Carbon-A also requires confidence ≥0.1 or explicit NA; missing confidence is an error.
+
+The confidence cutoff follows Carbon-A’s [reference-evaluation rule for genes](https://huggingface.co/HuggingFaceBio/Carbon-A-1.2B/blob/ee6359990109eef6adccfd19aba8ca64b48ae514/annotation_pipeline/README.md#reference-evaluation). Its native pipeline exports models before this filter and assigns NA to record-edge-truncated genes. We apply the same filtered prediction set at all three scoring levels; upstream applies confidence filtering only to gene/protein metrics.
+
+No additional filter removes predictions for incorrect codons, phase or completeness status. [Run settings](docs/run_predictors.md) document the departures from defaults: Carbon-A’s input-length filter is disabled, its native 96 bp minimum CDS precedes the common cutoff, and Tiberius uses a 1,000 bp minimum input.
+
+### Scoring
+
+Nucleotide and exon scoring reuse the frozen interval definitions from the [Carbon-A technical report](https://www.biorxiv.org/content/10.64898/2026.10.20.760448v1). Gene scoring requires exact coding structure and reading frame.
+
+| Level | Requirement for a true positive |
+| --- | --- |
+| Nucleotide | A coding base overlaps reference coding sequence on the same record and strand. |
+| Exon | A merged coding-exon interval matches both reference boundaries on the same record and strand. These are CDS intervals, not UTR-containing transcript exons. |
+| Gene / CDS | The full visible CDS exon-coordinate chain and reading frame match on the same record and strand. For a truncated reference, the entire visible portion and its initial phase must match. |
+
+Nucleotide and exon scoring use the longest eligible visible isoform per gene and merge intervals by record and strand. Gene scoring matches any eligible isoform one-to-one, with at most one TP per reference gene per fragment. Duplicate predictions cannot add TPs, and identical sequence at another locus is not a match. Explicit stop-codon features are normalized with CDS coordinates.
+
+Scoring regions follow reference CDS spans, including internal introns, on each record and strand:
+
+- Complete-reference regions and scoreable background form the main comparison; unmatched predictions count as FP.
+- Predictions wholly within truncated-reference regions enter Carbon-A’s truncated comparison; unmatched predictions count as FP within that scope.
+- Failed, too-short or ambiguously classified references and conflicting same-strand overlap regions are excluded. Predictions overlapping excluded regions or crossing truncated-scope boundaries are reported separately, without clipping. Unrecovered scoreable references still count as FN.
+
+Truncated precision and F1 are conditional on truncated-reference regions, not whole-genome estimates. Full isoform, phase and exclusion rules are in [Methods](docs/methods.md); [diagnostics](results/diagnostics.tsv) report background FP and excluded predictions.
 
 ## Results
 
-Completed 2026-11-21: 144/144 prediction cases, comprising the same 12 species in all four conditions (48 species × condition pairs). All source evaluations and independent coordinate/phase and count checks passed. R independently verified all 252 summary rows.
+### Complete reference CDS
 
-Complete-reference gene/CDS F1 (%), species-equal mean ± sample SD:
+Across the 12-species means:
 
-| Condition | Species | ANNEVO | Tiberius | Carbon-A |
-| --- | ---: | ---: | ---: | ---: |
-| Original assembly | 12 | 58.49 ± 18.97 | 61.47 ± 21.50 | 73.95 ± 16.70 |
-| 50–100 kb | 12 | 57.87 ± 19.02 | 60.73 ± 21.29 | 73.67 ± 16.88 |
-| 5–10 kb | 12 | 54.27 ± 19.46 | 59.46 ± 20.99 | 61.37 ± 19.66 |
-| 1–2 kb | 12 | 20.62 ± 14.25 | 55.50 ± 19.57 | 36.59 ± 18.08 |
+- Carbon-A achieves the highest F1 at all three levels for original assemblies and 50–100 kb inputs.
+- Tiberius achieves the highest F1 at all three levels for 1–2 kb inputs.
+- For 5–10 kb inputs, Tiberius and Carbon-A have similar mean F1.
+- ANNEVO does not achieve the highest mean F1 in any of the 12 comparisons.
 
-![Complete CDS benchmark](figures/complete_cds.png)
+These are descriptive comparisons for the selected species, not evidence of statistical equivalence or performance on unseen species.
 
-Carbon-A has the highest mean complete-CDS gene F1 for original assemblies and 50–100 kb inputs. Tiberius retains the highest mean at 1–2 kb. These are descriptive comparisons across the selected species, not an unseen-species generalization claim. Carbon-A's truncated-CDS scores are conditional on truncated-reference regions; they are not whole-genome precision estimates.
+![Complete reference CDS](figures/complete_cds.png)
 
-[All metrics: mean ± SD](results/mean_sd.tsv) · [Per-species TP/FP/FN and P/R/F1](results/metrics.tsv) · [Background and exclusions](results/diagnostics.tsv) · [Truncated CDS figure](figures/carbon_partial_cds.pdf) · [Validation](results/validation.json)
+Bars show species-equal mean F1 and error bars show sample SD across 12 species. Each genome’s score is calculated from its combined TP/FP/FN across fragments; counts are not pooled across species. SD describes between-species variation. [Summary statistics](results/mean_sd.tsv) and [per-species results](results/metrics.tsv) include precision, recall and F1.
 
-[Methods](docs/methods.md) · [Datasets](docs/datasets.md) · [Script registry](docs/methods.md#implementation)
+### Carbon-A on truncated reference CDS
+
+Overall mean gene/CDS F1 is 78.7%, 71.8% and 53.9% for 50–100 kb, 5–10 kb and 1–2 kb inputs, respectively. Carbon-A can recover truncated coding structures, with lower accuracy as fragments become shorter.
+
+CDS missing the 5′ end have higher mean F1 than those missing the 3′ end at all three levels; the gene/CDS difference is 4.2–8.5 percentage points. Missing both ends is substantially harder: mean gene/CDS F1 is 28.0% for 5–10 kb inputs and 22.1% for 1–2 kb inputs.
+
+![Carbon-A on truncated reference CDS](figures/carbon_partial_cds.png)
+
+Bars show species-equal mean F1 ± sample SD within truncated-reference regions. Overall uses aggregate truncated-region counts within each genome, including unresolved subtypes, rather than averaging subtype F1. NA means no eligible reference exists; no 50–100 kb case contains a scoreable CDS missing both ends.
 
 ## Reproduce
 
-Run the commands from the repository root. Choose either figure-only rendering or CPU rescoring below. The released inputs and native predictions are sufficient; neither route requires model installation or GPU inference.
+The published scores can be reproduced on CPU from released native predictions; GPU inference is optional. Run commands from the repository root.
 
-### Set up
+### Get the repository
 
 ```bash
-git clone https://github.com/WeStrainGroup/fungal_gene_calling_benchmark.git
+git clone --branch v1.1 --depth 1 https://github.com/WeStrainGroup/fungal_gene_calling_benchmark.git
 cd fungal_gene_calling_benchmark
-Rscript -e 'install.packages(c("ggplot2", "jsonlite"), repos="https://cloud.r-project.org")'
+Rscript -e 'install.packages("ggplot2", repos="https://cloud.r-project.org")'
 ```
 
-For CPU rescoring, also create a Python 3.12 environment:
-
-```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-```
-
-### Redraw figures from the published summary
+### Redraw published figures
 
 ```bash
 Rscript scripts/plot_all_species.R results figures
 ```
 
-This reads `results/mean_sd.tsv` and writes PNG/PDF files to `figures/`. It does not download the data or recalculate scores.
+This uses the published summary in `results/` and writes PNG/PDF files to `figures/`. No data download or rescoring is required.
 
-### Recalculate scores from native predictions
+### Recalculate scores
 
-The [v1.0.0 data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v1.0.0) contains all 12 frozen RefSeq inputs, fragment maps, genetic codes and 144 native prediction GFFs. The archive is approximately 1.03 GB; extraction and evaluation require additional disk space. `fetch_data.py` checks the archive SHA256 and every extracted file.
-
-Download and verify the data, then run the scoring tests:
+Create a Python 3.12 environment, install dependencies and run the tests:
 
 ```bash
-python scripts/fetch_data.py
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 ```
 
-Evaluate and independently validate each source dataset:
+Download the [frozen data](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v1.0.0), then evaluate and independently validate each source dataset. The approximately 1.03 GB archive contains all 12 genomes, annotations, fragment maps, genetic codes and 144 native prediction GFFs. Archive and extracted-file checksums are verified automatically; extraction and scoring require additional disk space.
 
 ```bash
+python scripts/fetch_data.py
 for cohort in pilot tiberius carbon; do
   python scripts/evaluate_stratified.py --data data \
     --samples metadata/${cohort}_samples.tsv --cohort ${cohort}_set \
@@ -96,7 +134,7 @@ for cohort in pilot tiberius carbon; do
 done
 ```
 
-Combine the validated results, count the shared species once, and draw the figures:
+Combine the validated results, deduplicate the shared species, and plot:
 
 ```bash
 python scripts/summarize_all_species.py \
@@ -105,14 +143,18 @@ python scripts/summarize_all_species.py \
 Rscript scripts/plot_all_species.R combined_results combined_results/figures
 ```
 
-Outputs are `combined_results/metrics.tsv` (per-species TP/FP/FN and rates), `mean_sd.tsv` (species-equal mean and sample SD), `diagnostics.tsv` (filtering and excluded predictions), validation reports, and `figures/`. Published reference tables remain in `results/`.
+Recalculated tables, validation reports and figures are written under `combined_results/`; published tables remain in `results/`. The main outputs are `metrics.tsv` (per-species counts and rates), `mean_sd.tsv` (species-equal summaries) and `diagnostics.tsv` (filtering and exclusions).
 
-### Run predictors on new inputs
+To run models on new inputs, see [Running the predictors](docs/run_predictors.md). The [script registry](docs/methods.md#implementation) and [validation evidence](results/validation.json) document the maintained implementation and completed checks.
 
-See [Running the predictors](docs/run_predictors.md) for environments, model versions and inference commands. This is optional and separate from reproducing the released scores. The [script registry](docs/methods.md#implementation) describes the maintained code; [validation evidence](results/validation.json) records the completed checks.
+## Contact
 
-## Sources and license
+Xinyu Wang: [wangxinyu30@westlake.edu.cn](mailto:wangxinyu30@westlake.edu.cn)
 
-[ANNEVO](https://github.com/xjtu-omics/ANNEVO) · [Tiberius](https://github.com/Gaius-Augustus/Tiberius) · [Carbon-A](https://huggingface.co/HuggingFaceBio/Carbon-A-1.2B) · [RefSeq](https://www.ncbi.nlm.nih.gov/refseq/)
+## License
 
-Benchmark code: [MIT](LICENSE). Vendored evaluator: [Apache 2.0](vendor/carbon_a/LICENSE). See [third-party notices](THIRD_PARTY.md), versioned metadata and `CITATION.cff`.
+Copyright © 2026 WeStrainGroup.
+
+[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) for our benchmark scripts and documentation. The vendored Carbon-A evaluator retains its [Apache 2.0 license](vendor/carbon_a/LICENSE); external predictors, model weights and reference datasets retain their own terms. See [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY.md).
+
+

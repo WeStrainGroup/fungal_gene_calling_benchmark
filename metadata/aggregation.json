@@ -25,7 +25,7 @@
   "files_sha256": {
     "metadata/species.tsv": "f100cfde19ac0f3ea308cd66453d298c208d8a9917b9f1c70e10cda2526fb542",
     "scripts/summarize_all_species.py": "6e8002b083061f078cb08bb9cfa5be0bffe12f92b0b75bcfa7b3fb20285badc4",
-    "scripts/plot_all_species.R": "597755c8667f5601eeb61593c384dc5d7994f3f8d726ae787030922a82412dd8",
+    "scripts/plot_all_species.R": "b19da1ef66d413e89bfc4e4030abff79623eec34d31cbe32cee5c51a9a446de6",
     "tests/test_species_summary.py": "c515b737c623638d19c4f728dc4492c70e2d35c1485450163e0e360c2380ff10"
   },
   "summary_rows_checked_in_R": 252
