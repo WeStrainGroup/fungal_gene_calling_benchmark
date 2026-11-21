@@ -2,19 +2,16 @@
 
 | Script | Purpose | Status |
 | --- | --- | --- |
-| `fetch_data.py` | Fetch and verify the current frozen pilot input/prediction bundle. | Current archive validated. |
-| `prepare_inputs.py` | Reconstruct pilot inputs from frozen source records and fragment maps. | Input hashes checked. |
-| `prepare_new_inputs.py` | Prepare fixed RefSeq accessions and whole-genome partitions. | Twelve-species inputs prepared. |
-| `run_carbon_multigpu.py` | Reserve eight shared GPUs, replace the final single-GPU inference and run the unchanged native pipeline with GPU_COUNT=8. | Active for Rhizophagus 1–2 kb; prior in-memory progress could not be resumed, old log retained. |
-| `run_queue.py` | Schedule both expansion datasets on shared GPUs 0–7; adopt existing processes and skip completed cases. | Completed all other cases; retired for the final native eight-GPU case. |
-| `run_predictor.sh` | Run one native predictor on one input. | Existing outputs retained; expanded inference running. |
-| `common.py` | Shared FASTA helpers and the pinned interval evaluator. | Used by the current evaluator. |
-| `evaluate_stratified.py` | Reference strata, common prediction filters, structural matching and metrics. | Pilot and available extension cases verified. |
-| `validate_stratified.py` | Independent coordinate/phase and count checks; rehash inputs. | Latest snapshot: all 72 Tiberius-set and 59 Carbon-A-set cases verified; pilot 24 cases retained. |
-| `finish_stratified.py` | Wait for native outputs, then evaluate and validate a source dataset. | Tiberius-set validation complete; Carbon-A follow-up awaits the last native case. |
-| `summarize_all_species.py` | Deduplicate species and calculate mean/sample SD; wait for final validation. | Interim report: 47 paired species-condition units, 141 cases; final summary waiting. |
-| `plot_all_species.R` | Final complete/truncated CDS figures with sample-SD error bars. | Interim figures validated; actual species counts labeled per condition. |
-| `tests/test_stratified.py` | Scientific scoring boundary tests. | 24 tests passed. |
-| `tests/test_species_summary.py` | Species weighting, deduplication, NA and sample SD. | Seven tests passed. |
+| `fetch_data.py` | Download and verify all 12 frozen inputs and 144 native GFFs. | All archived files verified. |
+| `prepare_inputs.py` | Reconstruct the two pilot inputs from source records and maps. | Pilot input hashes checked; release already includes inputs. |
+| `prepare_new_inputs.py` | Prepare additional RefSeq accessions and whole-genome partitions. | Expansion inputs frozen; not needed to score released data. |
+| `run_predictor.sh` | Run one native predictor on one input; Carbon-A supports GPU_COUNT. | 144 unique inference cases complete. |
+| `common.py` | FASTA helpers and pinned interval evaluator. | Current evaluator dependency. |
+| `evaluate_stratified.py` | Reference strata, common filters, structural matching and metrics. | All three source datasets complete. |
+| `validate_stratified.py` | Independent raw coordinate/phase and count checks; source hashes. | 24 + 72 + 60 source cases passed; 144 unique cases. |
+| `summarize_all_species.py` | Deduplicate shared species and calculate mean/sample SD. | Final 1,008 metric rows; 252 summary rows independently checked in R. |
+| `plot_all_species.R` | Complete and truncated CDS figures. | Final twelve-species figures inspected. |
+| `tests/test_stratified.py` | Scoring boundary tests. | 24 tests passed. |
+| `tests/test_species_summary.py` | Weighting, deduplication, NA and sample SD tests. | Seven tests passed. |
 
-The unchanged files in `vendor/carbon_a/` provide the pinned interval definitions and retain their license. Runtime environments, primary inputs and native predictions are reusable assets, not disposable intermediates. All other cases have completed. The final Carbon-A Rhizophagus 1–2 kb case now uses native eight-GPU dynamic scheduling (dispatch chunk size 4, batch size 4, SDPA). The official implementation writes probabilities only after all input records finish, so this case restarted from the same full input; the earlier single-GPU log and handoff record are retained. The supervisor holds all eight shared locks and marks COMPLETE only after the native pipeline exits successfully and all three output files exist. Model, input, scoring thresholds and post-processing parameters are unchanged.
+One-time GPU scheduling and completion-waiting helpers have been removed. The final Carbon-A Rhizophagus 1–2 kb case used the official native pipeline on eight GPUs, with the same model, inputs, thresholds and postprocessing. Other inference results were reused. Vendored interval definitions retain their original license.

@@ -2,13 +2,13 @@
   "status": "PASS",
   "summary_rows_independently_checked": 252,
   "mean_sd_engine": "R base mean and sample sd",
-  "paired_cases": 141,
-  "paired_species_conditions": 47,
+  "paired_cases": 144,
+  "paired_species_conditions": 48,
   "unit_tests": 31,
   "scoring_code_unchanged": true,
-  "validated_at": "2026-11-20 16:14:19 CST",
+  "validated_at": "2026-11-21 21:46:52 CST",
   "source_validations": {
-    "annevo": {
+    "three_predictor_full_genome": {
       "status": "PASS",
       "cases": 24,
       "all_gene_true_positives_checked": 106556,
@@ -19,7 +19,7 @@
       "examples": 68,
       "note": "Read native GFF and original reference directly; no evaluator imports."
     },
-    "tiberius": {
+    "fungi_test_six": {
       "status": "PASS",
       "cases": 72,
       "all_gene_true_positives_checked": 328525,
@@ -30,17 +30,16 @@
       "examples": 238,
       "note": "Read native GFF and original reference directly; no evaluator imports."
     },
-    "carbon": {
+    "carbon_fungi_set": {
       "status": "PASS",
-      "cases": 59,
-      "all_gene_true_positives_checked": 386934,
+      "cases": 60,
+      "all_gene_true_positives_checked": 401810,
       "raw_gff_coordinate_and_phase_agreement": "PASS",
       "independent_gene_accounting": "PASS",
-      "source_files_rehashed": 109,
+      "source_files_rehashed": 110,
       "source_files_unchanged": true,
-      "examples": 187,
+      "examples": 191,
       "note": "Read native GFF and original reference directly; no evaluator imports."
     }
-  },
-  "unit_tests_note": "31 existing tests passed for the unchanged registered source; no scoring code changes in this refresh."
+  }
 }

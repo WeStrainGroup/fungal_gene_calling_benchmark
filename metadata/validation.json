@@ -1,30 +1,19 @@
 {
   "status": "PASS",
   "unit_tests": 31,
-  "pilot_cases": 24,
-  "source_files_rehashed": 44,
-  "matched_genes_independently_checked": 106556,
-  "refactoring_preserved_metrics": true,
-  "comparison_tables": [
-    "metrics.tsv",
-    "diagnostics.tsv",
-    "inputs.tsv",
-    "reference_regions.tsv",
-    "source_sha256.json"
-  ],
+  "unique_cases": 144,
+  "paired_species_conditions": 48,
+  "summary_rows_checked_in_R": 252,
+  "independent_receipts": "results/validation.json",
   "files_sha256": {
     "scripts/prepare_new_inputs.py": "3375336907cf8aa1f65cf377d2207877d9f7d092383de04387271195b8b144a5",
     "scripts/prepare_inputs.py": "cb9bb55baa56610689450701a5c68c59c18c4572044d9b47df0082365b768cf1",
     "scripts/validate_stratified.py": "b63071c6e0a3ea041b966446e9a6102bc18e55ec17012a95665ff89fa8132c8a",
     "scripts/fetch_data.py": "41be151f795ebd87d788d3ef810269a1f21824a945f14ef7be1d1af30d5aa649",
     "scripts/summarize_all_species.py": "6e8002b083061f078cb08bb9cfa5be0bffe12f92b0b75bcfa7b3fb20285badc4",
-    "scripts/finish_stratified.py": "9904b955ddf52922d9fb0b2550c3d18d9a70b148615244bbba24607e562ec872",
     "scripts/common.py": "f1648f0599755bc041e490a8a90d732aefaa964b214351cf869a9784ab7fc40c",
     "scripts/evaluate_stratified.py": "34b13198af0d632c6f5fbf6d0b685f66aab50c6115ee4da42e790a5bd61f02db",
     "tests/test_species_summary.py": "c515b737c623638d19c4f728dc4492c70e2d35c1485450163e0e360c2380ff10",
-    "tests/test_stratified.py": "89b7c98dcf911f8d20aaadfb1342102cff92cdbb3ef83db15c2972a2c96d70b8",
-    "scripts/run_queue.py": "33e89ab854557c6e11335728ae8567b4dbe402dc534cb2878a518fef6dc1984a",
-    "scripts/run_carbon_multigpu.py": "4bf8b13bfc9dcc7d265196a2b32fe051bd17c12a3339fbdee7d88a8e3f72bec7"
-  },
-  "interim_summary_rows_checked_in_R": 252
+    "tests/test_stratified.py": "89b7c98dcf911f8d20aaadfb1342102cff92cdbb3ef83db15c2972a2c96d70b8"
+  }
 }

@@ -36,7 +36,7 @@ p <- ggplot(full,aes(group,mean,fill=tool)) +
   scale_y_continuous(expand=expansion(mult=c(.03,.12))) +
   labs(x=NULL,y='F1 (%)',fill=NULL,title='Complete reference CDS',
        subtitle=scope,
-       caption='Species-equal mean +/- sample SD. n: species with all three tools validated in that condition.\nSpecies composition differs between conditions; metric-specific defined counts are reported in the table.') + base
+       caption='Species-equal mean +/- sample SD. n: species with all three tools validated in that condition.\nMetric-specific defined counts are reported in the table.') + base
 p2data <- subset(d, stratum!='complete' & metric=='f1' & !original)
 p2data$stratum <- factor(p2data$stratum,c('partial','missing_5prime','missing_3prime','missing_both'),
                          c('All truncated CDS',"Missing 5' end","Missing 3' end",'Missing both ends'))

@@ -30,13 +30,13 @@ Input FASTA/GFF downloads use the exact RefSeq accession versions and NCBI MD5 f
 
 The [official data bucket](https://huggingface.co/buckets/HuggingFaceBio/Carbon-A-training-data) reports **5 seen fungi and 0 unseen fungi**. It also lists 644 fungal training assemblies. Thus this set can support within-assembly fragmentation testing, but cannot be presented as unseen-fungal-species evaluation. The five selected assemblies are:
 
-| Species | Assembly | Planned handling |
+| Species | Assembly | Handling |
 | --- | --- | --- |
 | Saccharomyces cerevisiae S288C | GCF_000146045.2 | Reuse the completed assembly and frozen references. |
-| Schizosaccharomyces pombe | GCF_000002945.2 | New full-genome fragmentation runs. |
-| Neurospora crassa OR74A | GCF_000182925.2 | New full-genome fragmentation runs. |
-| Coprinopsis cinerea okayama7#130 | GCF_000182895.1 | New full-genome fragmentation runs. |
-| Rhizophagus irregularis DAOM-197198 | GCF_026210795.1 | New full-genome fragmentation runs. |
+| Schizosaccharomyces pombe | GCF_000002945.2 | Completed all four input conditions. |
+| Neurospora crassa OR74A | GCF_000182925.2 | Completed all four input conditions. |
+| Coprinopsis cinerea okayama7#130 | GCF_000182895.1 | Completed all four input conditions. |
+| Rhizophagus irregularis DAOM-197198 | GCF_026210795.1 | Completed all four input conditions. |
 
 Membership was checked against the official `eval/seen` directory and NCBI assembly metadata. Candida albicans is not in this five-species set. Our common protocol uses frozen RefSeq annotation files for the selected assembly versions; the original Carbon-A bucket may use a different annotation release. This is not an exact reproduction of Carbon-A's published scores.
 

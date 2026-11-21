@@ -1,7 +1,7 @@
 {
   "aggregation_version": "0.2.1",
   "scoring_version": "0.2.0",
-  "status": "INTERIM",
+  "status": "COMPLETE",
   "expected_species": 12,
   "included_species": 12,
   "species": [
@@ -18,7 +18,7 @@
     "Coprinopsis_cinerea",
     "Rhizophagus_irregularis"
   ],
-  "available_cases": 143,
+  "available_cases": 144,
   "species_by_condition": {
     "genome": [
       "Saccharomyces_cerevisiae",
@@ -73,13 +73,14 @@
       "Tilletiopsis_washingtonensis",
       "Schizosaccharomyces_pombe",
       "Neurospora_crassa",
-      "Coprinopsis_cinerea"
+      "Coprinopsis_cinerea",
+      "Rhizophagus_irregularis"
     ]
   },
-  "interim_rule": "All three tools validated within each species-condition pair",
-  "completed_cases": 141,
+  "interim_rule": null,
+  "completed_cases": 144,
   "expected_cases": 144,
-  "metric_rows": 987,
+  "metric_rows": 1008,
   "expected_metric_rows": 1008,
   "duplicate_metric_rows_removed": 84,
   "sample_sd_ddof": 1,
@@ -109,31 +110,14 @@
     },
     {
       "cohort": "carbon_set",
-      "status": "PARTIAL",
-      "completed_cases": 59,
+      "status": "COMPLETE",
+      "completed_cases": 60,
       "expected_cases": 60,
       "sha256": {
-        "metrics.tsv": "72dca512a8d5359b8f69f9406e90e382edeb3a231101c783b8d88c2d591d95dc",
-        "diagnostics.tsv": "10a12b0d29098739baedb3d4604a6df0184ec4e28f22afb2959b3c78955aee74",
+        "metrics.tsv": "9d9e38c16490f08e26dd804b523434faac6d1a0f96cc9668c2633661cde4eb6d",
+        "diagnostics.tsv": "b961149dcc2048449a49b05b66762c09a64e0c2da31c843e60ca2ff3eefc3825",
         "inputs.tsv": "cde4c5673532f5c6e5d9bf7b7e5ae3f7621797cc2d96bee8ed8fc2426f5c8834"
       }
     }
-  ],
-  "run_progress": {
-    "snapshot_at": "2026-11-20T16:14:52.997867+08:00",
-    "native_cases_completed": 143,
-    "expected_cases": 144,
-    "validated_unique_cases": 143,
-    "paired_cases_included": 141,
-    "pending": 0,
-    "failed": 0,
-    "active": [
-      {
-        "dataset": "carbon_fungi_set",
-        "tool": "carbon",
-        "species": "Rhizophagus_irregularis",
-        "condition": "1-2kb"
-      }
-    ]
-  }
+  ]
 }

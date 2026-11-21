@@ -41,7 +41,7 @@ Use separate output directories for new runs so the released predictions remain 
 
 ## Fixed settings
 
-- Carbon-A: batch size 4, SDPA attention, CPU Viterbi, minimum record length 0, native minimum CDS 96 bp, explicit sample codon table. Initial runs used 2 GPUs per case, or 4 for 1–2 kb; the queued six-species extension uses one GPU per case. The pipeline distributes records over devices. SDPA does not produce the authors' FlashAttention2-identical probabilities.
+- Carbon-A: batch size 4, SDPA attention, CPU Viterbi, minimum record length 0, native minimum CDS 96 bp, explicit sample codon table. Initial runs used 2 GPUs per case, or 4 for 1–2 kb; the six-species extension used one GPU per case. The final Rhizophagus 1–2 kb case used eight GPUs. The pipeline distributes records over devices. SDPA does not produce the authors' FlashAttention2-identical probabilities.
 - ANNEVO: Fungi model, batch size 32, 4 threads, 2 workers, native decoding thresholds, no `--overlap_pred`.
 - Tiberius: fungi model, batch size 8, minimum input 1,000 bp, native postprocessing. Native protein exports may use the standard code; common evaluation independently extracts CDS from the input and GFF.
 - Native predictions remain unchanged. The common evaluator applies visible CDS >=200 bp and Carbon-A confidence >=0.1 or explicit NA, without filtering by predicted completeness.
