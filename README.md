@@ -2,7 +2,7 @@
 
 This benchmark compares ANNEVO, Tiberius and Carbon-A on 12 fungal species drawn from the three tools’ test datasets. For each tool and fragmentation condition, we report the mean ± SD of each metric across species, with equal weight per species.
 
-Conditions comprise the **original assembly**, **1–2 kb**, **5–10 kb** and **50–100 kb** full-genome random partitions. All tools receive identical DNA; no RNA or protein evidence is supplied. Saccharomyces cerevisiae is counted once.
+Conditions comprise the original assembly, 1–2 kb, 5–10 kb and 50–100 kb full-genome random partitions. All tools receive identical DNA; no RNA or protein evidence is supplied. Saccharomyces cerevisiae is counted once.
 
 | Species | Assembly | Source |
 | --- | --- | --- |
@@ -23,11 +23,11 @@ Conditions comprise the **original assembly**, **1–2 kb**, **5–10 kb** and *
 
 The v0.2 scoring protocol is unchanged: compare all three tools on complete reference CDS, and assess Carbon-A separately on truncated reference CDS. Gene/CDS matches require identical visible CDS coordinates, strand and reading frame. Main scoring uses input records >=1 kb and visible CDS >=200 bp; Carbon-A retains confidence >=0.1 or explicit NA.
 
-Metrics are first computed per species. The final summary combines all 12 species using the arithmetic mean and **sample SD (n−1)** of defined values. Missing values are never replaced with zero; each row reports `n_species`. SD is NA for fewer than two defined species. Original assemblies are a separate condition.
+Metrics are first computed per species. The final summary combines all 12 species using the arithmetic mean and sample SD (n−1) of defined values. Missing values are never replaced with zero; each row reports `n_species`. SD is NA for fewer than two defined species. Original assemblies are a separate condition.
 
 ## Results
 
-Completed **2026-11-21**: **144/144 prediction cases**, comprising the same **12 species in all four conditions (48 species × condition pairs)**. All source evaluations and independent coordinate/phase and count checks passed. R independently verified all 252 summary rows.
+Completed 2026-11-21: 144/144 prediction cases, comprising the same 12 species in all four conditions (48 species × condition pairs). All source evaluations and independent coordinate/phase and count checks passed. R independently verified all 252 summary rows.
 
 Complete-reference gene/CDS F1 (%), species-equal mean ± sample SD:
 
@@ -44,29 +44,72 @@ Carbon-A has the highest mean complete-CDS gene F1 for original assemblies and 5
 
 [All metrics: mean ± SD](results/mean_sd.tsv) · [Per-species TP/FP/FN and P/R/F1](results/metrics.tsv) · [Background and exclusions](results/diagnostics.tsv) · [Truncated CDS figure](figures/carbon_partial_cds.pdf) · [Validation](results/validation.json)
 
-[Methods](docs/methods.md) · [Datasets](docs/datasets.md) · [Script registry](docs/scripts.md)
+[Methods](docs/methods.md) · [Datasets](docs/datasets.md) · [Script registry](docs/methods.md#implementation)
 
 ## Reproduce
 
-Install the dependencies in `requirements.txt`; plotting requires R packages `ggplot2` and `jsonlite`. The [v1.0.0 data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v1.0.0) contains **all 12 frozen public RefSeq inputs, fragment maps, genetic codes and 144 native prediction GFFs**. `fetch_data.py` verifies the archive and every file before use. No GPU inference is needed to reproduce the scores.
+Run the commands from the repository root. Choose either figure-only rendering or CPU rescoring below. The released inputs and native predictions are sufficient; neither route requires model installation or GPU inference.
+
+### Set up
+
+```bash
+git clone https://github.com/WeStrainGroup/fungal_gene_calling_benchmark.git
+cd fungal_gene_calling_benchmark
+Rscript -e 'install.packages(c("ggplot2", "jsonlite"), repos="https://cloud.r-project.org")'
+```
+
+For CPU rescoring, also create a Python 3.12 environment:
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+### Redraw figures from the published summary
+
+```bash
+Rscript scripts/plot_all_species.R results figures
+```
+
+This reads `results/mean_sd.tsv` and writes PNG/PDF files to `figures/`. It does not download the data or recalculate scores.
+
+### Recalculate scores from native predictions
+
+The [v1.0.0 data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v1.0.0) contains all 12 frozen RefSeq inputs, fragment maps, genetic codes and 144 native prediction GFFs. The archive is approximately 1.03 GB; extraction and evaluation require additional disk space. `fetch_data.py` checks the archive SHA256 and every extracted file.
+
+Download and verify the data, then run the scoring tests:
 
 ```bash
 python scripts/fetch_data.py
 python -m unittest discover -s tests -v
+```
+
+Evaluate and independently validate each source dataset:
+
+```bash
 for cohort in pilot tiberius carbon; do
   python scripts/evaluate_stratified.py --data data \
     --samples metadata/${cohort}_samples.tsv --cohort ${cohort}_set \
     --output data/${cohort}_results
   python scripts/validate_stratified.py --data data --output data/${cohort}_results
 done
+```
+
+Combine the validated results, count the shared species once, and draw the figures:
+
+```bash
 python scripts/summarize_all_species.py \
   --inputs data/pilot_results data/tiberius_results data/carbon_results \
   --output combined_results
 Rscript scripts/plot_all_species.R combined_results combined_results/figures
 ```
 
-To redraw the published figures directly: `Rscript scripts/plot_all_species.R results figures`.
-Native software/model versions are recorded in [software.json](metadata/software.json); `run_predictor.sh` documents the inference commands. The repository and release retain only the current analysis, reusable inputs, native predictions and validation evidence.
+Outputs are `combined_results/metrics.tsv` (per-species TP/FP/FN and rates), `mean_sd.tsv` (species-equal mean and sample SD), `diagnostics.tsv` (filtering and excluded predictions), validation reports, and `figures/`. Published reference tables remain in `results/`.
+
+### Run predictors on new inputs
+
+See [Running the predictors](docs/run_predictors.md) for environments, model versions and inference commands. This is optional and separate from reproducing the released scores. The [script registry](docs/methods.md#implementation) describes the maintained code; [validation evidence](results/validation.json) records the completed checks.
 
 ## Sources and license
 

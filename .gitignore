@@ -7,3 +7,4 @@ __pycache__/
 .Rhistory
 .RData
 /data_*/
+/combined_results/

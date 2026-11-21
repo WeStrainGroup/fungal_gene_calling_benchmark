@@ -16,8 +16,8 @@ A CDS means the spliced coding region of one transcript. Original reference qual
 
 Completeness is derived from the original qualified annotation and fragment map, never from predicted codons or native model status:
 
-- **Complete:** all original coding bases remain in the fragment.
-- **Truncated:** some original coding bases fall outside it; distinguish missing 5' end, missing 3' end and missing both ends in transcriptional orientation.
+- Complete: all original coding bases remain in the fragment.
+- Truncated: some original coding bases fall outside it; distinguish missing 5' end, missing 3' end and missing both ends in transcriptional orientation.
 - Cuts in introns count as truncation when coding exons lie outside the fragment, even if no visible CDS touches its physical edge.
 - A fragment may contribute to both strata. No whole-fragment exclusion based on the presence of a truncated gene is applied.
 
@@ -46,13 +46,13 @@ Background FP is a subset of complete-scope predictions whose span overlaps no c
 
 ## Metrics
 
-Gene/CDS TP requires **identical record, strand, full visible CDS interval chain and initial phase**, with a consistent predicted exon-phase chain. Adjacent/overlapping CDS/stop features are normalized to disjoint intervals. On a truncated transcript, the expected phase is `(original_phase - removed_5prime_coding_bases) mod 3`; residual boundary bases are retained in the coordinate comparison. Identical sequence at a different locus is not a TP.
+Gene/CDS TP requires identical record, strand, full visible CDS interval chain and initial phase, with a consistent predicted exon-phase chain. Adjacent/overlapping CDS/stop features are normalized to disjoint intervals. On a truncated transcript, the expected phase is `(original_phase - removed_5prime_coding_bases) mod 3`; residual boundary bases are retained in the coordinate comparison. Identical sequence at a different locus is not a TP.
 
 A maximum one-to-one matching permits any eligible isoform but counts a reference gene only once per fragment. Duplicate predictions cannot create extra TPs. A separate SciPy maximum matching checks each count. `TP + FP` equals the number of scoreable predicted models; `TP + FN` equals the number of scoreable reference genes.
 
 Nucleotide and exon metrics keep the frozen official evaluator definitions: choose the longest eligible visible isoform per reference gene (transcript ID breaks length ties), merge intervals on each record/strand, calculate nucleotide overlap, and match exact merged exon intervals. Thus nucleotide/exon counts do not have the same denominators as gene counts, and exon unions are not counts of transcript-specific exon occurrences. No prediction is clipped into a new model. All three levels use the same confidence/length-filtered prediction collection within their respective scope.
 
-Carbon-A truncated precision/F1 are **conditional within truncated-reference regions**, not whole-genome precision/F1. For subtype results, matched predictions follow their globally matched reference gene's subtype. Unmatched predictions wholly attributable to one subtype territory contribute its FP; ambiguous subtype assignments remain in aggregate truncated counts and `subtype_unresolved`. The three named subtype counts therefore need not sum to the aggregate. Background and cross-scope predictions are always reported alongside these scores.
+Carbon-A truncated precision/F1 are conditional within truncated-reference regions, not whole-genome precision/F1. For subtype results, matched predictions follow their globally matched reference gene's subtype. Unmatched predictions wholly attributable to one subtype territory contribute its FP; ambiguous subtype assignments remain in aggregate truncated counts and `subtype_unresolved`. The three named subtype counts therefore need not sum to the aggregate. Background and cross-scope predictions are always reported alongside these scores.
 
 Each cell includes TP, FP, FN, predicted/reference denominator, precision, recall and F1. No eligible reference gives `NA` rates (even if FP are present). A reference with no prediction gives recall/F1 zero. Counts remain available when rates are NA. Under the revised aggregation policy (v0.2.1), each tool, input condition, stratum and metric is summarized across the 12 unique species by arithmetic mean and sample SD (n−1), giving each species equal weight. Undefined values are excluded, never zero-filled; `n_species` states the number of defined values. With zero defined values, mean and SD are NA; with one, mean is retained and SD is NA. Original assemblies are a separate condition. All inference/validation must finish before final summary tables are produced. The exact species × input × tool × stratum × level grid is asserted.
 
@@ -76,3 +76,19 @@ Each cell includes TP, FP, FN, predicted/reference denominator, precision, recal
 | `STATUS.json` | Evaluator version, completion and explicit missing cases. |
 
 Current figures use R/ggplot2, `theme_minimal()`, the accepted muted tool palette, species-equal means and sample-SD error bars. `summarize_all_species.py` checks duplicate species for exact agreement, preserves zero values and asserts the final 1,008-row metric grid (144 unique inference cases). Current public tables live in `results/`, and final figures are generated in `figures/`. Detailed reference and prediction audits remain with the validated computation outputs. Obsolete derived results and temporary experiments are removed; primary inputs and native predictions are retained. Incomplete results are explicitly labeled and are not summarized as complete.
+
+## Implementation
+
+| Script | Purpose | Status |
+| --- | --- | --- |
+| `fetch_data.py` | Download and verify all 12 frozen inputs and 144 native GFFs. | All archived files verified. |
+| `prepare_inputs.py` | Reconstruct the two pilot inputs from source records and maps. | Pilot input hashes checked; release already includes inputs. |
+| `prepare_new_inputs.py` | Prepare additional RefSeq accessions and whole-genome partitions. | Expansion inputs frozen; not needed to score released data. |
+| `run_predictor.sh` | Run one native predictor on one input; Carbon-A supports GPU_COUNT. | 144 unique inference cases complete. |
+| `common.py` | FASTA helpers and pinned interval evaluator. | Current evaluator dependency. |
+| `evaluate_stratified.py` | Reference strata, common filters, structural matching and metrics. | All three source datasets complete. |
+| `validate_stratified.py` | Independent raw coordinate/phase and count checks; source hashes. | 24 + 72 + 60 source cases passed; 144 unique cases. |
+| `summarize_all_species.py` | Deduplicate shared species and calculate mean/sample SD. | Final 1,008 metric rows; 252 summary rows independently checked in R. |
+| `plot_all_species.R` | Complete and truncated CDS figures. | Final twelve-species figures inspected. |
+| `tests/test_stratified.py` | Scoring boundary tests. | 24 tests passed. |
+| `tests/test_species_summary.py` | Weighting, deduplication, NA and sample SD tests. | Seven tests passed. |
