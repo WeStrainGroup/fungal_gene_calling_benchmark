@@ -66,7 +66,7 @@ def paired_units(observed, expected):
     return {unit for unit in units if {key for key in expected if key[:2] == unit} <= observed}
 
 
-def aggregate(roots, manifest, output, paired_conditions=False):
+def aggregate(roots, manifest, output, paired_conditions=False, groups=GROUPS):
     species = [r['species'] for r in read_table(manifest)]
     assert len(species) == len(set(species)) == 12
     output.mkdir(parents=True, exist_ok=True)
@@ -89,20 +89,20 @@ def aggregate(roots, manifest, output, paired_conditions=False):
     metrics = unique_rows(collected['metrics'], KEY)
     diagnostics = unique_rows(collected['diagnostics'], ('species', 'group', 'tool', 'category'))
     inputs = unique_rows(collected['inputs'], ('species', 'group'))
-    expected = {(s, g, t, scope, level) for s in species for g in GROUPS for t in TOOLS
+    expected = {(s, g, t, scope, level) for s in species for g in groups for t in TOOLS
                 for scope in (SCOPES if t == 'carbon' else ('complete',)) for level in LEVELS}
     observed = {tuple(r[k] for k in KEY) for r in metrics}
     assert observed <= expected, 'Unexpected species, condition or metric'
     complete = all(s['status'] == 'COMPLETE' for s in snapshots)
     available_cases = len({tuple(r[k] for k in KEY[:3]) for r in metrics})
     included = species
-    species_by_group = {g: species for g in GROUPS}
+    species_by_group = {g: species for g in groups}
     if paired_conditions:
         units = paired_units(observed, expected)
         if not units:
             raise ValueError('No species-condition pair has all tools and metrics validated')
         included = [s for s in species if any(unit[0] == s for unit in units)]
-        species_by_group = {g: [s for s in species if (s, g) in units] for g in GROUPS}
+        species_by_group = {g: [s for s in species if (s, g) in units] for g in groups}
         metrics = [r for r in metrics if (r['species'], r['group']) in units]
         diagnostics = [r for r in diagnostics if (r['species'], r['group']) in units]
         inputs = [r for r in inputs if (r['species'], r['group']) in units]
@@ -120,7 +120,7 @@ def aggregate(roots, manifest, output, paired_conditions=False):
         species=included if complete or paired_conditions else [], available_cases=available_cases,
         species_by_condition=species_by_group if complete or paired_conditions else {},
         interim_rule='All three tools validated within each species-condition pair' if paired_conditions else None,
-        completed_cases=len({tuple(r[k] for k in KEY[:3]) for r in metrics}), expected_cases=144,
+        completed_cases=len({tuple(r[k] for k in KEY[:3]) for r in metrics}), expected_cases=len(species)*len(groups)*len(TOOLS),
         metric_rows=len(metrics), expected_metric_rows=len(expected),
         duplicate_metric_rows_removed=len(collected['metrics'])-len(observed),
         sample_sd_ddof=1, missing_values='excluded, never replaced with zero',
@@ -134,7 +134,7 @@ def run(args):
     output.mkdir(parents=True, exist_ok=True)
     with (output/'summary.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        status = aggregate(args.inputs, args.species, output, args.paired_conditions)
+        status = aggregate(args.inputs, args.species, output, args.paired_conditions, args.groups)
         print(json.dumps(status, indent=2), flush=True)
         while args.wait and status['status'] != 'COMPLETE':
             time.sleep(60)
@@ -146,7 +146,7 @@ def run(args):
                 ready &= (current['status'] == 'COMPLETE' and check['status'] == 'PASS'
                           and check['cases'] == current['expected_cases'])
             if ready:
-                status = aggregate(args.inputs, args.species, output)
+                status = aggregate(args.inputs, args.species, output, groups=args.groups)
                 print(json.dumps(status, indent=2), flush=True)
         if status['status'] in ('COMPLETE', 'INTERIM') and args.rscript:
             subprocess.run([args.rscript, str(Path(__file__).with_name('plot_all_species.R')),
@@ -155,10 +155,11 @@ def run(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--inputs', type=Path, nargs=3, required=True,
+    parser.add_argument('--inputs', type=Path, nargs='+', required=True,
                         help='Validated ANNEVO, Tiberius and Carbon-A cohort result directories')
     parser.add_argument('--species', type=Path, default=Path(__file__).resolve().parents[1]/'metadata/species.tsv')
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--groups', nargs='+', default=GROUPS, choices=(*GROUPS, '2-5kb'))
     parser.add_argument('--wait', action='store_true', help='Wait for final independently validated source tables')
     parser.add_argument('--paired-conditions', action='store_true',
                         help='Interim report restricted to species-condition pairs with all three tools validated')

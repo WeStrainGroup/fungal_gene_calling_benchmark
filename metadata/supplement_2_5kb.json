@@ -1,0 +1,24 @@
+{
+  "status": "INFERENCE_RUNNING",
+  "condition": "2-5kb",
+  "species": 12,
+  "expected_new_cases": 36,
+  "expected_combined_cases": 180,
+  "expected_combined_metric_rows": 1260,
+  "input_records": 149658,
+  "input_bp": 518960603,
+  "excluded_below_1kb_records": 771,
+  "excluded_below_1kb_bp": 560320,
+  "random_seed_rule": "Each frozen species seed; independent RNG for 2-5kb",
+  "source_release": "v1.1",
+  "unit_tests": 32,
+  "original_four_condition_regression": "all four aggregate tables identical",
+  "code_sha256": {
+    "scripts/prepare_fragment_condition.py": "deb56761d2578c462508634d6ec7ddfcb2f3400c7daeed915b33ef33e5dce1e8",
+    "scripts/run_fragment_condition.py": "ecc7f4cebbdfd62a5ca1bda5872220e00345621220418f3f5c9f3dc5db9eeb3d",
+    "scripts/evaluate_stratified.py": "3d3b67dd3affbc8ae888bc16f9bcc42324b77c8124a28ecc57678a500873973b",
+    "scripts/summarize_all_species.py": "1033079da7f857ff21b97d43ddcef1c0c1d15074f46c3a009d1fc1d7221daa45",
+    "scripts/plot_all_species.R": "91fa6000c64d196fec0406797cf97e75e934c1af551ae701541e15914eb98039",
+    "scripts/run_predictor.sh": "88c103b2def6652499f4cf6644e79e82e8764db05c734b3357414787baff68f5"
+  }
+}

@@ -92,3 +92,12 @@ Current figures use R/ggplot2, `theme_minimal()`, the accepted muted tool palett
 | `plot_all_species.R` | Complete and truncated CDS figures. | Final twelve-species figures inspected. |
 | `tests/test_stratified.py` | Scoring boundary tests. | 24 tests passed. |
 | `tests/test_species_summary.py` | Weighting, deduplication, NA and sample SD tests. | Seven tests passed. |
+
+## Additional 2–5 kb condition
+
+The same partition algorithm uses an independent `random.Random(species_seed)` for 2–5 kb. Existing partitions are not regenerated. Every new sequence, coordinate map and reconstructed original record is checked before inference; shorter original records are retained. `--groups 2-5kb` restricts CPU evaluation to the supplement, and explicit five-condition aggregation expects 180 unique cases and 1,260 metric rows. No scoring thresholds or matching rules change.
+
+| Script | Purpose | Status |
+| --- | --- | --- |
+| `prepare_fragment_condition.py` | Freeze and verify the independent 2–5 kb partition. | Preparation and launch tracked in `fragment_2_5kb/STATUS.json`. |
+| `run_fragment_condition.py` | Run 36 cases on GPUs 4–7, then score, validate and plot. | Supplement in progress; original 144 predictions retained. |

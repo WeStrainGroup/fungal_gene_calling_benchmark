@@ -42,6 +42,38 @@ class SummaryTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             s.mean_sd([row('a', '10')], ['a', 'b'])
 
+    def test_supplement_adds_36_cases_without_changing_original_grid(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            species = [f'species_{i}' for i in range(12)]
+            manifest = root/'species.tsv'
+            s.write_table(manifest, [dict(species=sp) for sp in species])
+            roots = []
+            for label, groups in [('original', s.GROUPS), ('supplement', ('2-5kb',))]:
+                folder = root/label
+                folder.mkdir()
+                roots.append(folder)
+                cases = 12*len(groups)*3
+                (folder/'STATUS.json').write_text(json.dumps(dict(version='0.2.0', min_record_bp=1000,
+                    min_cds_bp=200, confidence_threshold=0.1, source_files_unchanged=True,
+                    cohort=label, status='COMPLETE', completed_cases=cases, expected_cases=cases)))
+                (folder/'independent_validation.json').write_text(json.dumps(dict(status='PASS',
+                    cases=cases, source_files_unchanged=True)))
+                metrics = [dict(species=sp, group=g, tool=t, stratum=scope, level=level,
+                    precision='50', recall='50', f1='50') for sp in species for g in groups
+                    for t in s.TOOLS for scope in (s.SCOPES if t=='carbon' else ('complete',))
+                    for level in s.LEVELS]
+                s.write_table(folder/'metrics.tsv', metrics)
+                s.write_table(folder/'diagnostics.tsv', [dict(species=sp, group=g, tool=t, category='complete')
+                    for sp in species for g in groups for t in s.TOOLS])
+                s.write_table(folder/'inputs.tsv', [dict(species=sp, group=g) for sp in species for g in groups])
+            status = s.aggregate(roots, manifest, root/'combined', groups=(*s.GROUPS, '2-5kb'))
+            self.assertEqual((status['completed_cases'], status['expected_cases'], status['metric_rows']), (180, 180, 1260))
+            self.assertEqual(len(s.read_table(root/'combined/mean_sd.tsv')), 315)
+            self.assertEqual(set(status['species_by_condition']), {*s.GROUPS, '2-5kb'})
+
     def test_interim_requires_all_tools_within_each_condition(self):
         expected = {(sp,g,t,scope,level) for sp in ('a','b') for g in s.GROUPS for t in s.TOOLS
                     for scope in (s.SCOPES if t=='carbon' else ('complete',)) for level in s.LEVELS}

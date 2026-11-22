@@ -458,7 +458,7 @@ def run(args):
             m['qualification'] = reference_reason(m, original, code)
             qualification.append(dict(transcript=m['id'], gene=m['gene'], record=m['record'], status=m['qualification']))
         write_table(output/'reference'/name/'qualification.tsv', qualification)
-        for group in GROUPS:
+        for group in args.groups:
             path = folder/f'{group}.fna'
             genome = common.fasta(path)
             source_hashes[str(path.relative_to(data))] = digest(path)
@@ -504,7 +504,7 @@ def run(args):
         for path, value in source_hashes.items():
             if path in expected_hashes:
                 assert value == expected_hashes[path], path
-    assert len(validations) + len(pending) == len(species)*12
+    assert len(validations) + len(pending) == len(species)*len(args.groups)*len(TOOLS)
     validate_metric_grid(metrics, validations)
     write_table(output/'metrics.tsv', metrics)
     write_table(output/'diagnostics.tsv', diagnostics)
@@ -513,11 +513,11 @@ def run(args):
     write_table(output/'validation.tsv', validations)
     (output/'source_sha256.json').write_text(json.dumps(source_hashes, indent=2)+'\n')
     (output/'STATUS.json').write_text(json.dumps(dict(version=VERSION, cohort=args.cohort,
-        status='PARTIAL' if pending else 'COMPLETE', expected_cases=len(species)*12,
+        status='PARTIAL' if pending else 'COMPLETE', expected_cases=len(species)*len(args.groups)*len(TOOLS),
         completed_cases=len(validations), pending=pending, min_record_bp=MIN_RECORD,
         min_cds_bp=MIN_CDS, confidence_threshold=CONFIDENCE,
         source_files_unchanged=True, fragment_reconstruction='PASS', independent_matching='PASS'), indent=2)+'\n')
-    print(f'{len(validations)}/{len(species)*12} cases evaluated.')
+    print(f'{len(validations)}/{len(species)*len(args.groups)*len(TOOLS)} cases evaluated.')
 
 
 if __name__ == '__main__':
@@ -525,6 +525,7 @@ if __name__ == '__main__':
     parser.add_argument('--data', type=Path, default=common.REPO/'data')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--cohort', required=True)
+    parser.add_argument('--groups', nargs='+', default=GROUPS, choices=(*GROUPS, '2-5kb'))
     parser.add_argument('--samples', type=Path)
     parser.add_argument('--completed-only', action='store_true', help='Require native COMPLETE markers for live inference directories')
     run(parser.parse_args())

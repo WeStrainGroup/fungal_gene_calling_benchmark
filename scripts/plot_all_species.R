@@ -6,8 +6,9 @@ d <- read.delim(file.path(args[1], "mean_sd.tsv"), na.strings = "NA")
 out <- args[2]
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 d <- subset(d, metric == "f1")
-d$group <- factor(d$group, c("genome", "50-100kb", "5-10kb", "1-2kb"),
-                  c("Original", "50–100 kb", "5–10 kb", "1–2 kb"))
+d$group <- factor(d$group, c("genome", "50-100kb", "5-10kb", "2-5kb", "1-2kb"),
+                  c("Original", "50–100 kb", "5–10 kb", "2–5 kb", "1–2 kb"))
+d$group <- droplevels(d$group)
 d$level <- factor(d$level, c("nucleotide", "exon", "gene"),
                   c("Nucleotide", "Exon", "Gene / CDS"))
 d$lower <- d$mean - d$sd
@@ -50,10 +51,8 @@ partial$group <- droplevels(partial$group)
 partial$category <- factor(partial$stratum,
                            c("partial", "missing_5prime", "missing_3prime", "missing_both"),
                            c("Overall", "Missing 5′ end", "Missing 3′ end", "Missing both ends"))
-stopifnot(nrow(full) == 36, nrow(partial) == 36,
-          all(full$n_species == 12), sum(is.na(partial$mean)) == 3,
-          all(partial$group[is.na(partial$mean)] == "50–100 kb"),
-          all(partial$stratum[is.na(partial$mean)] == "missing_both"))
+stopifnot(nrow(full) == 9 * nlevels(d$group), nrow(partial) == 12 * (nlevels(d$group) - 1),
+          all(full$n_species == 12), all(is.na(partial$mean) == (partial$n_species == 0)))
 
 plots <- list(complete_cds = draw(full, "Complete reference CDS", tool_colors),
               carbon_partial_cds = draw(partial, "Carbon-A: truncated reference CDS", type_colors))

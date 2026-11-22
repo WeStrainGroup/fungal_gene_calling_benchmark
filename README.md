@@ -64,6 +64,12 @@ Scoring regions follow reference CDS spans, including internal introns, on each 
 
 Truncated precision and F1 are conditional on truncated-reference regions, not whole-genome estimates. Full isoform, phase and exclusion rules are in [Methods](docs/methods.md); [diagnostics](results/diagnostics.tsv) report background FP and excluded predictions.
 
+## 2–5 kb supplement
+
+An additional whole-genome partition is being run for the same 12 species (36 new predictions) on server 111, GPUs 4–7. Each species uses its frozen seed in a separate random generator. Original records shorter than 2 kb remain unchanged; scoring still requires ≥1 kb. All previous inputs and predictions are reused unchanged.
+
+`prepare_fragment_condition.py` freezes and checks the new inputs. `run_fragment_condition.py` runs the native predictors, evaluates only 2–5 kb, independently validates the outputs, and then combines all five conditions. Run files are under `fragment_2_5kb/`; published tables below still describe the four completed conditions until the supplement is validated.
+
 ## Results
 
 ### Complete reference CDS
