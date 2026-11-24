@@ -1,34 +1,29 @@
-# Input sequence lengths
+# Original assembly sequence lengths
 
-Statistics describe the frozen nuclear FASTA records actually used in the benchmark, which may be chromosomes, scaffolds or contigs. They are not CDS lengths or total genome sizes. Shared genomes are counted once.
+Sequence lengths within each original assembly after retaining nuclear sequences ≥1 kb, before random fragmentation. Lengths are in kb, rounded to one decimal place.
 
-The [full table](../results/input_lengths.tsv) provides each of the 17 species and the pooled `ALL` distribution for all five input conditions. `scope=all` includes every input record; `scope=scored` includes only records ≥1,000 bp. Quartiles use linear interpolation (R `quantile(type=7)`) with equal weight per record. N50 is the record length at which the cumulative length, ordered longest first, reaches half the total bp; it is not the median record length.
+| Species | Sequences | Min | Median | Max |
+| --- | ---: | ---: | ---: | ---: |
+| *Saccharomyces cerevisiae* | 16 | 230.2 | 765.0 | 1,531.9 |
+| *Candida albicans* | 8 | 949.5 | 1,701.3 | 3,188.3 |
+| *Agaricus bisporus* | 1,245 | 1.0 | 1.7 | 2,973.6 |
+| *Cryphonectria parasitica* | 26 | 2.6 | 56.8 | 7,437.3 |
+| *Parastagonospora nodorum* | 107 | 2.0 | 32.4 | 2,531.9 |
+| *Puccinia striiformis* | 184 | 2.5 | 57.2 | 5,908.9 |
+| *Punctularia strigosozonata* | 195 | 2.0 | 3.0 | 4,675.7 |
+| *Tilletiopsis washingtonensis* | 38 | 1.2 | 523.7 | 1,093.0 |
+| *Schizosaccharomyces pombe* | 3 | 2,452.9 | 4,539.8 | 5,579.1 |
+| *Neurospora crassa* | 20 | 1.6 | 78.6 | 9,798.9 |
+| *Coprinopsis cinerea* | 67 | 2.2 | 6.7 | 4,147.0 |
+| *Rhizophagus irregularis* | 32 | 2,669.0 | 4,707.8 | 7,995.2 |
+| *Aspergillus terreus* | 26 | 12.1 | 1,388.6 | 2,751.8 |
+| *Coccidioides immitis* | 6 | 3,458.9 | 4,138.2 | 8,482.3 |
+| *Debaryomyces hansenii* | 7 | 1,249.9 | 1,606.3 | 2,305.8 |
+| *Fusarium graminearum* | 19 | 2.1 | 7.0 | 11,697.3 |
+| *Laccaria bicolor* | 665 | 1.0 | 8.2 | 3,566.4 |
 
-Across original inputs there are 3,435 records totaling 690,727,699 bp, with a minimum of 499 bp. Scoring retains 2,664 records totaling 690,167,379 bp, with a minimum of 1,000 bp. The excluded 771 records (560,320 bp) all belong to *Agaricus bisporus*. The scored original records have a pooled median of 3,236.5 bp but an N50 of 3,600,274 bp: short records are numerous while long records contain most bases.
 
-## Original assemblies by species
-
-All nuclear records, including those below 1 kb. Length quantiles and N50 are in kb; total length is in Mb. Exact bp values and the ≥1 kb subset are in the full table.
-
-| Species | Records | Total Mb | Min | Q1 | Median | Q3 | Max | N50 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| *Saccharomyces cerevisiae* | 16 | 12.071 | 230.218 | 531.954 | 765.042 | 980.594 | 1,531.933 | 924.431 |
-| *Candida albicans* | 8 | 14.283 | 949.511 | 1,151.457 | 1,701.279 | 2,245.472 | 3,188.341 | 2,231.883 |
-| *Agaricus bisporus* | 2,016 | 32.614 | 0.499 | 0.794 | 1.191 | 1.884 | 2,973.556 | 1,225.131 |
-| *Cryphonectria parasitica* | 26 | 43.870 | 2.579 | 7.304 | 56.798 | 3,359.665 | 7,437.273 | 5,118.729 |
-| *Parastagonospora nodorum* | 107 | 37.164 | 2.005 | 4.029 | 32.376 | 474.105 | 2,531.949 | 1,045.363 |
-| *Puccinia striiformis* | 184 | 89.491 | 2.546 | 33.927 | 57.189 | 84.298 | 5,908.853 | 4,700.190 |
-| *Punctularia strigosozonata* | 195 | 34.172 | 2.001 | 2.430 | 3.005 | 4.263 | 4,675.683 | 2,122.796 |
-| *Tilletiopsis washingtonensis* | 38 | 18.762 | 1.171 | 249.237 | 523.680 | 738.220 | 1,093.019 | 728.438 |
-| *Schizosaccharomyces pombe* | 3 | 12.572 | 2,452.883 | 3,496.344 | 4,539.804 | 5,059.469 | 5,579.133 | 4,539.804 |
-| *Neurospora crassa* | 20 | 41.038 | 1.646 | 9.294 | 78.550 | 4,311.148 | 9,798.893 | 6,000.761 |
-| *Coprinopsis cinerea* | 67 | 36.150 | 2.208 | 3.452 | 6.705 | 9.392 | 4,146.986 | 3,468.139 |
-| *Rhizophagus irregularis* | 32 | 146.773 | 2,669.031 | 3,614.262 | 4,707.757 | 5,270.495 | 7,995.222 | 5,085.394 |
-| *Aspergillus terreus* | 26 | 29.331 | 12.095 | 30.166 | 1,388.580 | 1,860.592 | 2,751.824 | 1,912.493 |
-| *Coccidioides immitis* | 6 | 28.948 | 3,458.857 | 3,590.154 | 4,138.235 | 5,026.670 | 8,482.323 | 4,323.945 |
-| *Debaryomyces hansenii* | 7 | 12.152 | 1,249.940 | 1,465.962 | 1,606.296 | 2,029.283 | 2,305.761 | 2,007.515 |
-| *Fusarium graminearum* | 19 | 36.458 | 2.080 | 4.498 | 7.037 | 14.095 | 11,697.295 | 8,914.601 |
-| *Laccaria bicolor* | 665 | 64.877 | 1.015 | 3.475 | 8.175 | 17.798 | 3,566.367 | 784.691 |
+The [source table](../results/input_lengths.tsv) retains full-precision values. The displayed rows use `group=genome` and `scope=scored`, separately for each species.
 
 ## Reproduce
 
