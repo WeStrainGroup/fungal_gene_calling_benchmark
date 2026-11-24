@@ -4,6 +4,10 @@
 
 We compare four deep learning–based *ab initio* gene predictors—[Helixer](https://github.com/usadellab/Helixer), [ANNEVO](https://github.com/xjtu-omics/ANNEVO), [Tiberius](https://github.com/Gaius-Augustus/Tiberius) and [Carbon-A](https://huggingface.co/HuggingFaceBio/Carbon-A-1.2B)—on 17 fungal genomes, from original assemblies to short random fragments. The benchmark evaluates complete CDS for all four tools and truncated CDS separately for Helixer and Carbon-A. Frozen inputs, native predictions and evaluation scripts are provided for reproduction.
 
+## Evaluation
+
+### Tools and models
+
 Versions are frozen across all five input conditions.
 
 | Tool | Tested software | Model |
@@ -12,8 +16,6 @@ Versions are frozen across all five input conditions.
 | ANNEVO | v2.3.3, commit [`42c920f`](https://github.com/xjtu-omics/ANNEVO/commit/42c920f70f52f96c7c06c665a639ec47d9304fff) | `ANNEVO_Fungi.pt` |
 | Tiberius | 2.0.7 | Official fungi weights, downloaded 2026-09-27 |
 | Carbon-A | Carbon-A-1.2B, pipeline/evaluator revision [`ee63599`](https://huggingface.co/HuggingFaceBio/Carbon-A-1.2B/tree/ee6359990109eef6adccfd19aba8ca64b48ae514) | Published 1.2B checkpoint |
-
-## Evaluation
 
 ### Genomes and fragmentation
 
@@ -76,36 +78,26 @@ Truncated precision and F1 are conditional on truncated-reference regions, not w
 
 ## Results
 
-### Complete reference CDS
+We compare nucleotide-, exon- and gene-level F1 for four tools across 17 fungal genomes and five input conditions. These are descriptive comparisons for the selected species, not evidence of statistical equivalence or performance on unseen species.
 
-Across the 17-species means:
+### Complete reference CDS
 
 - Carbon-A achieves the highest F1 at all three levels for original assemblies and 10–100 kb inputs.
 - Tiberius achieves the highest F1 at all three levels for 2–5 kb and 1–2 kb inputs.
-- For 5–10 kb inputs, Tiberius has the highest nucleotide F1, while Carbon-A has the highest exon and gene/CDS F1.
-- Helixer and ANNEVO do not achieve the highest mean F1 in any of the 15 comparisons.
-
-These are descriptive comparisons for the selected species, not evidence of statistical equivalence or performance on unseen species.
+- For 5–10 kb inputs, Tiberius and Carbon-A have similar mean F1, differing by less than 1.6 percentage points at each level.
+- Helixer and ANNEVO have lower mean F1 than both Tiberius and Carbon-A in all 15 comparisons.
 
 ![Complete reference CDS](figures/complete_cds.png)
 
 Bars show species-equal mean F1 and error bars show sample SD across 17 species. Each genome’s score is calculated from its combined TP/FP/FN across fragments; counts are not pooled across species. SD describes between-species variation. [Summary statistics](results/mean_sd.tsv) and [per-species results](results/metrics.tsv) include precision, recall and F1.
 
-### Helixer and Carbon-A on truncated reference CDS
+### Truncated reference CDS
 
-Carbon-A achieves higher mean F1 than Helixer at all three levels across all four fragment conditions. Overall mean gene/CDS F1 is 31.5%, 18.4%, 18.0% and 14.9% for Helixer, compared with 76.4%, 71.4%, 66.4% and 53.5% for Carbon-A, for 10–100 kb, 5–10 kb, 2–5 kb and 1–2 kb inputs, respectively.
+Carbon-A achieves higher mean F1 than Helixer at all three levels across all four fragment conditions.
 
 ![Helixer and Carbon-A on truncated reference CDS](figures/truncated_cds.png)
 
-Helixer has higher exact gene/CDS F1 for CDS missing the 3′ end than for those missing the 5′ end or both ends; scores for the latter two types are near zero under the coordinate-and-phase matching criterion.
-
-![Helixer on truncated reference CDS](figures/helixer_partial_cds.png)
-
-For Carbon-A, CDS missing the 5′ end have higher mean F1 than those missing the 3′ end at all three levels. Missing both ends is substantially harder: mean gene/CDS F1 is 23.6% for 5–10 kb inputs, 24.1% for 2–5 kb inputs and 20.3% for 1–2 kb inputs.
-
-![Carbon-A on truncated reference CDS](figures/carbon_partial_cds.png)
-
-Bars show species-equal mean F1 ± sample SD within truncated-reference regions. Overall uses aggregate truncated-region counts within each genome, including unresolved subtypes, rather than averaging subtype F1. NA means no eligible reference exists; no 10–100 kb case contains a scoreable CDS missing both ends.
+Bars show species-equal mean F1 ± sample SD within truncated-reference regions. Overall uses aggregate truncated-region counts within each genome, including unresolved subtypes, rather than averaging subtype F1. Results by truncation type are shown separately for [Helixer](figures/helixer_partial_cds.png) and [Carbon-A](figures/carbon_partial_cds.png). In those figures, NA means no eligible reference exists; no 10–100 kb case contains a scoreable CDS missing both ends.
 
 ## Reproduce
 
