@@ -43,12 +43,12 @@ draw <- function(x, title, colors) {
 }
 
 full <- subset(d, stratum == "complete")
-full$category <- droplevels(factor(full$tool, c("annevo", "tiberius", "carbon", "helixer"),
-                                  c("ANNEVO", "Tiberius", "Carbon-A", "Helixer")))
+full$category <- droplevels(factor(full$tool, c("helixer", "annevo", "tiberius", "carbon"),
+                                  c("Helixer", "ANNEVO", "Tiberius", "Carbon-A")))
 stopifnot(nrow(full) == 3 * nlevels(full$category) * nlevels(d$group),
           all(is.na(full$mean) == (full$n_species == 0)))
 plots <- list(complete_cds = draw(full, "Complete reference CDS", tool_colors))
-for (tool in intersect(c("carbon", "helixer"), unique(d$tool))) {
+for (tool in intersect(c("helixer", "carbon"), unique(d$tool))) {
   partial <- d[d$tool == tool & d$group != "Original" &
                  d$stratum %in% c("partial", "missing_5prime", "missing_3prime", "missing_both"), ]
   partial$group <- droplevels(partial$group)
@@ -63,7 +63,7 @@ for (tool in intersect(c("carbon", "helixer"), unique(d$tool))) {
 if (all(c("carbon", "helixer") %in% unique(d$tool))) {
   paired <- subset(d, stratum == "partial" & group != "Original")
   paired$group <- droplevels(paired$group)
-  paired$category <- factor(paired$tool, c("carbon", "helixer"), c("Carbon-A", "Helixer"))
+  paired$category <- factor(paired$tool, c("helixer", "carbon"), c("Helixer", "Carbon-A"))
   plots$truncated_cds <- draw(paired, "Truncated reference CDS", tool_colors)
 }
 for (name in names(plots)) {
