@@ -62,8 +62,15 @@ for (tool in intersect(c("helixer", "carbon"), unique(d$tool))) {
 }
 if (all(c("carbon", "helixer") %in% unique(d$tool))) {
   paired <- subset(d, stratum == "partial" & group != "Original")
+  # Reserve the same four tool positions; NA denotes tools not evaluated here.
+  not_evaluated <- subset(full, tool %in% c("annevo", "tiberius") & group != "Original")
+  not_evaluated$category <- NULL
+  not_evaluated$stratum <- "partial"
+  not_evaluated[c("mean", "sd", "lower", "upper")] <- NA_real_
+  paired <- rbind(paired, not_evaluated)
   paired$group <- droplevels(paired$group)
-  paired$category <- factor(paired$tool, c("helixer", "carbon"), c("Helixer", "Carbon-A"))
+  paired$category <- factor(paired$tool, c("helixer", "annevo", "tiberius", "carbon"),
+                            c("Helixer", "ANNEVO", "Tiberius", "Carbon-A"))
   plots$truncated_cds <- draw(paired, "Truncated reference CDS", tool_colors)
 }
 for (name in names(plots)) {

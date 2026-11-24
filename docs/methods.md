@@ -90,7 +90,8 @@ Current figures use R/ggplot2, `theme_minimal()`, the accepted muted palette, sp
 | `evaluate_stratified.py` | Reference strata, shared filtering, exact structural matching and metrics. | Four-tool support; inherited partial flag retained. |
 | `validate_stratified.py` | Independent native-GFF coordinate/phase checks, count reconciliation and hashes. | Supports both truncated-prediction tools. |
 | `summarize_all_species.py` | Deduplicate, verify selected tool/species grid, calculate species-equal mean/sample SD. | Four-tool grid regression passed. |
-| `plot_all_species.R` | Complete comparison, shared truncated comparison and subtype plots. | Four final figures generated; Helixer is displayed first; scores and palette unchanged. |
+| `summarize_input_lengths.py` | FASTA length counts, quartiles and N50, per species and pooled; all/scored subsets. | All 85 input totals reconciled; 180 quantile summaries independently checked against NumPy and fragment maps. |
+| `plot_all_species.R` | Complete comparison, shared truncated comparison and subtype plots. | Four tool positions in the main plots; ANNEVO/Tiberius truncated scores shown as NA (not evaluated). |
 | `validate_summary.R` | Independently recompute means, sample SD and denominators in R. | All 540 expanded summary rows independently verified in R. |
 | `tests/test_stratified.py`, `tests/test_species_summary.py` | Scientific boundary and summary regression tests. | 34 tests passed; 30 real cases retain all 210 metric rows exactly, with 130,930 gene TPs independently checked. |
 

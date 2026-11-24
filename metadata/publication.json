@@ -10,8 +10,8 @@
     "figures/complete_cds.png": "e1b8a6178d78955a8d415995abeea07fbe7dec68be74a0c2daa81b9c8df93c72",
     "figures/helixer_partial_cds.pdf": "48c24fc6fdbeca5efd411fc944301f047b2502b6da6efb386a28a5502825352c",
     "figures/helixer_partial_cds.png": "58de8bb708c9ea9ae6fac7f00354f4e5870fb98615641b98fe176830d27d09d3",
-    "figures/truncated_cds.pdf": "d670d539151c23755f59d6b51e796d4ac2f0ca02729ab1cdd9425c7ef5728ce2",
-    "figures/truncated_cds.png": "de3cb20f52d426357666bd5c65a9d6a81b159531c71d01b2b27c8cb8c5780c50",
+    "figures/truncated_cds.pdf": "0c5ba5933866fcef99c9225f231029b447f233355f78101cf3f6aca214672aef",
+    "figures/truncated_cds.png": "7a413b7e9b0f5fa19dc4e39ddb98098fb39365a9b7a6f8d7eb849518e4b85a69",
     "results/STATUS.json": "3edb9d5e9520e45081e1da9a6c79fd09facbdf244e699780cf3fbbee788e36b4",
     "results/diagnostics.tsv": "3ac880183c4fdd33d5d3b3d13db333e7390ed11b40836046a9dbac33af2f4f1b",
     "results/independent_validation.json": "0c65fb1052af4de9c1754df999dc0f21c8f330381c5063d8b38b6938b8888d90",
@@ -19,8 +19,12 @@
     "results/mean_sd.tsv": "8eb64afbf0ed7b77de76daf574aec8beb588450b1f3648d203c01e5f33972bf7",
     "results/metrics.tsv": "6b9ed3ad6f4d566b765ebaf68f7fed3e1bca98176a8f06000958c03f2ff43b04",
     "results/validation.json": "0a6aacac88eeec56967176882bfc5f1268cd53a2af50e83c0ef408d72921ec53",
-    "README.md": "a01f91af4e9bb6747a2e5dbe03289344647a831ace0b57e8e26a88ad30b2ae9d",
-    "scripts/plot_all_species.R": "f523d941f72b60e5a23f974ac2f4c764938017c4cb397d345e1c2b23e5cd51c4"
+    "README.md": "7dafdd3eef8727a10f665a73606372ceea67354105825da8bf40e630b651efb9",
+    "scripts/plot_all_species.R": "7d326c9e44af1b1459d29f3770e671a083bcc4668a7e78169aa691010a749af3",
+    "results/input_lengths.tsv": "7c0d41b7fb3f2900aa0dcab0288f87c37c77a672740e3bad8357369907b3c547",
+    "scripts/summarize_input_lengths.py": "39e9e864858f2587df2977c3d020cfb15060a70413a5af19a50cbc1a95e639b6",
+    "docs/input_lengths.md": "28a6ab32347dbe5735469d5b87c6ddf24189a5b356405329e6eb024a7c695240",
+    "docs/methods.md": "0ff54181b98b93f066e643f5f7c7ea628b470c1199bae8bbc0d19d17c0170718"
   },
   "data_release": "v1.2",
   "presentation_updated": "2026-11-24"

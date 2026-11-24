@@ -25,6 +25,18 @@ Each genome is evaluated as its original assembly and as full-genome random part
 
 Only records ≥1 kb enter scoring. Shorter original records remain in the release; *A. bisporus* has 771 such records totaling 560,320 bp.
 
+Length distribution of scored records (≥1 kb), pooled across the 17 genomes; lengths are in kb. Q1, median and Q3 are the 25th, 50th and 75th percentiles by record count.
+
+| Input condition | Records | Min | Q1 | Median | Q3 | Max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Original assembly | 2,664 | 1.000 | 1.647 | 3.236 | 19.075 | 11,697.295 |
+| 10–100 kb | 14,330 | 1.000 | 21.674 | 47.959 | 74.601 | 99.995 |
+| 5–10 kb | 93,393 | 1.000 | 6.158 | 7.428 | 8.705 | 10.000 |
+| 2–5 kb | 198,130 | 1.000 | 2.735 | 3.483 | 4.234 | 5.000 |
+| 1–2 kb | 460,571 | 1.000 | 1.247 | 1.499 | 1.749 | 2.000 |
+
+These are record-level distributions, not species-equal averages. Original records shorter than a target fragment range are retained intact, so each condition can include shorter records. [Per-species length statistics](docs/input_lengths.md) include all records, the scoring subset and N50.
+
 ### Complete and truncated reference CDS
 
 A CDS is the spliced coding region of one transcript. Original reference CDS are qualified for complete coding structure, valid introns, start/stop codons and reading frame under each genome’s genetic code, then mapped onto the fragments.
@@ -97,7 +109,7 @@ Carbon-A achieves higher mean F1 than Helixer at all three levels across all fou
 
 ![Helixer and Carbon-A on truncated reference CDS](figures/truncated_cds.png)
 
-Bars show species-equal mean F1 ± sample SD within truncated-reference regions. Overall uses aggregate truncated-region counts within each genome, including unresolved subtypes, rather than averaging subtype F1. Results by truncation type are shown separately for [Helixer](figures/helixer_partial_cds.png) and [Carbon-A](figures/carbon_partial_cds.png). In those figures, NA means no eligible reference exists; no 10–100 kb case contains a scoreable CDS missing both ends.
+Bars show species-equal mean F1 ± sample SD within truncated-reference regions. ANNEVO and Tiberius are marked NA because they are not evaluated in this stratum; NA is not a zero F1 score. Overall uses aggregate truncated-region counts within each genome, including unresolved subtypes, rather than averaging subtype F1. Results by truncation type are shown separately for [Helixer](figures/helixer_partial_cds.png) and [Carbon-A](figures/carbon_partial_cds.png). In those figures, NA means no eligible reference exists; no 10–100 kb case contains a scoreable CDS missing both ends.
 
 ## Reproduce
 
