@@ -73,6 +73,32 @@ class StratifiedTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             e.prediction_bucket(m, 'carbon', self.genome, {})
 
+    def test_helixer_partial_gene_parent_and_shared_cds_ids(self):
+        gff = """##gff-version 3.1.26
+r\tHelixer\tgene\t1\t450\t.\t+\t.\tID=g;partial=true
+r\tHelixer\tmRNA\t1\t450\t.\t+\t.\tID=g.t1;Parent=g
+r\tHelixer\tCDS\t1\t150\t.\t+\t0\tID=g.t1.CDS;Parent=g.t1
+r\tHelixer\tCDS\t301\t450\t.\t+\t0\tID=g.t1.CDS;Parent=g.t1
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)/'helixer.gff3'; path.write_text(gff)
+            m, = e.read_models(path)
+        self.assertTrue(m['native_partial'])
+        self.assertEqual((m['gene'], m['blocks'], m['phase']), ('g', [(1,150),(301,450)], 0))
+        self.assertFalse(m['confidence_present'])
+        self.assertEqual(e.prediction_bucket(m, 'helixer', self.genome, {})[0], 'complete')
+
+    def test_helixer_partial_scoring_uses_reference_class(self):
+        truth = model(kind='missing_3prime')
+        units, domains = e.build_domains([truth], self.genome)
+        prediction = model(); prediction['native_partial'] = False
+        h, _, _ = e.score_case([prediction], 'helixer', self.genome, units, domains)
+        c, _, _ = e.score_case([prediction], 'carbon', self.genome, units, domains)
+        self.assertEqual(h, c)
+        self.assertEqual(next(r['tp'] for r in h if r['stratum']=='partial' and r['level']=='gene'), 1)
+        e.validate_metric_grid([dict(species='s',group='1-2kb',tool='helixer',**r) for r in h],
+                              [dict(species='s',group='1-2kb',tool='helixer')])
+
     def test_native_incomplete_does_not_filter(self):
         m = model(); m['status'] = 'incomplete'
         self.assertEqual(e.prediction_bucket(m, 'carbon', self.genome, {})[0], 'complete')

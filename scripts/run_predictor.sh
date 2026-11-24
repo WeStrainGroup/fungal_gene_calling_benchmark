@@ -32,5 +32,11 @@ case "$tool" in
       --out "$output/prediction.gff3" --codingseq "$output/native.cds.fa" \
       --protseq "$output/native.proteins.fa" --batch_size 8 --min_genome_seqlen 1000
     ;;
-  *) echo 'Choose carbon, annevo or tiberius' >&2; exit 2 ;;
+  helixer)
+    mkdir -p "$output/work"
+    Helixer.py --lineage fungi --fasta-path "$input" \
+      --model-filepath "$HELIXER_MODEL" --subsequence-length 21384 --gff-output-path "$output/prediction.gff3" \
+      --species "$(basename "$(dirname "$input")")" --temporary-dir "$output/work"
+    ;;
+  *) echo 'Choose carbon, annevo, tiberius or helixer' >&2; exit 2 ;;
 esac

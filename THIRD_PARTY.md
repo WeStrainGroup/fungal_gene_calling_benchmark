@@ -8,6 +8,6 @@ The repository's CC BY-NC-SA 4.0 license covers our benchmark scripts and docume
 
 ## Other software and data
 
-ANNEVO has its own non-commercial license; Tiberius and all dependencies retain their upstream licenses. No predictor weights or full ANNEVO/Tiberius source trees are redistributed here. Follow their official installation and licensing requirements.
+ANNEVO has its own non-commercial license; Tiberius, Helixer, HelixerPost, GeenuFF and all dependencies retain their upstream licenses. No predictor weights or full predictor source trees are redistributed here. Follow their official installation and licensing requirements.
 
 The release includes public RefSeq references with original accession/version and checksum information, frozen fragment coordinates, and generated annotation results. Consult [NCBI policies](https://www.ncbi.nlm.nih.gov/home/about/policies/) and the original submissions for source-data conditions. Generated benchmark tables and figures retain attribution to this repository and release; upstream dataset rights remain unchanged.

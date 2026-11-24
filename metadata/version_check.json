@@ -1,0 +1,33 @@
+{
+  "checked_on": "2026-11-23",
+  "timezone": "Asia/Shanghai",
+  "installation": "111 benchmark runtime",
+  "frozen_model_hashes_match": true,
+  "source_fingerprints_checked": 61,
+  "changed_source_fingerprints": [],
+  "annevo": {
+    "tested_version": "2.3.3",
+    "tested_commit": "42c920f70f52f96c7c06c665a639ec47d9304fff",
+    "official_main_commit": "42c920f70f52f96c7c06c665a639ec47d9304fff",
+    "official_commit_date": "2026-08-11T02:44:08Z",
+    "source": "https://api.github.com/repos/xjtu-omics/ANNEVO/commits?per_page=1",
+    "verification": "live GitHub API from 111"
+  },
+  "tiberius": {
+    "tested_version": "2.0.7",
+    "latest_release": "2.0.9",
+    "latest_release_published": "2026-10-05T09:08:44Z",
+    "source": "https://github.com/Gaius-Augustus/Tiberius/releases/tag/v2.0.9",
+    "verification": "live GitHub API and official release page"
+  },
+  "carbon_a": {
+    "tested_revision": "ee6359990109eef6adccfd19aba8ca64b48ae514",
+    "official_tree_displayed_revision": "ee6359990109eef6adccfd19aba8ca64b48ae514",
+    "source": "https://huggingface.co/HuggingFaceBio/Carbon-A-1.2B/tree/main",
+    "verification": "official tree web snapshot, crawled 5 days before check; live HF API timed out",
+    "model_sha256": "5e0a58184ac94be5c729b3d94464bb5fd400340c6ab4d2c63f4a3b97a850f71c",
+    "modeling_generanno_sha256": "d4ee34258c1a3bdad43ea3c3d687e4f210c758790859e0d671033b181809e0ef",
+    "modeling_matches_official_provenance": true,
+    "attention_backend": "sdpa"
+  }
+}

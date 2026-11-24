@@ -46,6 +46,10 @@
     "tiberius": {
       "bytes": 32204736,
       "sha256": "b8be8c45236226aa46efd537fed9a0ef5b0b53066552b5d7ed11e48fc1d58e88"
+    },
+    "helixer": {
+      "bytes": 25089032,
+      "sha256": "8771f071769931519da8b504216fb16d1a97cc031034419bcf884a2f5d0a52cf"
     }
   },
   "annevo_commit": "42c920f70f52f96c7c06c665a639ec47d9304fff",
@@ -54,5 +58,15 @@
     "gpu": "NVIDIA GeForce RTX 4090",
     "gpu_memory_mib": 24564,
     "driver": "595.45.04"
+  },
+  "helixer": {
+    "packages": {
+      "helixer": "0.3.8",
+      "geenuff": "0.4.0",
+      "tensorflow": "2.15.1"
+    },
+    "helixer_post": "0.4.0",
+    "hdf5": "1.14.6",
+    "provenance": "metadata/helixer.json"
   }
 }

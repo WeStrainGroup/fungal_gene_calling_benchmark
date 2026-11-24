@@ -121,7 +121,7 @@ def run(data, output):
             checked_tp += 1
         assert len(matched_keys) == len(set(matched_keys)), 'Reference counted twice'
         for stratum in ('complete', 'partial'):
-            if stratum == 'partial' and tool != 'carbon':
+            if stratum == 'partial' and tool not in ('carbon', 'helixer'):
                 continue
             expected = next(r for r in metrics if (r['species'],r['group'],r['tool'],r['stratum'],r['level']) ==
                             (species,group,tool,stratum,'gene'))

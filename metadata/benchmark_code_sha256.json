@@ -1,0 +1,19 @@
+{
+  "scripts/install_helixer.sh": "71ccda86254624becad19b59ca5a5379a6ab2161cd5627b41b1d4f9a39b255ca",
+  "scripts/prepare_new_inputs.py": "b89cbe0b76a8c105dbc0d399f56ef14bca1e9b4c99c292ea5171602243b7dfad",
+  "scripts/common.py": "51adfe716101a88d4da6900145bd9cf201cfb4f6f8ff4f83e5e1ea076eda3db6",
+  "scripts/evaluate_stratified.py": "01d30e9fad5994eada5f2e12c83e2f0d5ccb42b2b375fe16c6b9d9aca8d2a851",
+  "scripts/plot_all_species.R": "463350323ff0ece1cb085e5912d6a5d11418a9f7fbf4cb6a469f7617335e6a50",
+  "scripts/prepare_benchmark.py": "84ff58fb4abc3760fe55c6918e660604b63eb973c9f691dd32b494efbe9d07e1",
+  "scripts/run_benchmark.py": "a48d915f5a22ffaaed0f171e20830c272267c28554893081294d05c6c1956b5a",
+  "scripts/run_predictor.sh": "eadee0ca539b0476fadffc2f6eb3ecedb90ab30010e00aeb63fc87d85ebe6874",
+  "scripts/summarize_all_species.py": "70cd6ffc3c4de41e3ac67f98c0f4ea8cf7ec83d83dc4c958b168df583d217eca",
+  "scripts/validate_stratified.py": "ed671e7c7f960399cdb52fd119b26ea0ce272ba099ce62045cb15a0ffa5ceec8",
+  "scripts/validate_summary.R": "243bef7190324509eb7ddaebb7188f7fee6019e490d19d8abefc7e154c0f36ba",
+  "tests/test_species_summary.py": "da0e4caf53d66b76e68889a285b2ca0865c285b14c28735c75d62c27a06fddb6",
+  "tests/test_stratified.py": "b695343b46c3cf7dc9ffb03a8c3c54db096d3c7b74e7089173f97b8b629b08ad",
+  "vendor/carbon_a/LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "vendor/carbon_a/constants.py": "0c4d43c0faa5efe1d00ffb207c32b9fbcc9c1e3f61343f3cef3c1d86017d41cb",
+  "vendor/carbon_a/evaluation.py": "26da5b42667883348cfc0055125aa64ea467f4128e7f035d0fcab5b45b96d32a",
+  "vendor/carbon_a/utils.py": "b009a6108e63045de9ef1c1a0aec4dd459f41f569fcd843139b0c7d855a90f87"
+}

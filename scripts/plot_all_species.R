@@ -6,15 +6,15 @@ d <- read.delim(file.path(args[1], "mean_sd.tsv"), na.strings = "NA")
 out <- args[2]
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
 d <- subset(d, metric == "f1")
-d$group <- factor(d$group, c("genome", "50-100kb", "5-10kb", "2-5kb", "1-2kb"),
-                  c("Original", "50–100 kb", "5–10 kb", "2–5 kb", "1–2 kb"))
+d$group <- factor(d$group, c("genome", "10-100kb", "5-10kb", "2-5kb", "1-2kb"),
+                  c("Original", "10–100 kb", "5–10 kb", "2–5 kb", "1–2 kb"))
 d$group <- droplevels(d$group)
 d$level <- factor(d$level, c("nucleotide", "exon", "gene"),
                   c("Nucleotide", "Exon", "Gene / CDS"))
 d$lower <- d$mean - d$sd
 d$upper <- d$mean + ifelse(is.na(d$sd), 0, d$sd)
-tool_colors <- c("#738B91", "#BDA982", "#B76E60")
-type_colors <- c("#514A46", tool_colors)
+tool_colors <- c(ANNEVO = "#738B91", Tiberius = "#BDA982", `Carbon-A` = "#B76E60", Helixer = "#92919F")
+type_colors <- c("#514A46", unname(tool_colors[1:3]))
 
 draw <- function(x, title, colors) {
   dodge <- position_dodge(width = .80)
@@ -24,9 +24,9 @@ draw <- function(x, title, colors) {
                   width = .13, linewidth = .40, colour = "#444A50", na.rm = TRUE) +
     geom_text(aes(y = ifelse(is.na(mean), 0, upper),
                   label = ifelse(is.na(mean), "NA", sprintf("%.1f", mean))),
-              position = dodge, vjust = -.65, size = 2.7, colour = "#30363B") +
+              position = dodge, vjust = -.65, size = if (nlevels(d$group) > 4) 2.2 else 2.7, colour = "#30363B") +
     facet_wrap(~level, nrow = 1) +
-    scale_fill_manual(values = setNames(colors, levels(x$category)), drop = FALSE) +
+    scale_fill_manual(values = if (is.null(names(colors))) setNames(colors, levels(x$category)) else colors, drop = FALSE) +
     scale_y_continuous(breaks = seq(0, 125, 25), expand = expansion(mult = c(.01, .14))) +
     labs(title = title, x = NULL, y = "F1 (%)", fill = NULL) +
     theme_minimal(base_size = 11, base_family = "sans") +
@@ -43,22 +43,32 @@ draw <- function(x, title, colors) {
 }
 
 full <- subset(d, stratum == "complete")
-full$category <- factor(full$tool, c("annevo", "tiberius", "carbon"),
-                        c("ANNEVO", "Tiberius", "Carbon-A"))
-partial <- subset(d, tool == "carbon" & group != "Original" &
-                    stratum %in% c("partial", "missing_5prime", "missing_3prime", "missing_both"))
-partial$group <- droplevels(partial$group)
-partial$category <- factor(partial$stratum,
-                           c("partial", "missing_5prime", "missing_3prime", "missing_both"),
-                           c("Overall", "Missing 5′ end", "Missing 3′ end", "Missing both ends"))
-stopifnot(nrow(full) == 9 * nlevels(d$group), nrow(partial) == 12 * (nlevels(d$group) - 1),
-          all(full$n_species == 12), all(is.na(partial$mean) == (partial$n_species == 0)))
-
-plots <- list(complete_cds = draw(full, "Complete reference CDS", tool_colors),
-              carbon_partial_cds = draw(partial, "Carbon-A: truncated reference CDS", type_colors))
+full$category <- droplevels(factor(full$tool, c("annevo", "tiberius", "carbon", "helixer"),
+                                  c("ANNEVO", "Tiberius", "Carbon-A", "Helixer")))
+stopifnot(nrow(full) == 3 * nlevels(full$category) * nlevels(d$group),
+          all(is.na(full$mean) == (full$n_species == 0)))
+plots <- list(complete_cds = draw(full, "Complete reference CDS", tool_colors))
+for (tool in intersect(c("carbon", "helixer"), unique(d$tool))) {
+  partial <- d[d$tool == tool & d$group != "Original" &
+                 d$stratum %in% c("partial", "missing_5prime", "missing_3prime", "missing_both"), ]
+  partial$group <- droplevels(partial$group)
+  partial$category <- factor(partial$stratum,
+                             c("partial", "missing_5prime", "missing_3prime", "missing_both"),
+                             c("Overall", "Missing 5′ end", "Missing 3′ end", "Missing both ends"))
+  stopifnot(nrow(partial) == 12 * (nlevels(d$group) - 1),
+            all(is.na(partial$mean) == (partial$n_species == 0)))
+  label <- if (tool == "carbon") "Carbon-A" else "Helixer"
+  plots[[paste0(tool, "_partial_cds")]] <- draw(partial, paste0(label, ": truncated reference CDS"), type_colors)
+}
+if (all(c("carbon", "helixer") %in% unique(d$tool))) {
+  paired <- subset(d, stratum == "partial" & group != "Original")
+  paired$group <- droplevels(paired$group)
+  paired$category <- factor(paired$tool, c("carbon", "helixer"), c("Carbon-A", "Helixer"))
+  plots$truncated_cds <- draw(paired, "Truncated reference CDS", tool_colors)
+}
 for (name in names(plots)) {
   ggsave(file.path(out, paste0(name, ".png")), plots[[name]],
-         width = 13.2, height = 4.4, dpi = 220, bg = "white")
+         width = 18, height = 4.4, dpi = 220, bg = "white")
   ggsave(file.path(out, paste0(name, ".pdf")), plots[[name]],
-         width = 13.2, height = 4.4, device = cairo_pdf, bg = "white")
+         width = 18, height = 4.4, device = cairo_pdf, bg = "white")
 }

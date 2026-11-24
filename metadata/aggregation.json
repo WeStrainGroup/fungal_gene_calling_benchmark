@@ -1,17 +1,23 @@
 {
   "aggregation_version": "0.2.1",
   "scoring_version": "0.2.0",
-  "unique_species": 12,
-  "expected_cases": 144,
-  "metrics": [
-    "precision",
-    "recall",
-    "f1"
+  "target_species": 17,
+  "target_cases": 340,
+  "tools": [
+    "annevo",
+    "tiberius",
+    "carbon",
+    "helixer"
+  ],
+  "truncated_tools": [
+    "carbon",
+    "helixer"
   ],
   "conditions": [
     "genome",
-    "50-100kb",
+    "10-100kb",
     "5-10kb",
+    "2-5kb",
     "1-2kb"
   ],
   "weighting": "Equal weight per species",
@@ -19,14 +25,25 @@
   "undefined": "Excluded, never zero-filled",
   "n_zero": "mean and SD are NA",
   "n_one": "mean defined, SD is NA",
-  "shared_species": "Saccharomyces_cerevisiae counted once",
-  "tests_passed": 31,
-  "source_scoring_unchanged": true,
-  "files_sha256": {
-    "metadata/species.tsv": "f100cfde19ac0f3ea308cd66453d298c208d8a9917b9f1c70e10cda2526fb542",
-    "scripts/summarize_all_species.py": "1033079da7f857ff21b97d43ddcef1c0c1d15074f46c3a009d1fc1d7221daa45",
-    "scripts/plot_all_species.R": "91fa6000c64d196fec0406797cf97e75e934c1af551ae701541e15914eb98039",
-    "tests/test_species_summary.py": "a7eb9e1e2fcdfa466b67eb40df71e84aab4aeeb2d618f4ba100ccf379d58242f"
+  "shared_species": "Shared assemblies counted once",
+  "tests_passed": 34,
+  "real_regression_cases": 30,
+  "validated_results": {
+    "species": 17,
+    "tools": [
+      "annevo",
+      "tiberius",
+      "carbon",
+      "helixer"
+    ],
+    "cases": 340,
+    "metric_rows": 3060,
+    "summary_rows_checked_in_R": 540
   },
-  "summary_rows_checked_in_R": 252
+  "files_sha256": {
+    "metadata/species.tsv": "c50c650c43ad0695d1a2e6d230d3362f3b06e81f4851d744c9e75fb26071ed70",
+    "scripts/summarize_all_species.py": "70cd6ffc3c4de41e3ac67f98c0f4ea8cf7ec83d83dc4c958b168df583d217eca",
+    "scripts/plot_all_species.R": "463350323ff0ece1cb085e5912d6a5d11418a9f7fbf4cb6a469f7617335e6a50",
+    "tests/test_species_summary.py": "da0e4caf53d66b76e68889a285b2ca0865c285b14c28735c75d62c27a06fddb6"
+  }
 }

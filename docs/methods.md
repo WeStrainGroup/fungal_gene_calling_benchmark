@@ -4,9 +4,9 @@ This protocol reuses frozen inputs and native predictions. It does not retrain m
 
 ## Inputs and cohorts
 
-The source datasets contain 2 ANNEVO-selected, 6 Tiberius-selected and 5 Carbon-A-selected species. The current summary combines their 12 distinct genomes, counting the shared Saccharomyces cerevisiae inputs and predictions once. Source-specific tables remain provenance records, not the final reporting groups. Carbon-A's five species are all officially `seen`. See [accessions and training exposure](datasets.md); this is not a three-model unseen-species benchmark.
+The benchmark contains 17 unique fungal genomes selected from the ANNEVO, Tiberius, Carbon-A and Helixer evaluations. Shared assemblies are counted once. All 17 species, five conditions and four tools have completed prediction and independent validation. Carbon-A's five selected species are officially `seen`; no uniformly unseen-species claim is made. See [accessions and exposure](datasets.md).
 
-Original assemblies and full-genome random partitions of 1–2 kb, 5–10 kb and 50–100 kb use the existing frozen maps, seeds, annotations and genetic codes. Cut points are not moved to preserve genes. All tools receive identical DNA. Main scoring uses records >=1,000 bp. Smaller original records are retained and reported, not scored: Agaricus bisporus has 771 such records totaling 560,320 bp. Whole-genome reconstruction checks include these records.
+Conditions are original assemblies and full-genome random partitions of 1–2 kb, 2–5 kb, 5–10 kb and 10–100 kb. Existing DNA, annotations, genetic codes, seeds and retained maps are frozen. For the five new assemblies, each condition uses an independent `random.Random(species_seed)`. Cut points do not follow genes. All tools receive identical DNA. Main scoring uses records >=1,000 bp; smaller original records are retained and counted in reconstruction checks.
 
 The evaluator checks RefSeq MD5 files, frozen input SHA256 where available, source DNA equality, exact consecutive fragment coverage, each fragment's sequence checksum, and reconstruction of every original CDS from its visible pieces. Native prediction hashes must remain unchanged during evaluation and independent validation.
 
@@ -31,14 +31,14 @@ All tools retain their native filters. Apply the following external filters once
 2. Visible spliced CDS >=200 bp, counting retained terminal-stop bases and partial boundary bases.
 3. Carbon-A confidence >=0.1 or explicit `NA`. A missing confidence attribute is an error, not `NA`.
 
-No model is removed because its predicted start/stop, complete/incomplete status, or phase is wrong. An inconsistent predicted exon-phase chain cannot earn a gene TP, but remains in counts and interval metrics. Raw confidence, native status, gene Parent and phase are read directly from the original GFF; prediction IDs remain unchanged.
+No model is removed because its predicted start/stop, complete/incomplete status, or phase is wrong. An inconsistent predicted exon-phase chain cannot earn a gene TP, but remains in counts and interval metrics. Raw confidence, native status, inherited native partial flag, gene Parent and phase are read directly from the original GFF; prediction IDs remain unchanged.
 
 Reference territory is the visible CDS span on each record and strand, including internal introns. Same-strand overlapping spans are resolved as connected components. A component containing complete and truncated references, or any unscored reference, is conservatively unscored in full; affected references are removed from scoring too. This conservative propagation prevents ambiguous FP attribution. A failed isoform can therefore mask an overlapping qualified isoform/gene; exclusion reasons and regions are provided. Opposite strands are independent.
 
 | Prediction location after filtering | Treatment |
 | --- | --- |
 | Within complete territory, or elsewhere in scoreable background | Complete comparison; unmatched model is FP. |
-| Wholly within truncated territory | Truncated-region evaluation; report scores only for Carbon-A. |
+| Wholly within truncated territory | Truncated-region evaluation; report scores for Carbon-A and Helixer. |
 | Overlaps an unscored region | Unscored; report count, model CDS bp and proportion. |
 | Overlaps truncated territory but extends outside it | Cross-scope; report separately without clipping it into a new model. |
 
@@ -52,9 +52,9 @@ A maximum one-to-one matching permits any eligible isoform but counts a referenc
 
 Nucleotide and exon metrics keep the frozen official evaluator definitions: choose the longest eligible visible isoform per reference gene (transcript ID breaks length ties), merge intervals on each record/strand, calculate nucleotide overlap, and match exact merged exon intervals. Thus nucleotide/exon counts do not have the same denominators as gene counts, and exon unions are not counts of transcript-specific exon occurrences. No prediction is clipped into a new model. All three levels use the same confidence/length-filtered prediction collection within their respective scope.
 
-Carbon-A truncated precision/F1 are conditional within truncated-reference regions, not whole-genome precision/F1. For subtype results, matched predictions follow their globally matched reference gene's subtype. Unmatched predictions wholly attributable to one subtype territory contribute its FP; ambiguous subtype assignments remain in aggregate truncated counts and `subtype_unresolved`. The three named subtype counts therefore need not sum to the aggregate. Background and cross-scope predictions are always reported alongside these scores.
+Carbon-A and Helixer truncated precision/F1 are conditional within truncated-reference regions, not whole-genome precision/F1. For subtype results, matched predictions follow their globally matched reference gene's subtype. Unmatched predictions wholly attributable to one subtype territory contribute its FP; ambiguous subtype assignments remain in aggregate truncated counts and `subtype_unresolved`. The three named subtype counts therefore need not sum to the aggregate. Background and cross-scope predictions are always reported alongside these scores.
 
-Each cell includes TP, FP, FN, predicted/reference denominator, precision, recall and F1. No eligible reference gives `NA` rates (even if FP are present). A reference with no prediction gives recall/F1 zero. Counts remain available when rates are NA. Under the revised aggregation policy (v0.2.1), each tool, input condition, stratum and metric is summarized across the 12 unique species by arithmetic mean and sample SD (n−1), giving each species equal weight. Undefined values are excluded, never zero-filled; `n_species` states the number of defined values. With zero defined values, mean and SD are NA; with one, mean is retained and SD is NA. Original assemblies are a separate condition. All inference/validation must finish before final summary tables are produced. The exact species × input × tool × stratum × level grid is asserted.
+Each cell includes TP, FP, FN, predicted/reference denominator, precision, recall and F1. No eligible reference gives `NA` rates (even if FP are present). A reference with no prediction gives recall/F1 zero. Counts remain available when rates are NA. Under the revised aggregation policy (v0.2.1), each tool, input condition, stratum and metric is summarized across the unique species in the declared result set by arithmetic mean and sample SD (n−1), giving each species equal weight. Undefined values are excluded, never zero-filled; `n_species` states the number of defined values. With zero defined values, mean and SD are NA; with one, mean is retained and SD is NA. Original assemblies are a separate condition. All inference/validation must finish before final summary tables are produced. The exact species × input × tool × stratum × level grid is asserted.
 
 ## Validation and outputs
 
@@ -75,29 +75,23 @@ Each cell includes TP, FP, FN, predicted/reference denominator, precision, recal
 | `source_sha256.json` | Exact inputs and native predictions read. |
 | `STATUS.json` | Evaluator version, completion and explicit missing cases. |
 
-Current figures use R/ggplot2, `theme_minimal()`, the accepted muted tool palette, species-equal means and sample-SD error bars. `summarize_all_species.py` checks duplicate species for exact agreement, preserves zero values and asserts the final 1,008-row metric grid (144 unique inference cases). Current public tables live in `results/`, and final figures are generated in `figures/`. Detailed reference and prediction audits remain with the validated computation outputs. Obsolete derived results and temporary experiments are removed; primary inputs and native predictions are retained. Incomplete results are explicitly labeled and are not summarized as complete.
+Current figures use R/ggplot2, `theme_minimal()`, the accepted muted palette, species-equal means and sample-SD error bars. The final 17-species/four-tool grid contains 340 inference cases and 3,060 metric rows. All 3,060 metric rows and 540 summary rows are complete; independent validation checked 1,603,921 gene TPs and 544 unchanged source files. No partial run is labeled complete. Native source files are reused; derived outputs have one maintained location.
 
 ## Implementation
 
 | Script | Purpose | Status |
 | --- | --- | --- |
-| `fetch_data.py` | Download and verify all 12 frozen inputs and 144 native GFFs. | All archived files verified. |
-| `prepare_inputs.py` | Reconstruct the two pilot inputs from source records and maps. | Pilot input hashes checked; release already includes inputs. |
-| `prepare_new_inputs.py` | Prepare additional RefSeq accessions and whole-genome partitions. | Expansion inputs frozen; not needed to score released data. |
-| `run_predictor.sh` | Run one native predictor on one input; Carbon-A supports GPU_COUNT. | 144 unique inference cases complete. |
-| `common.py` | FASTA helpers and pinned interval evaluator. | Current evaluator dependency. |
-| `evaluate_stratified.py` | Reference strata, common filters, structural matching and metrics. | All three source datasets complete. |
-| `validate_stratified.py` | Independent raw coordinate/phase and count checks; source hashes. | 24 + 72 + 60 source cases passed; 144 unique cases. |
-| `summarize_all_species.py` | Deduplicate shared species and calculate mean/sample SD. | Final 1,008 metric rows; 252 summary rows independently checked in R. |
-| `plot_all_species.R` | Complete and truncated CDS figures. | Final twelve-species figures inspected. |
-| `tests/test_stratified.py` | Scoring boundary tests. | 24 tests passed. |
-| `tests/test_species_summary.py` | Weighting, deduplication, NA and sample SD tests. | Seven tests passed. |
+| `install_helixer.sh` | Install fixed Helixer, HelixerPost, GeenuFF and fungi model in isolation. | Installed; 33 official tests and model MD5 passed. |
+| `prepare_new_inputs.py` | Fetch exact RefSeq DNA/GFF, verify MD5, exclude organelles and validate all current partitions. | Five added species frozen; official MD5 and all partition reconstruction checks passed. |
+| `prepare_benchmark.py` | Link reusable inputs and native predictions into one current view; write the 160-task list. | 17-species view ready; 180 existing cases reused without copying. |
+| `run_benchmark.py` | Run pilot or pending cases on selected cooperative GPU locks; score and validate on completion. | All 340 predictions complete; CPU scoring and independent validation passed on 2026-11-24. |
+| `run_predictor.sh` | One native predictor invocation, four tool choices. | Existing parameters preserved; Helixer CLI checked against v0.3.8. |
+| `common.py` | FASTA helpers and frozen interval evaluator. | Current dependency. |
+| `evaluate_stratified.py` | Reference strata, shared filtering, exact structural matching and metrics. | Four-tool support; inherited partial flag retained. |
+| `validate_stratified.py` | Independent native-GFF coordinate/phase checks, count reconciliation and hashes. | Supports both truncated-prediction tools. |
+| `summarize_all_species.py` | Deduplicate, verify selected tool/species grid, calculate species-equal mean/sample SD. | Four-tool grid regression passed. |
+| `plot_all_species.R` | Complete comparison, shared truncated comparison and subtype plots. | Four final figures generated; labels and layout inspected. |
+| `validate_summary.R` | Independently recompute means, sample SD and denominators in R. | All 540 expanded summary rows independently verified in R. |
+| `tests/test_stratified.py`, `tests/test_species_summary.py` | Scientific boundary and summary regression tests. | 34 tests passed; 30 real cases retain all 210 metric rows exactly, with 130,930 gene TPs independently checked. |
 
-## Additional 2–5 kb condition
-
-The same partition algorithm uses an independent `random.Random(species_seed)` for 2–5 kb. Existing partitions are not regenerated. Every new sequence, coordinate map and reconstructed original record is checked before inference; shorter original records are retained. `--groups 2-5kb` restricts CPU evaluation to the supplement, and explicit five-condition aggregation expects 180 unique cases and 1,260 metric rows. No scoring thresholds or matching rules change.
-
-| Script | Purpose | Status |
-| --- | --- | --- |
-| `prepare_fragment_condition.py` | Freeze and verify the independent 2–5 kb partition. | Preparation and launch tracked in `fragment_2_5kb/STATUS.json`. |
-| `run_fragment_condition.py` | Run 36 cases on GPUs 4–7, then score, validate and plot. | Supplement in progress; original 144 predictions retained. |
+Run status is recorded in the active compute root's `STATUS.json`; pilot status is `PILOT_STATUS.json`. The input, software and prediction manifests identify the exact sources. README and this registry must be updated whenever script status changes.

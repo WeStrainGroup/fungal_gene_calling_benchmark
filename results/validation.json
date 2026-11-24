@@ -1,56 +1,9 @@
 {
   "status": "PASS",
-  "summary_rows_independently_checked": 252,
+  "summary_rows_independently_checked": 540,
   "mean_sd_engine": "R base mean and sample sd",
-  "paired_cases": 144,
-  "paired_species_conditions": 48,
-  "unit_tests": 31,
-  "scoring_code_unchanged": true,
-  "validated_at": "2026-11-21 21:46:52 CST",
-  "source_validations": {
-    "three_predictor_full_genome": {
-      "status": "PASS",
-      "cases": 24,
-      "all_gene_true_positives_checked": 106556,
-      "raw_gff_coordinate_and_phase_agreement": "PASS",
-      "independent_gene_accounting": "PASS",
-      "source_files_rehashed": 44,
-      "source_files_unchanged": true,
-      "examples": 68,
-      "note": "Read native GFF and original reference directly; no evaluator imports."
-    },
-    "fungi_test_six": {
-      "status": "PASS",
-      "cases": 72,
-      "all_gene_true_positives_checked": 328525,
-      "raw_gff_coordinate_and_phase_agreement": "PASS",
-      "independent_gene_accounting": "PASS",
-      "source_files_rehashed": 132,
-      "source_files_unchanged": true,
-      "examples": 238,
-      "note": "Read native GFF and original reference directly; no evaluator imports."
-    },
-    "carbon_fungi_set": {
-      "status": "PASS",
-      "cases": 60,
-      "all_gene_true_positives_checked": 401810,
-      "raw_gff_coordinate_and_phase_agreement": "PASS",
-      "independent_gene_accounting": "PASS",
-      "source_files_rehashed": 110,
-      "source_files_unchanged": true,
-      "examples": 191,
-      "note": "Read native GFF and original reference directly; no evaluator imports."
-    }
-  },
-  "files_sha256": {
-    "scripts/prepare_new_inputs.py": "3375336907cf8aa1f65cf377d2207877d9f7d092383de04387271195b8b144a5",
-    "scripts/prepare_inputs.py": "cb9bb55baa56610689450701a5c68c59c18c4572044d9b47df0082365b768cf1",
-    "scripts/validate_stratified.py": "b63071c6e0a3ea041b966446e9a6102bc18e55ec17012a95665ff89fa8132c8a",
-    "scripts/fetch_data.py": "41be151f795ebd87d788d3ef810269a1f21824a945f14ef7be1d1af30d5aa649",
-    "scripts/summarize_all_species.py": "6e8002b083061f078cb08bb9cfa5be0bffe12f92b0b75bcfa7b3fb20285badc4",
-    "scripts/common.py": "f1648f0599755bc041e490a8a90d732aefaa964b214351cf869a9784ab7fc40c",
-    "scripts/evaluate_stratified.py": "34b13198af0d632c6f5fbf6d0b685f66aab50c6115ee4da42e790a5bd61f02db",
-    "tests/test_species_summary.py": "c515b737c623638d19c4f728dc4492c70e2d35c1485450163e0e360c2380ff10",
-    "tests/test_stratified.py": "89b7c98dcf911f8d20aaadfb1342102cff92cdbb3ef83db15c2972a2c96d70b8"
-  }
+  "paired_cases": 340,
+  "paired_species_conditions": 85,
+  "scoring_version": "0.2.0",
+  "validated_at": "2026-11-24 18:54:29 CST"
 }

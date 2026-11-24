@@ -8,6 +8,11 @@ Puccinia_striiformis	GCF_021901695.1	Tiberius
 Punctularia_strigosozonata	GCF_000264995.1	Tiberius
 Tilletiopsis_washingtonensis	GCF_003144115.1	Tiberius
 Schizosaccharomyces_pombe	GCF_000002945.2	Carbon-A
-Neurospora_crassa	GCF_000182925.2	Carbon-A
+Neurospora_crassa	GCF_000182925.2	Carbon-A, Helixer
 Coprinopsis_cinerea	GCF_000182895.1	Carbon-A
 Rhizophagus_irregularis	GCF_026210795.1	Carbon-A
+Aspergillus_terreus	GCF_000149615.1	Helixer
+Coccidioides_immitis	GCF_000149335.2	Helixer
+Debaryomyces_hansenii	GCF_000006445.2	Helixer
+Fusarium_graminearum	GCF_000240135.3	Helixer
+Laccaria_bicolor	GCF_000143565.1	Helixer

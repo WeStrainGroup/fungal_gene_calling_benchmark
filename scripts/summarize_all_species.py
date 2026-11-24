@@ -12,8 +12,8 @@ import subprocess
 import time
 from pathlib import Path
 
-GROUPS = ('genome', '50-100kb', '5-10kb', '1-2kb')
-TOOLS = ('annevo', 'tiberius', 'carbon')
+GROUPS = ('genome', '10-100kb', '5-10kb', '2-5kb', '1-2kb')
+TOOLS = ('annevo', 'tiberius', 'carbon', 'helixer')
 SCOPES = ('complete', 'partial', 'missing_5prime', 'missing_3prime', 'missing_both')
 LEVELS = ('nucleotide', 'exon', 'gene')
 KEY = ('species', 'group', 'tool', 'stratum', 'level')
@@ -66,9 +66,9 @@ def paired_units(observed, expected):
     return {unit for unit in units if {key for key in expected if key[:2] == unit} <= observed}
 
 
-def aggregate(roots, manifest, output, paired_conditions=False, groups=GROUPS):
+def aggregate(roots, manifest, output, paired_conditions=False, groups=GROUPS, tools=TOOLS):
     species = [r['species'] for r in read_table(manifest)]
-    assert len(species) == len(set(species)) == 12
+    assert species and len(species) == len(set(species))
     output.mkdir(parents=True, exist_ok=True)
     collected = {name: [] for name in ('metrics', 'diagnostics', 'inputs')}
     snapshots = []
@@ -86,11 +86,15 @@ def aggregate(roots, manifest, output, paired_conditions=False, groups=GROUPS):
             collected[name].extend(read_table(path))
         snapshots.append(dict(cohort=status['cohort'], status=status['status'],
             completed_cases=status['completed_cases'], expected_cases=status['expected_cases'], sha256=hashes))
+    # Keep only requested conditions; retired partitions cannot enter the new summary.
+    excluded_groups = sorted({r['group'] for r in collected['metrics']} - set(groups))
+    assert set(excluded_groups) <= set(GROUPS)
+    collected = {name: [r for r in rows if r['group'] in groups and ('tool' not in r or r['tool'] in tools)] for name, rows in collected.items()}
     metrics = unique_rows(collected['metrics'], KEY)
     diagnostics = unique_rows(collected['diagnostics'], ('species', 'group', 'tool', 'category'))
     inputs = unique_rows(collected['inputs'], ('species', 'group'))
-    expected = {(s, g, t, scope, level) for s in species for g in groups for t in TOOLS
-                for scope in (SCOPES if t == 'carbon' else ('complete',)) for level in LEVELS}
+    expected = {(s, g, t, scope, level) for s in species for g in groups for t in tools
+                for scope in (SCOPES if t in ('carbon', 'helixer') else ('complete',)) for level in LEVELS}
     observed = {tuple(r[k] for k in KEY) for r in metrics}
     assert observed <= expected, 'Unexpected species, condition or metric'
     complete = all(s['status'] == 'COMPLETE' for s in snapshots)
@@ -115,16 +119,16 @@ def aggregate(roots, manifest, output, paired_conditions=False, groups=GROUPS):
     if complete or paired_conditions:
         write_table(output/'mean_sd.tsv', mean_sd(metrics, included, species_by_group))
     status = dict(aggregation_version='0.2.1', scoring_version='0.2.0',
-        status='COMPLETE' if complete else 'INTERIM' if paired_conditions else 'PARTIAL', expected_species=12,
+        status='COMPLETE' if complete else 'INTERIM' if paired_conditions else 'PARTIAL', expected_species=len(species),
         included_species=len(included) if complete or paired_conditions else 0,
         species=included if complete or paired_conditions else [], available_cases=available_cases,
         species_by_condition=species_by_group if complete or paired_conditions else {},
-        interim_rule='All three tools validated within each species-condition pair' if paired_conditions else None,
-        completed_cases=len({tuple(r[k] for k in KEY[:3]) for r in metrics}), expected_cases=len(species)*len(groups)*len(TOOLS),
+        interim_rule='All selected tools validated within each species-condition pair' if paired_conditions else None,
+        completed_cases=len({tuple(r[k] for k in KEY[:3]) for r in metrics}), expected_cases=len(species)*len(groups)*len(tools),
         metric_rows=len(metrics), expected_metric_rows=len(expected),
         duplicate_metric_rows_removed=len(collected['metrics'])-len(observed),
         sample_sd_ddof=1, missing_values='excluded, never replaced with zero',
-        sources=snapshots)
+        sources=snapshots, excluded_conditions=excluded_groups)
     (output/'STATUS.json').write_text(json.dumps(status, indent=2)+'\n')
     return status
 
@@ -134,7 +138,7 @@ def run(args):
     output.mkdir(parents=True, exist_ok=True)
     with (output/'summary.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        status = aggregate(args.inputs, args.species, output, args.paired_conditions, args.groups)
+        status = aggregate(args.inputs, args.species, output, args.paired_conditions, args.groups, args.tools)
         print(json.dumps(status, indent=2), flush=True)
         while args.wait and status['status'] != 'COMPLETE':
             time.sleep(60)
@@ -146,7 +150,7 @@ def run(args):
                 ready &= (current['status'] == 'COMPLETE' and check['status'] == 'PASS'
                           and check['cases'] == current['expected_cases'])
             if ready:
-                status = aggregate(args.inputs, args.species, output, groups=args.groups)
+                status = aggregate(args.inputs, args.species, output, groups=args.groups, tools=args.tools)
                 print(json.dumps(status, indent=2), flush=True)
         if status['status'] in ('COMPLETE', 'INTERIM') and args.rscript:
             subprocess.run([args.rscript, str(Path(__file__).with_name('plot_all_species.R')),
@@ -156,13 +160,14 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--inputs', type=Path, nargs='+', required=True,
-                        help='Validated ANNEVO, Tiberius and Carbon-A cohort result directories')
+                        help='Validated cohort result directories')
     parser.add_argument('--species', type=Path, default=Path(__file__).resolve().parents[1]/'metadata/species.tsv')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--groups', nargs='+', default=GROUPS, choices=(*GROUPS, '2-5kb'))
+    parser.add_argument('--groups', nargs='+', default=GROUPS, choices=GROUPS)
+    parser.add_argument('--tools', nargs='+', choices=TOOLS, default=TOOLS)
     parser.add_argument('--wait', action='store_true', help='Wait for final independently validated source tables')
     parser.add_argument('--paired-conditions', action='store_true',
-                        help='Interim report restricted to species-condition pairs with all three tools validated')
+                        help='Interim report restricted to species-condition pairs with all selected tools validated')
     parser.add_argument('--rscript', help='Optional Rscript executable to draw the completed summary')
     args = parser.parse_args()
     if args.wait and args.paired_conditions:

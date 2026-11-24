@@ -1,0 +1,24 @@
+{
+  "release": "v1.2",
+  "date": "2026-11-24",
+  "cases": 340,
+  "tests_passed": 34,
+  "unchanged_prior_metric_rows": 1260,
+  "files_sha256": {
+    "figures/carbon_partial_cds.pdf": "f292fc16de6bd63c0ef1f3aa11d3a164efdf3da0cb0770579b6ba160b705c132",
+    "figures/carbon_partial_cds.png": "3ef914125e16ab6b135d009cc10f42e81917ff64a79d15954ea33adf9379da09",
+    "figures/complete_cds.pdf": "2bd5c9b48892965e9a2fedeb9d63377a6cac82d1193469f9e242ab069f01725f",
+    "figures/complete_cds.png": "ac58cb9b948731a7917219f06f735db692d26a8ad3869af40c5a899788322d26",
+    "figures/helixer_partial_cds.pdf": "48c24fc6fdbeca5efd411fc944301f047b2502b6da6efb386a28a5502825352c",
+    "figures/helixer_partial_cds.png": "58de8bb708c9ea9ae6fac7f00354f4e5870fb98615641b98fe176830d27d09d3",
+    "figures/truncated_cds.pdf": "bdf437252a6d291d942c4695424376d66137172d647ad590afe1cfb0794cd2d6",
+    "figures/truncated_cds.png": "d9025c3ad99f453166b92da58ea21774adf2e45f1c1952708b84e89db9be50d6",
+    "results/STATUS.json": "3edb9d5e9520e45081e1da9a6c79fd09facbdf244e699780cf3fbbee788e36b4",
+    "results/diagnostics.tsv": "3ac880183c4fdd33d5d3b3d13db333e7390ed11b40836046a9dbac33af2f4f1b",
+    "results/independent_validation.json": "0c65fb1052af4de9c1754df999dc0f21c8f330381c5063d8b38b6938b8888d90",
+    "results/inputs.tsv": "ccc75f58f22ab44922e0bf3e87a6f38197224a83be805bc59d1ae2fa921db1df",
+    "results/mean_sd.tsv": "8eb64afbf0ed7b77de76daf574aec8beb588450b1f3648d203c01e5f33972bf7",
+    "results/metrics.tsv": "6b9ed3ad6f4d566b765ebaf68f7fed3e1bca98176a8f06000958c03f2ff43b04",
+    "results/validation.json": "0a6aacac88eeec56967176882bfc5f1268cd53a2af50e83c0ef408d72921ec53"
+  }
+}

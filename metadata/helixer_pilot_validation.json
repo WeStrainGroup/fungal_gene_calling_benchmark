@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "cases": 4,
+  "all_gene_true_positives_checked": 16959,
+  "raw_gff_coordinate_and_phase_agreement": "PASS",
+  "independent_gene_accounting": "PASS",
+  "source_files_rehashed": 16,
+  "source_files_unchanged": true,
+  "examples": 12,
+  "note": "Read native GFF and original reference directly; no evaluator imports.",
+  "cases_detail": [
+    {
+      "species": "Saccharomyces_cerevisiae",
+      "group": "genome",
+      "models": 5777,
+      "native_partial": 1,
+      "inconsistent_phase": 0,
+      "elapsed": "0:45.24"
+    },
+    {
+      "species": "Saccharomyces_cerevisiae",
+      "group": "1-2kb",
+      "models": 5188,
+      "native_partial": 2765,
+      "inconsistent_phase": 0,
+      "elapsed": "3:54.96"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "genome",
+      "models": 10326,
+      "native_partial": 0,
+      "inconsistent_phase": 0,
+      "elapsed": "1:55.91"
+    },
+    {
+      "species": "Neurospora_crassa",
+      "group": "1-2kb",
+      "models": 9720,
+      "native_partial": 5462,
+      "inconsistent_phase": 0,
+      "elapsed": "12:40.00"
+    }
+  ],
+  "coordinate_bounds": "PASS",
+  "gpu_inference_verified": true
+}

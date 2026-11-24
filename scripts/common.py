@@ -6,8 +6,8 @@ from Bio.Seq import Seq
 
 REPO = Path(__file__).resolve().parents[1]
 SPECIES = ('Saccharomyces_cerevisiae', 'Candida_albicans')
-TOOLS = ('carbon', 'annevo', 'tiberius')
-GROUPS = ('genome', '50-100kb', '5-10kb', '1-2kb')
+TOOLS = ('carbon', 'annevo', 'tiberius', 'helixer')
+GROUPS = ('genome', '10-100kb', '5-10kb', '2-5kb', '1-2kb')
 sys.path.insert(0, str(REPO/'vendor/carbon_a'))
 import evaluation as official
 

@@ -24,7 +24,7 @@ MIN_RECORD = 1000
 MIN_CDS = 200
 CONFIDENCE = 0.1
 AUDIT_FIELDS = ('transcript', 'gene', 'record', 'strand', 'cds_bp', 'phase',
-                'phase_consistent', 'confidence', 'native_status', 'incomplete_reason',
+                'phase_consistent', 'confidence', 'native_status', 'native_partial', 'incomplete_reason',
                 'bucket', 'background', 'matched_reference', 'subtype_unresolved')
 
 
@@ -104,7 +104,8 @@ def read_models(path):
         intervals = common.official.merge_intervals([(r[1], r[2]) for r in parts + stops[tx]])
         result.append(dict(id=tx, gene=gene, record=parts[0][0], strand=parts[0][3],
                            blocks=intervals, raw_blocks=[(r[1], r[2]) for r in parts], phase=phase, phase_consistent=consistent,
-                           partial=any(r[5] for r in parts), confidence=confidence,
+                           partial=any(r[5] for r in parts),
+                           native_partial=attributes.get('partial') == 'true' or any(r[5] for r in parts), confidence=confidence,
                            confidence_present=value is not None, status=attributes.get('status', ''),
                            incomplete_reason=attributes.get('incomplete_reason', '')))
     return result
@@ -367,7 +368,8 @@ def score_case(predictions, tool, genome, units, domains):
         audit.append(dict(transcript=model['id'], gene=model['gene'], record=model['record'],
                           strand=model['strand'], cds_bp=length(model), phase=model['phase'],
                           phase_consistent=model['phase_consistent'], confidence='NA' if model['confidence'] is None else model['confidence'],
-                          native_status=model['status'], incomplete_reason=model['incomplete_reason'],
+                          native_status=model['status'], native_partial=model.get('native_partial', model['partial']),
+                          incomplete_reason=model['incomplete_reason'],
                           bucket=bucket, background=background, matched_reference=''))
     references = {kind: {u['key']: u['models'] for u in units if u['kind'] == kind}
                   for kind in ('complete', 'partial')}
@@ -375,7 +377,7 @@ def score_case(predictions, tool, genome, units, domains):
     for kind in ('complete', 'partial'):
         rows, assignments = metric_rows(buckets[kind], references[kind])
         matches[kind] = assignments
-        if kind == 'complete' or tool == 'carbon':
+        if kind == 'complete' or tool in ('carbon', 'helixer'):
             results.extend(dict(stratum=kind, **r) for r in rows)
         for i, key in assignments.items():
             matches[(kind, buckets[kind][i]['id'])] = key
@@ -383,7 +385,7 @@ def score_case(predictions, tool, genome, units, domains):
     subtype_by_gene = {u['key']: u['subtype'] for u in units if u['kind'] == 'partial'}
     subtype_predictions = collections.defaultdict(list)
     unresolved_subtypes = set()
-    if tool == 'carbon':
+    if tool in ('carbon', 'helixer'):
         for i, model in enumerate(buckets['partial']):
             if i in matches['partial']:
                 subtype = subtype_by_gene[matches['partial'][i]]
@@ -421,7 +423,7 @@ def score_case(predictions, tool, genome, units, domains):
 def validate_metric_grid(rows, cases):
     expected = {(c['species'], c['group'], c['tool'], scope, level)
                 for c in cases
-                for scope in (('complete', 'partial') + SUBTYPES if c['tool'] == 'carbon' else ('complete',))
+                for scope in (('complete', 'partial') + SUBTYPES if c['tool'] in ('carbon', 'helixer') else ('complete',))
                 for level in LEVELS}
     actual = [(r['species'], r['group'], r['tool'], r['stratum'], r['level']) for r in rows]
     assert len(actual) == len(set(actual)), 'Duplicate metric row'
@@ -430,6 +432,7 @@ def validate_metric_grid(rows, cases):
 
 def run(args):
     data, output = args.data.resolve(), args.output.resolve()
+    tools = args.tools
     output.mkdir(parents=True, exist_ok=True)
     if args.samples:
         species = [r['species'] for r in csv.DictReader(args.samples.open(), delimiter='\t')]
@@ -482,7 +485,7 @@ def run(args):
                 group_ref_rows.append(row)
             ref_rows.extend(group_ref_rows)
             write_table(output/'reference'/name/group/'regions.tsv', group_ref_rows)
-            for tool in TOOLS:
+            for tool in tools:
                 native = data/'out'/tool/name/group/('prediction.gff' if tool == 'carbon' else 'prediction.gff3')
                 if not native.is_file() or (args.completed_only and not (native.parent/'COMPLETE').exists()):
                     pending.append(dict(species=name, group=group, tool=tool))
@@ -504,7 +507,7 @@ def run(args):
         for path, value in source_hashes.items():
             if path in expected_hashes:
                 assert value == expected_hashes[path], path
-    assert len(validations) + len(pending) == len(species)*len(args.groups)*len(TOOLS)
+    assert len(validations) + len(pending) == len(species)*len(args.groups)*len(tools)
     validate_metric_grid(metrics, validations)
     write_table(output/'metrics.tsv', metrics)
     write_table(output/'diagnostics.tsv', diagnostics)
@@ -513,11 +516,11 @@ def run(args):
     write_table(output/'validation.tsv', validations)
     (output/'source_sha256.json').write_text(json.dumps(source_hashes, indent=2)+'\n')
     (output/'STATUS.json').write_text(json.dumps(dict(version=VERSION, cohort=args.cohort,
-        status='PARTIAL' if pending else 'COMPLETE', expected_cases=len(species)*len(args.groups)*len(TOOLS),
+        status='PARTIAL' if pending else 'COMPLETE', expected_cases=len(species)*len(args.groups)*len(tools),
         completed_cases=len(validations), pending=pending, min_record_bp=MIN_RECORD,
         min_cds_bp=MIN_CDS, confidence_threshold=CONFIDENCE,
         source_files_unchanged=True, fragment_reconstruction='PASS', independent_matching='PASS'), indent=2)+'\n')
-    print(f'{len(validations)}/{len(species)*len(args.groups)*len(TOOLS)} cases evaluated.')
+    print(f'{len(validations)}/{len(species)*len(args.groups)*len(tools)} cases evaluated.')
 
 
 if __name__ == '__main__':
@@ -525,7 +528,8 @@ if __name__ == '__main__':
     parser.add_argument('--data', type=Path, default=common.REPO/'data')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--cohort', required=True)
-    parser.add_argument('--groups', nargs='+', default=GROUPS, choices=(*GROUPS, '2-5kb'))
+    parser.add_argument('--groups', nargs='+', default=GROUPS, choices=GROUPS)
+    parser.add_argument('--tools', nargs='+', choices=TOOLS, default=TOOLS)
     parser.add_argument('--samples', type=Path)
     parser.add_argument('--completed-only', action='store_true', help='Require native COMPLETE markers for live inference directories')
     run(parser.parse_args())
