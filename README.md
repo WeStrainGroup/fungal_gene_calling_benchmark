@@ -25,27 +25,27 @@ Each genome is evaluated as its original assembly and as full-genome random part
 
 Only records ≥1 kb enter scoring. Shorter original records remain in the release; *A. bisporus* has 771 such records totaling 560,320 bp.
 
-Sequence lengths within each original assembly after retaining nuclear sequences ≥1 kb, before random fragmentation. Lengths are in kb, rounded to one decimal place.
+Sequence lengths within each original assembly after retaining nuclear sequences ≥1 kb, before random fragmentation. Lengths are in kb; values below 10 kb retain one decimal place, and larger values are rounded to integers.
 
 | Species | Sequences | Min | Median | Max |
 | --- | ---: | ---: | ---: | ---: |
-| *Saccharomyces cerevisiae* | 16 | 230.2 | 765.0 | 1,531.9 |
-| *Candida albicans* | 8 | 949.5 | 1,701.3 | 3,188.3 |
-| *Agaricus bisporus* | 1,245 | 1.0 | 1.7 | 2,973.6 |
-| *Cryphonectria parasitica* | 26 | 2.6 | 56.8 | 7,437.3 |
-| *Parastagonospora nodorum* | 107 | 2.0 | 32.4 | 2,531.9 |
-| *Puccinia striiformis* | 184 | 2.5 | 57.2 | 5,908.9 |
-| *Punctularia strigosozonata* | 195 | 2.0 | 3.0 | 4,675.7 |
-| *Tilletiopsis washingtonensis* | 38 | 1.2 | 523.7 | 1,093.0 |
-| *Schizosaccharomyces pombe* | 3 | 2,452.9 | 4,539.8 | 5,579.1 |
-| *Neurospora crassa* | 20 | 1.6 | 78.6 | 9,798.9 |
-| *Coprinopsis cinerea* | 67 | 2.2 | 6.7 | 4,147.0 |
-| *Rhizophagus irregularis* | 32 | 2,669.0 | 4,707.8 | 7,995.2 |
-| *Aspergillus terreus* | 26 | 12.1 | 1,388.6 | 2,751.8 |
-| *Coccidioides immitis* | 6 | 3,458.9 | 4,138.2 | 8,482.3 |
-| *Debaryomyces hansenii* | 7 | 1,249.9 | 1,606.3 | 2,305.8 |
-| *Fusarium graminearum* | 19 | 2.1 | 7.0 | 11,697.3 |
-| *Laccaria bicolor* | 665 | 1.0 | 8.2 | 3,566.4 |
+| *Agaricus bisporus* | 1,245 | 1.0 | 1.7 | 2,974 |
+| *Punctularia strigosozonata* | 195 | 2.0 | 3.0 | 4,676 |
+| *Coprinopsis cinerea* | 67 | 2.2 | 6.7 | 4,147 |
+| *Fusarium graminearum* | 19 | 2.1 | 7.0 | 11,697 |
+| *Laccaria bicolor* | 665 | 1.0 | 8.2 | 3,566 |
+| *Parastagonospora nodorum* | 107 | 2.0 | 32 | 2,532 |
+| *Cryphonectria parasitica* | 26 | 2.6 | 57 | 7,437 |
+| *Puccinia striiformis* | 184 | 2.5 | 57 | 5,909 |
+| *Neurospora crassa* | 20 | 1.6 | 79 | 9,799 |
+| *Tilletiopsis washingtonensis* | 38 | 1.2 | 524 | 1,093 |
+| *Saccharomyces cerevisiae* | 16 | 230 | 765 | 1,532 |
+| *Aspergillus terreus* | 26 | 12 | 1,389 | 2,752 |
+| *Debaryomyces hansenii* | 7 | 1,250 | 1,606 | 2,306 |
+| *Candida albicans* | 8 | 950 | 1,701 | 3,188 |
+| *Coccidioides immitis* | 6 | 3,459 | 4,138 | 8,482 |
+| *Schizosaccharomyces pombe* | 3 | 2,453 | 4,540 | 5,579 |
+| *Rhizophagus irregularis* | 32 | 2,669 | 4,708 | 7,995 |
 
 Statistics are calculated separately within each genome. [Source statistics and reproduction](docs/input_lengths.md).
 
