@@ -8,3 +8,7 @@ __pycache__/
 .RData
 /data_*/
 /combined_results/
+
+/runtime_work/
+/reproduced_runtime/
+/data_download/

@@ -1,0 +1,13 @@
+{
+  "environments": {
+    "carbon": "/path/to/envs/carbon",
+    "annevo": "/path/to/envs/annevo",
+    "tiberius": "/path/to/envs/tiberius",
+    "helixer": "/path/to/envs/helixer"
+  },
+  "carbon_dir": "/path/to/Carbon-A",
+  "annevo_dir": "/path/to/ANNEVO",
+  "tiberius_model": "/path/to/tiberius/fungi",
+  "helixer_model": "/path/to/fungi_v0.3_a_0100.h5",
+  "gnu_time": "/usr/bin/time"
+}

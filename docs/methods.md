@@ -56,6 +56,14 @@ Carbon-A and Helixer truncated precision/F1 are conditional within truncated-ref
 
 Each cell includes TP, FP, FN, predicted/reference denominator, precision, recall and F1. No eligible reference gives `NA` rates (even if FP are present). A reference with no prediction gives recall/F1 zero. Counts remain available when rates are NA. Under the revised aggregation policy (v0.2.1), each tool, input condition, stratum and metric is summarized across the unique species in the declared result set by arithmetic mean and sample SD (n−1), giving each species equal weight. Undefined values are excluded, never zero-filled; `n_species` states the number of defined values. With zero defined values, mean and SD are NA; with one, mean is retained and SD is NA. Original assemblies are a separate condition. All inference/validation must finish before final summary tables are produced. The exact species × input × tool × stratum × level grid is asserted.
 
+## Original-assembly length groups
+
+`compare_original_assemblies.R` joins `results/input_lengths.tsv` (`group=genome`, `scope=scored`) to complete-reference F1 scores in `results/metrics.tsv` (`group=genome`, `stratum=complete`). Species are assigned by the unrounded median length of their ≥1 kb nuclear records: <10,000 bp, 10,000–100,000 bp inclusive, or >100,000 bp. The groups contain 5, 4 and 8 species. Each species is paired between Tiberius and Carbon-A at each of the three scoring levels; means give every species equal weight.
+
+Differences are Carbon-A − Tiberius on the F1 percentage scale. Two-sided paired Wilcoxon signed-rank tests use exact P values without continuity or multiple-comparison correction. The current nine comparisons have no zero differences or tied absolute differences; the script checks this and independently verifies every P value by enumerating all signed-rank assignments. With 5 or 4 pairs, the smallest possible two-sided exact P values are 0.0625 and 0.125, respectively, so P ≥0.05 does not establish equivalence. These comparisons are exploratory: species, gene structure, reference quality and training overlap differ among length groups, and a median by record count does not describe the length distribution experienced by most genes.
+
+Outputs are `results/original_assembly_pairs.tsv` (51 species-level pairs), `results/original_assembly_tests.tsv` (9 comparisons) and `figures/original_assembly_comparison.{png,pdf}`. The figure uses the existing palette, `theme_minimal()`, solid circles (`shape=16`) and an 11.5 × 4 inch canvas.
+
 ## Validation and outputs
 
 `tests/test_stratified.py` covers positive/negative strand clipping, intron cuts, all three missing-end types, phase, 199/200/201-bp CDS and 999/1,000-bp inputs, confidence boundaries and missing attributes, native incomplete predictions, duplicate and alternative-isoform matching, wrong locus/strand/frame, overlap conflicts, mixed fragments, ignored short references and empty-reference cases.
@@ -86,12 +94,20 @@ Current figures use R/ggplot2, `theme_minimal()`, the accepted muted palette, sp
 | `prepare_benchmark.py` | Link reusable inputs and native predictions into one current view; write the 160-task list. | 17-species view ready; 180 existing cases reused without copying. |
 | `run_benchmark.py` | Run pilot or pending cases on selected cooperative GPU locks; score and validate on completion. | All 340 predictions complete; CPU scoring and independent validation passed on 2026-11-24. |
 | `run_predictor.sh` | One native predictor invocation, four tool choices. | Existing parameters preserved; Helixer CLI checked against v0.3.8. |
+| `prepare_efficiency.py` | Keep all original records >=1 kb; sample 50 frozen fragments per species/range in five equal-width length bins. | All 85 inputs prepared; 3,400 sampled fragments match frozen sequence hashes. |
+| `check_efficiency_resources.py` | Verify A100 40GB, BF16, 32 GiB memory, and either four physical cores (Slurm) or four-CPU quota (AIS). | Both platform modes record allocation evidence; AIS does not claim exclusive cores. |
+| `run_efficiency.py` | Check frozen inputs/software; run 20 serial cases per species and record runtime, CPU time and maximum individual-process RSS. Optional path configuration supports external installations. | Round one: 340 cases passed; portable path configuration checked with a mocked 20-case run. |
+| `efficiency_ais.sh` | Run one species on AIS with the frozen software prefixes; 20 serial cases, round-one outputs. | Round one passed; two additional rounds submitted (34 tasks), using separate output directories. |
+| `summarize_efficiency.py` | Validate three full rounds; calculate within-input replicate medians, then equal-species means and sample SDs for throughput/time; export original-assembly relative elapsed times. | Round-one summary verified; three-round aggregation tested; final summary waits for all 1,020 observations. |
+| `collect_efficiency.py` | Collect one complete 17-species runtime round and verify native GFFs, hardware receipts and timing files. | Validated collection and failure checks; outputs feed the common summary. |
+| `plot_efficiency.R` | Plot throughput mean ± species SD by input condition, using the accepted palette and theme_minimal; assembly time is a table. | Round-one throughput preview rendered and inspected; three-round figure pending. |
 | `common.py` | FASTA helpers and frozen interval evaluator. | Current dependency. |
 | `evaluate_stratified.py` | Reference strata, shared filtering, exact structural matching and metrics. | Four-tool support; inherited partial flag retained. |
 | `validate_stratified.py` | Independent native-GFF coordinate/phase checks, count reconciliation and hashes. | Supports both truncated-prediction tools. |
 | `summarize_all_species.py` | Deduplicate, verify selected tool/species grid, calculate species-equal mean/sample SD. | Four-tool grid regression passed. |
 | `summarize_input_lengths.py` | FASTA length counts, quartiles and N50, per species and pooled; all/scored subsets. | All 85 input totals reconciled; 180 quantile summaries independently checked against NumPy and fragment maps. |
 | `plot_all_species.R` | Complete comparison, shared truncated comparison and subtype plots. | Four tool positions in the main plots; ANNEVO/Tiberius truncated scores shown as NA (not evaluated). |
+| `compare_original_assemblies.R` | Original-assembly length groups, paired F1 comparisons, exact raw P values and figure. | 51 pairs and 9 tests reproduced; exact P values independently enumerated; layout inspected. |
 | `validate_summary.R` | Independently recompute means, sample SD and denominators in R. | All 540 expanded summary rows independently verified in R. |
 | `tests/test_stratified.py`, `tests/test_species_summary.py` | Scientific boundary and summary regression tests. | 34 tests passed; 30 real cases retain all 210 metric rows exactly, with 130,930 gene TPs independently checked. |
 

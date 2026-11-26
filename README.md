@@ -106,14 +106,21 @@ We compare nucleotide-, exon- and gene-level F1 for four tools across 17 fungal 
 
 ### Complete reference CDS
 
-- Carbon-A achieves the highest F1 at all three levels for original assemblies and 10–100 kb inputs.
-- Tiberius achieves the highest F1 at all three levels for 2–5 kb and 1–2 kb inputs.
-- For 5–10 kb inputs, Tiberius and Carbon-A have similar mean F1, differing by less than 1.6 percentage points at each level.
-- Helixer and ANNEVO have lower mean F1 than both Tiberius and Carbon-A in all 15 comparisons.
+Carbon-A achieves the highest mean F1 at all three levels for original assemblies and 10–100 kb inputs, whereas Tiberius leads at all three levels for 2–5 kb and 1–2 kb inputs. For 5–10 kb inputs, their mean F1 differs by less than 1.6 percentage points at each level. Helixer and ANNEVO have lower mean F1 than both tools in all 15 comparisons.
 
 ![Complete reference CDS](figures/complete_cds.png)
 
 Bars show species-equal mean F1 and error bars show sample SD across 17 species. Each genome’s score is calculated from its combined TP/FP/FN across fragments; counts are not pooled across species. SD describes between-species variation. [Summary statistics](results/mean_sd.tsv) and [per-species results](results/metrics.tsv) include precision, recall and F1.
+
+### Tiberius and Carbon-A across original assemblies
+
+Tiberius’s higher F1 on 1–2 kb and 2–5 kb fragments, and Carbon-A’s higher F1 on 10–100 kb fragments and original assemblies, prompted us to compare the two tools across original assemblies with different sequence-length distributions. We grouped assemblies by the median length of their ≥1 kb nuclear sequences: <10 kb (5 species), 10–100 kb (4 species) and >100 kb (8 species).
+
+Nucleotide F1 differed little between the tools, whereas Carbon-A had higher mean exon and gene/CDS F1 in all three groups. In the >100 kb group, both differences had raw P = 0.0078; neither reached P < 0.05 in the other two groups. These exploratory comparisons are limited by small group sizes and differing species composition. A short assembly median can also coexist with most genes on long scaffolds, so this grouping does not isolate the effect of sequence length.
+
+![Paired comparison of original assemblies by median sequence length](figures/original_assembly_comparison.png)
+
+Points show complete-reference F1 for each species (Tiberius, beige; Carbon-A, muted red), with lines connecting paired results. Groups reflect each assembly’s median sequence length, and n denotes the number of species. Mean Δ is the species-equal mean F1 difference, Carbon-A − Tiberius, in percentage points. P values are from two-sided paired Wilcoxon signed-rank exact tests, without correction for the nine comparisons.
 
 ### Truncated reference CDS
 
@@ -122,6 +129,33 @@ Carbon-A achieves higher mean F1 than Helixer at all three levels across all fou
 ![Helixer and Carbon-A on truncated reference CDS](figures/truncated_cds.png)
 
 Bars show species-equal mean F1 ± sample SD within truncated-reference regions. ANNEVO and Tiberius are marked NA because they are not evaluated in this stratum; NA is not a zero F1 score. Overall uses aggregate truncated-region counts within each genome, including unresolved subtypes, rather than averaging subtype F1. Results by truncation type are shown separately for [Helixer](figures/helixer_partial_cds.png) and [Carbon-A](figures/carbon_partial_cds.png). In those figures, NA means no eligible reference exists; no 10–100 kb case contains a scoreable CDS missing both ends.
+
+### Computational efficiency
+
+The first runtime round completed all 340 tool–species–input combinations successfully. Each run used one A100 40GB GPU, four CPUs and 32 GiB host memory. Original inputs contained all nuclear assembly records ≥1 kb. For each fragment range, 50 frozen records were sampled per species, with ten records from each of five equal-width length bins. The four tools received identical inputs and retained the frozen models and prediction settings. Timing includes model loading, native preprocessing, prediction, postprocessing and output writing, but excludes installation, transfer and validation.
+
+ANNEVO had the highest mean throughput in every input condition, whereas Carbon-A had the lowest. For original assemblies, Carbon-A’s mean elapsed time was about nine times that of ANNEVO and about three times that of Tiberius or Helixer. All four tools achieved higher throughput on longer inputs. Because each fragment set contained 50 records rather than a fixed number of bases, this trend also reflects larger total inputs and the amortization of fixed costs such as model loading.
+
+![Runtime throughput: first round](figures/efficiency/throughput.png)
+
+Bars show the species-equal mean throughput (Mb/min), with sample SD across 17 species. These are first-round results, with one observation per species, tool and condition. Panel y-axis scales differ. Two additional rounds are in progress; the final summary will first take each input’s median across three runs, then calculate the mean and SD across species.
+
+| Tool | Time per original assembly (min, mean ± SD) | Relative elapsed time |
+| --- | ---: | ---: |
+| ANNEVO | 1.2 ± 0.7 | 1.0× |
+| Tiberius | 3.5 ± 2.0 | 2.9× |
+| Helixer | 3.3 ± 2.1 | 2.8× |
+| Carbon-A | 11.0 ± 12.5 | 9.1× |
+
+Relative elapsed time is each tool’s mean time divided by the fastest tool’s mean time; 1.0× is the fastest. Values are calculated before rounding and displayed to one decimal place. Shared CPU resources and a single observation per input limit interpretation of small timing differences.
+
+[Runtime methods](docs/efficiency.md) and [current summary](results/efficiency/summary.tsv).
+
+## Suggestion
+
+For complete-CDS prediction in fungal assemblies or individual contigs, we recommend a length-based combination: **Tiberius for sequences of 1–10 kb and Carbon-A for sequences >10 kb**. Across the tested 1–10 kb ranges, Tiberius achieved similar or higher mean complete-reference F1 than Carbon-A and took approximately one fifth of its mean runtime in the first-round 50-record batches. Carbon-A achieved the highest mean F1 on longer inputs. Apply this choice to each sequence, rather than to an assembly’s median sequence length.
+
+If recovering truncated CDS is a priority and computational cost is less limiting, **Carbon-A is the preferred single-tool choice**: it achieved higher mean truncated-reference F1 than Helixer across all tested fragment ranges. The combined workflow’s end-to-end speedup has not yet been measured.
 
 ## Reproduce
 
@@ -139,9 +173,25 @@ Rscript -e 'install.packages("ggplot2", repos="https://cloud.r-project.org")'
 
 ```bash
 Rscript scripts/plot_all_species.R results figures
+Rscript scripts/compare_original_assemblies.R results figures
+Rscript scripts/plot_efficiency.R results/efficiency/summary.tsv figures/efficiency
 ```
 
-This uses the published summary in `results/` and writes PNG/PDF files to `figures/`. No data download or rescoring is required.
+These commands use the published tables in `results/` and write PNG/PDF files to `figures/`. The paired comparison also regenerates `original_assembly_pairs.tsv` and `original_assembly_tests.tsv` in `results/`. No data download or rescoring is required.
+
+### Reproduce runtime summaries
+
+The repository includes all 340 first-round timing observations. Recalculate the species means, SDs and relative elapsed times, then redraw the figure:
+
+```bash
+python scripts/summarize_efficiency.py \
+  --metrics results/efficiency/round1_metrics.tsv \
+  --expected-rounds 1 --output reproduced_runtime
+Rscript scripts/plot_efficiency.R reproduced_runtime/summary.tsv reproduced_runtime/figures
+python -m unittest discover -s tests -p 'test_efficiency*.py' -v
+```
+
+Python 3.10+ and R/ggplot2 are sufficient; no GPU or model download is needed to reproduce these summaries. [Runtime methods](docs/efficiency.md) also describe reconstructing the 85 exact inputs from the v1.2 data release, configuring locally installed predictors, rerunning timing, and collecting three rounds. Exact elapsed times depend on hardware and host load.
 
 ### Recalculate scores
 

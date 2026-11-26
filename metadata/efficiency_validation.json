@@ -1,0 +1,18 @@
+{
+  "archive_sha256": "6ae0b161b1b86e0b4ff57522f5f11d153e46526722979d60a7fc1160e4052741",
+  "fasta_hashes_verified": 85,
+  "sampled_records_verified": 3400,
+  "source": "GitHub v1.2 release archive",
+  "temporary_files_removed_on_exit": true,
+  "rounds_reported": 1,
+  "successful_cases": 340,
+  "cpu_reproduction": {
+    "summary_tables": "byte-identical",
+    "throughput_png": "byte-identical"
+  },
+  "runner_validation": "Portable configuration and 20-case orchestration tested with mocked predictors; new GPU inference was not run for the path-only change.",
+  "aggregation": "Within-input median across three rounds, then equal-species mean and sample SD; current snapshot explicitly uses one round.",
+  "measured_hardware": "A100-SXM4-40GB; 4 CPU quota; 32 GiB host RAM; shared physical CPU cores",
+  "raw_metrics_sha256": "effb8c51443dc73b562695aa26875cc30b908d0b32cd0637073fe174fb10efcd",
+  "efficiency_tests_passed": 5
+}
