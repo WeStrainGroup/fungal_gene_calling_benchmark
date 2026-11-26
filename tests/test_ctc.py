@@ -59,8 +59,8 @@ with p.open('w') as h:
                 f=root/(label+'.fa');f.write_text(''.join(f'>r{i}\n'+('A'*n)+'\n' for i,n in enumerate(lengths)))
                 out=root/label
                 command=[sys.executable,str(ROOT/'scripts/ctc.py'),'--input',str(f),'--output',str(out),
-                    '--tiberius-python',str(mock),'--tiberius-model',str(root/'model'),
-                    '--carbon-python',str(mock),'--carbon-dir',str(root/'carbon')]
+                    '--tiberius-path',str(mock),'--tiberius-model',str(root/'model'),
+                    '--carbon-path',str(mock),'--carbon-model',str(root/'carbon')]
                 if label=='failure':command+=['--tiberius-args=--fail']
                 result=subprocess.run(command,capture_output=True,text=True)
                 report=json.loads((out/'run.json').read_text())

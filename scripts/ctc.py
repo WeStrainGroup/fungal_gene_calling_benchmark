@@ -108,7 +108,7 @@ def run(a):
                 continue
             dest = output/tool
             env = os.environ.copy()
-            python = (a.tiberius_python if tool == 'tiberius' else a.carbon_python).absolute()
+            python = (a.tiberius_path if tool == 'tiberius' else a.carbon_path).absolute()
             env['PATH'] = str(python.parent)+os.pathsep+env.get('PATH', '')
             env['LD_LIBRARY_PATH'] = str(python.parent.parent/'lib')+os.pathsep+env.get('LD_LIBRARY_PATH', '')
             if tool == 'tiberius':
@@ -119,8 +119,8 @@ def run(a):
                     {'--genome','--model','--out','--codingseq','--protseq','--min_genome_seqlen'})
                 gff = dest/'prediction.gff3'
             else:
-                command = ['bash', str(a.carbon_dir.resolve()/'annotation_pipeline/run_annotation.sh'),
-                    '--input', str(dest/'input.fna'), '--model', str((a.carbon_model or a.carbon_dir).resolve()),
+                command = ['bash', str(a.carbon_model.resolve()/'annotation_pipeline/run_annotation.sh'),
+                    '--input', str(dest/'input.fna'), '--model', str(a.carbon_model.resolve()),
                     '--output-dir', str(dest/'work')] + extra_args(a.carbon_args,
                     {'--input','--model','--output-dir','--codon-table'})
                 if not any(x.split('=')[0] == '--min-record-length' for x in command):
@@ -163,12 +163,11 @@ def main():
     p.add_argument('--output', required=True, type=Path, help='New output directory')
     p.add_argument('--min-length', type=int, default=1000)
     p.add_argument('--cutoff', type=int, default=10000, help='Inclusive upper length for Tiberius; longer records go to Carbon-A')
-    p.add_argument('--tiberius-python', required=True, type=Path)
+    p.add_argument('--tiberius-path', required=True, type=Path, help='Python executable in the Tiberius environment')
     p.add_argument('--tiberius-model', required=True, type=Path)
     p.add_argument('--tiberius-args', default='', help='Quoted additional native options; use --tiberius-args="..."')
-    p.add_argument('--carbon-python', required=True, type=Path, help='Python in the Carbon-A environment; its bin directory is placed first in PATH')
-    p.add_argument('--carbon-dir', required=True, type=Path)
-    p.add_argument('--carbon-model', type=Path, help='Defaults to --carbon-dir')
+    p.add_argument('--carbon-path', required=True, type=Path, help='Python in the Carbon-A environment; its bin directory is placed first in PATH')
+    p.add_argument('--carbon-model', required=True, type=Path, help='Carbon-A directory containing model weights and annotation_pipeline/')
     p.add_argument('--carbon-args', default='', help='Quoted additional native options; use --carbon-args="..."')
     p.add_argument('--codon-table', type=Path, help='Native Carbon-A codon-table JSON; not passed to Tiberius')
     a = p.parse_args()

@@ -163,12 +163,14 @@ If recovering truncated CDS is a priority and computational cost is less limitin
 
 ```bash
 python scripts/ctc.py \
-  --input assembly.fasta --output ctc_out \
-  --min-length 1000 --cutoff 10000 \
-  --tiberius-python /path/to/tiberius_env/bin/python \
+  --input assembly.fasta \
+  --output ctc_out \
+  --min-length 1000 \
+  --cutoff 10000 \
+  --tiberius-path /path/to/tiberius_env/bin/python \
   --tiberius-model /path/to/tiberius_model/fungi \
-  --carbon-python /path/to/carbon_env/bin/python \
-  --carbon-dir /path/to/Carbon-A
+  --carbon-path /path/to/carbon_env/bin/python \
+  --carbon-model /path/to/Carbon-A
 ```
 
 Records of 1–10 kb go to Tiberius; longer records go to Carbon-A. Carbon-A defaults to one GPU with its additional input-length filter disabled. The merged annotation is `ctc_out/prediction.gff3`; native outputs and a routing table are retained. Use `--tiberius-args="..."` and `--carbon-args="..."` for native options, and `--codon-table` for Carbon-A's genetic-code JSON. See `python scripts/ctc.py --help` for all options. CTC's measured runtime on the 17 assemblies is pending.
