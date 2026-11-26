@@ -66,12 +66,12 @@ def main():
         OPENBLAS_NUM_THREADS='4', OMP_NUM_THREADS='4', MKL_NUM_THREADS='4',
         TF_NUM_INTRAOP_THREADS='4', TF_NUM_INTEROP_THREADS='2', TF_FORCE_GPU_ALLOW_GROWTH='true')
     command = [sys.executable, str(scripts/'ctc.py'), '--input', str(source),
-        '--output', str(output/'ctc'), '--min-length', '1000', '--cutoff', '10000',
+        '--output', str(output/'ctc'), '--min-length', '1000', '--cutoff-length', '10000',
         '--tiberius-path', str(Path(config['environments']['tiberius'])/'bin/python'),
         '--tiberius-model', config['tiberius_model'], '--tiberius-args=--batch_size 8',
-        '--carbon-path', str(Path(config['environments']['carbon'])/'bin/python'),
-        '--carbon-model', config['carbon_dir'], '--codon-table', str(code),
-        '--carbon-args=--accession benchmark --gpu-count 1 --batch-size 4 --attn-implementation sdpa '
+        '--carbon-a-path', str(Path(config['environments']['carbon'])/'bin/python'),
+        '--carbon-a-model', config['carbon_dir'], '--codon-table', str(code),
+        '--carbon-a-args=--accession benchmark --gpu-count 1 --batch-size 4 --attn-implementation sdpa '
         '--viterbi-backend cpu --min-record-length 0 --min-cds-length 96']
     load_start = os.getloadavg()[0]
     start = time.monotonic()
@@ -93,7 +93,7 @@ def main():
     split_seconds = details.get('split_seconds', 0)
     merge_seconds = details.get('merge_seconds', 0)
     cds = details.get('cds_features', 0)
-    result = dict(species=species,group='genome',tool='ctc',records=row['records'],bp=row['bp'],
+    result = dict(species=species,group='genome',tool='ctc',ctc_version=details.get('version'),records=row['records'],bp=row['bp'],
         elapsed_seconds=elapsed,bp_per_second=int(row['bp'])/elapsed,split_seconds=split_seconds,
         merge_seconds=merge_seconds,exit_code=exit_code,passed=exit_code==0,cds_features=cds,
         job_id=os.environ.get('BENCHMARK_RUN_ID'),node=os.uname().nodename,

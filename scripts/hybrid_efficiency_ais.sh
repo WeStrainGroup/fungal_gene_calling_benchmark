@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Keep original environment prefixes inside the AIS container.
 set -euo pipefail
+scripts=$(cd "$(dirname "$0")" && pwd)
 work=$1
 index=$2
 round=${3:-1}
@@ -13,6 +14,6 @@ fi
 export GNU_TIME=/ssd/wangxinyu/gnu_time
 export BENCHMARK_IMAGE=192.168.108.1:5000/pytorch/pytorch2.3-admin:cuda_12.4
 exec /ssd/wangxinyu/carbon_a_benchmark_20261117/runtime/bin/python \
-  "$work/scripts/run_hybrid_efficiency.py" \
+  "$scripts/run_hybrid_efficiency.py" \
   --inputs "$work/inputs" --metadata "$work/software.json" \
-  --cases "$work/cases.tsv" --output "$work/hybrid/round$round" --species-index "$index"
+  --cases "$work/cases.tsv" --output "$work/ctc/0.2.0/round$round" --species-index "$index"

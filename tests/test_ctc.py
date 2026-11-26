@@ -42,12 +42,17 @@ class CTCTests(unittest.TestCase):
             mock.write_text('#!'+sys.executable+'\n'+'''import pathlib,sys
 args=sys.argv
 if '--input' in args:
+ import json
+ table=json.loads(pathlib.Path(args[args.index('--codon-table')+1]).read_text())
+ assert len(table)==64 and table['TAA']=='*'
  assert args[args.index('--min-record-length')+1]=='0'
  assert args[args.index('--gpu-count')+1]=='1'
 if '--fail' in args: sys.exit(7)
 f=pathlib.Path(args[args.index('--genome' if '--genome' in args else '--input')+1])
 p=pathlib.Path(args[args.index('--out')+1]) if '--out' in args else pathlib.Path(args[args.index('--output-dir')+1])/'prediction.gff'
 p.parent.mkdir(parents=True,exist_ok=True)
+if '--codingseq' in args:
+ pathlib.Path(args[args.index('--codingseq')+1]).write_text('>t description\\nATGCTGTAA\\n')
 with p.open('w') as h:
  h.write('##gff-version 3\\n')
  for l in f.read_text().splitlines():
@@ -58,9 +63,13 @@ with p.open('w') as h:
             for label,lengths in [('mixed',[1000,10001]),('short',[1000]),('long',[10001]),('skipped',[999]),('failure',[1000])]:
                 f=root/(label+'.fa');f.write_text(''.join(f'>r{i}\n'+('A'*n)+'\n' for i,n in enumerate(lengths)))
                 out=root/label
-                command=[sys.executable,str(ROOT/'scripts/ctc.py'),'--input',str(f),'--output',str(out),
+                command=[sys.executable,str(ROOT/'scripts/ctc.py'),'--input',str(f),'--output',str(out),'--cutoff-length','10000',
                     '--tiberius-path',str(mock),'--tiberius-model',str(root/'model'),
-                    '--carbon-path',str(mock),'--carbon-model',str(root/'carbon')]
+                    '--carbon-a-path',str(mock),'--carbon-a-model',str(root/'carbon')]
+                if label=='mixed':
+                    table=ctc.codon_table();table['CTG']='S'
+                    custom=root/'custom.json';custom.write_text(json.dumps(table))
+                    command+=['--codon-table',str(custom)]
                 if label=='failure':command+=['--tiberius-args=--fail']
                 result=subprocess.run(command,capture_output=True,text=True)
                 report=json.loads((out/'run.json').read_text())
@@ -70,9 +79,47 @@ with p.open('w') as h:
                     self.assertFalse((out/'prediction.gff3').exists())
                 else:
                     self.assertEqual(result.returncode,0,result.stderr)
+                    if report['routing']['tiberius']['records']:
+                        self.assertEqual((out/'tiberius/proteins.fa').read_text(),'>tiberius_t t description\n'+('MS' if label=='mixed' else 'ML')+'\n')
+                    actual_table=json.loads((out/'codon_table.json').read_text())
+                    self.assertEqual(actual_table['CTG'],'S' if label=='mixed' else 'L')
                     self.assertEqual(report['cds_features'],sum(n>=1000 for n in lengths))
                     self.assertEqual(len(report['components']),len({n<=10000 for n in lengths if n>=1000}))
                     self.assertNotEqual(subprocess.run(command,capture_output=True).returncode,0)
+
+    def test_shared_genetic_codes_and_defects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source=root/'cds.fa'
+            source.write_text('>t1 description\nATGCTGTAA\n>t2\nATGTAANNN\n>t3\nATGTAAANN\n>t4\nATGA\n>t5\nGCNTAA\n>t6\nATGTAATAA\n')
+            for residue,expected in [('L','ML'),('S','MS'),('A','MA')]:
+                table=ctc.codon_table();table['CTG']=residue
+                summary=ctc.translate_cds(source,root/'proteins.fa',root/'diagnostics.tsv',table)
+                proteins=dict(ctc.fasta(root/'proteins.fa'))
+                self.assertEqual(proteins['t1 description'],expected)
+                self.assertEqual(proteins['t2'],'M*X')
+                self.assertEqual(proteins['t3'],'M*X')
+                self.assertEqual(proteins['t4'],'MX')
+                self.assertEqual(proteins['t5'],'A')
+                self.assertEqual(proteins['t6'],'M*')
+                self.assertEqual(summary['internal_stops'],3)
+                self.assertEqual(summary['partial_codons'],1)
+            custom=ctc.codon_table();custom['GCT']='S'
+            source.write_text('>ambiguous\nGCN\n')
+            ctc.translate_cds(source,root/'proteins.fa',root/'diagnostics.tsv',custom)
+            self.assertEqual(dict(ctc.fasta(root/'proteins.fa'))['ambiguous'],'X')
+            (root/'bad.json').write_text('{"ATG":"M"}')
+            with self.assertRaises(ValueError):ctc.codon_table(root/'bad.json')
+
+    def test_native_composite_headers_match_merged_ids(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source=root/'cds.fa'
+            source.write_text('>g1|g1_t1|chr:0-9(+)\nATGCTGTAA\n')
+            ctc.translate_cds(source,root/'proteins.fa',root/'diagnostics.tsv',ctc.codon_table(),{'g1_t1'})
+            header,seq=next(ctc.fasta(root/'proteins.fa'))
+            self.assertEqual(header,'tiberius_g1_t1 g1|g1_t1|chr:0-9(+)')
+            self.assertEqual(seq,'ML')
+            with self.assertRaisesRegex(ValueError,'Unmatched'):
+                ctc.translate_cds(source,root/'proteins.fa',root/'diagnostics.tsv',ctc.codon_table(),{'wrong'})
 
     def test_prevent_routing_override(self):
         for flag in ['--genome other.fa','--genome=other.fa']:
