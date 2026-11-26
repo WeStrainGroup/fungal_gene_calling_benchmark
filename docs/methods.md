@@ -93,6 +93,9 @@ Current figures use R/ggplot2, `theme_minimal()`, the accepted muted palette, sp
 | `prepare_new_inputs.py` | Fetch exact RefSeq DNA/GFF, verify MD5, exclude organelles and validate all current partitions. | Five added species frozen; official MD5 and all partition reconstruction checks passed. |
 | `prepare_benchmark.py` | Link reusable inputs and native predictions into one current view; write the 160-task list. | 17-species view ready; 180 existing cases reused without copying. |
 | `run_benchmark.py` | Run pilot or pending cases on selected cooperative GPU locks; score and validate on completion. | All 340 predictions complete; CPU scoring and independent validation passed on 2026-11-24. |
+| `ctc.py` | CTC: route FASTA records by length, run Tiberius and Carbon-A sequentially, merge native GFFs. | v0.1.0; four CPU tests passed; AIS measurement pending. |
+| `run_hybrid_efficiency.py`, `hybrid_efficiency_ais.sh` | Measure CTC on one frozen original assembly, including splitting and merging. | Staged on AIS with the single-tool benchmark resources and options; actual timing pending. |
+| `tests/test_ctc.py` | Routing boundaries, merge integrity, empty partitions and failure propagation. | Four tests passed; predictor calls mocked. |
 | `run_predictor.sh` | One native predictor invocation, four tool choices. | Existing parameters preserved; Helixer CLI checked against v0.3.8. |
 | `prepare_efficiency.py` | Keep all original records >=1 kb; sample 50 frozen fragments per species/range in five equal-width length bins. | All 85 inputs prepared; 3,400 sampled fragments match frozen sequence hashes. |
 | `check_efficiency_resources.py` | Verify A100 40GB, BF16, 32 GiB memory, and either four physical cores (Slurm) or four-CPU quota (AIS). | Both platform modes record allocation evidence; AIS does not claim exclusive cores. |

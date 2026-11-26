@@ -153,9 +153,25 @@ Relative elapsed time is each tool’s mean time divided by the fastest tool’s
 
 ## Suggestion
 
-For complete-CDS prediction in fungal assemblies or individual contigs, we recommend a length-based combination: **Tiberius for sequences of 1–10 kb and Carbon-A for sequences >10 kb**. Across the tested 1–10 kb ranges, Tiberius achieved similar or higher mean complete-reference F1 than Carbon-A and took approximately one fifth of its mean runtime in the first-round 50-record batches. Carbon-A achieved the highest mean F1 on longer inputs. Apply this choice to each sequence, rather than to an assembly’s median sequence length.
+For complete-CDS prediction in fungal assemblies or individual contigs, we recommend a length-based combination: **Tiberius for sequences of 1–10 kb and Carbon-A for sequences >10 kb**. Across the tested 1–10 kb ranges, Tiberius achieved similar or higher mean complete-reference F1 than Carbon-A and took approximately one fifth of its mean runtime. Carbon-A achieved the highest mean F1 on longer inputs. Apply this choice to each sequence, rather than to an assembly’s median sequence length.
 
-If recovering truncated CDS is a priority and computational cost is less limiting, **Carbon-A is the preferred single-tool choice**: it achieved higher mean truncated-reference F1 than Helixer across all tested fragment ranges. The combined workflow’s end-to-end speedup has not yet been measured.
+If recovering truncated CDS is a priority and computational cost is less limiting, **Carbon-A is the preferred single-tool choice**: it achieved higher mean truncated-reference F1 than Helixer across all tested fragment ranges.
+
+### CTC: Combined Tiberius and Carbon-A
+
+[CTC](scripts/ctc.py) runs this strategy with one input and one output directory. Install both predictors and their models first, then run:
+
+```bash
+python scripts/ctc.py \
+  --input assembly.fasta --output ctc_out \
+  --min-length 1000 --cutoff 10000 \
+  --tiberius-python /path/to/tiberius_env/bin/python \
+  --tiberius-model /path/to/tiberius_model/fungi \
+  --carbon-python /path/to/carbon_env/bin/python \
+  --carbon-dir /path/to/Carbon-A
+```
+
+Records of 1–10 kb go to Tiberius; longer records go to Carbon-A. The merged annotation is `ctc_out/prediction.gff3`; native outputs and a routing table are retained. Use `--tiberius-args="..."` and `--carbon-args="..."` for native options, and `--codon-table` for Carbon-A's genetic-code JSON. See `python scripts/ctc.py --help` for all options. CTC's measured runtime on the 17 assemblies is pending.
 
 ## Reproduce
 
