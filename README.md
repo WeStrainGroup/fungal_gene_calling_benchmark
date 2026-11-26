@@ -171,7 +171,7 @@ python scripts/ctc.py \
   --carbon-dir /path/to/Carbon-A
 ```
 
-Records of 1–10 kb go to Tiberius; longer records go to Carbon-A. The merged annotation is `ctc_out/prediction.gff3`; native outputs and a routing table are retained. Use `--tiberius-args="..."` and `--carbon-args="..."` for native options, and `--codon-table` for Carbon-A's genetic-code JSON. See `python scripts/ctc.py --help` for all options. CTC's measured runtime on the 17 assemblies is pending.
+Records of 1–10 kb go to Tiberius; longer records go to Carbon-A. Carbon-A defaults to one GPU with its additional input-length filter disabled. The merged annotation is `ctc_out/prediction.gff3`; native outputs and a routing table are retained. Use `--tiberius-args="..."` and `--carbon-args="..."` for native options, and `--codon-table` for Carbon-A's genetic-code JSON. See `python scripts/ctc.py --help` for all options. CTC's measured runtime on the 17 assemblies is pending.
 
 ## Reproduce
 

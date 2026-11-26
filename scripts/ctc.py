@@ -123,6 +123,10 @@ def run(a):
                     '--input', str(dest/'input.fna'), '--model', str((a.carbon_model or a.carbon_dir).resolve()),
                     '--output-dir', str(dest/'work')] + extra_args(a.carbon_args,
                     {'--input','--model','--output-dir','--codon-table'})
+                if not any(x.split('=')[0] == '--min-record-length' for x in command):
+                    command += ['--min-record-length', '0']
+                if not any(x.split('=')[0] == '--gpu-count' for x in command):
+                    command += ['--gpu-count', '1']
                 if a.codon_table:
                     command += ['--codon-table', str(a.codon_table.resolve())]
                 gff = dest/'work/prediction.gff'

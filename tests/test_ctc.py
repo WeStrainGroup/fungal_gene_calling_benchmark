@@ -41,6 +41,9 @@ class CTCTests(unittest.TestCase):
             mock=binpath/'python'
             mock.write_text('#!'+sys.executable+'\n'+'''import pathlib,sys
 args=sys.argv
+if '--input' in args:
+ assert args[args.index('--min-record-length')+1]=='0'
+ assert args[args.index('--gpu-count')+1]=='1'
 if '--fail' in args: sys.exit(7)
 f=pathlib.Path(args[args.index('--genome' if '--genome' in args else '--input')+1])
 p=pathlib.Path(args[args.index('--out')+1]) if '--out' in args else pathlib.Path(args[args.index('--output-dir')+1])/'prediction.gff'
