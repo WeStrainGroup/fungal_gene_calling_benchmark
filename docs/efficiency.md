@@ -90,6 +90,4 @@ Collection requires 20 successful cases for each of 17 species, passing hardware
 
 ## CTC timing
 
-CTC 0.3.0 runs the same native predictors on each original assembly, routing 1–10 kb records to Tiberius and longer records to Carbon-A. Its default combined output retains all Tiberius models and only Carbon-A `status=complete` models, with original IDs. There is no additional confidence or CDS-length filter at this merge step. The benchmark's frozen scoring rules remain separate.
-
-`run_hybrid_efficiency.py` measures splitting, native prediction, Tiberius CDS translation and selected GFF/CDS/protein output writing on the same A100/4-CPU/32-GiB allocation. The version is recorded in each timing row. Results from earlier CTC versions are not labelled as 0.3.0 end-to-end measurements. `hybrid_efficiency_ais.sh` uses a version-specific output directory and scripts deployed beside the wrapper; previously submitted jobs are not modified.
+CTC usage and timing scope are maintained on its [dedicated page](https://app.notion.com/p/425a1ddc1d86801bb3defe76863fed06). Timing records identify the CTC version and confidence threshold; existing version-isolated jobs are unchanged. Measurements from CTC 0.3.0 do not include the confidence filtering introduced in 0.4.0 and must not be relabelled as 0.4.0 timings.

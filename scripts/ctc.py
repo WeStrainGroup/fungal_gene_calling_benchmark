@@ -6,6 +6,7 @@ import gzip
 import hashlib
 from itertools import product
 import json
+import math
 import os
 from pathlib import Path
 import shlex
@@ -179,7 +180,7 @@ def fasta_index(path):
     return records
 
 
-def native_models(tool, directory, include_incomplete=False):
+def native_models(tool, directory, include_incomplete=False, confidence_threshold=0.1):
     rows, features = read_gff(directory/'prediction.gff3')
     genes = {key:parts[0] for key,parts in features.items() if parts[0]['fields'][2] == 'gene'}
     transcripts = {key:parts[0] for key,parts in features.items() if parts[0]['fields'][2] in {'mRNA','transcript'}}
@@ -218,12 +219,24 @@ def native_models(tool, directory, include_incomplete=False):
     if set(model_records) != cds_ids:
         raise ValueError(f'{tool}: missing FASTA records for native CDS models')
     allowed = set(genes)
+    incomplete_excluded = confidence_excluded = 0
     if tool == 'carbon_a':
-        for gene in genes.values():
-            if gene['attrs'].get('status') not in {'complete', 'incomplete'}:
+        for key, gene in genes.items():
+            status = gene['attrs'].get('status')
+            if status not in {'complete', 'incomplete'}:
                 raise ValueError('Carbon-A gene lacks an explicit complete/incomplete status')
-        if not include_incomplete:
-            allowed = {key for key,row in genes.items() if row['attrs']['status'] == 'complete'}
+            raw = gene['attrs'].get('confidence')
+            if raw is None:
+                raise ValueError(f'Carbon-A gene {key} lacks confidence (use explicit NA for unscored models)')
+            score = None if raw == 'NA' else float(raw)
+            if score is not None and (not math.isfinite(score) or not 0 <= score <= 1):
+                raise ValueError(f'Carbon-A gene {key} has invalid confidence: {raw}')
+            if status == 'incomplete' and not include_incomplete:
+                allowed.remove(key)
+                incomplete_excluded += 1
+            elif score is not None and score < confidence_threshold:
+                allowed.remove(key)
+                confidence_excluded += 1
     selected = []
     for row in rows:
         roots = owners(unquote(row['attrs']['ID'])) if 'ID' in row['attrs'] else set().union(
@@ -231,17 +244,20 @@ def native_models(tool, directory, include_incomplete=False):
         if not roots:
             raise ValueError(f'{tool}: feature has no gene ancestor')
         if roots & allowed and not roots <= allowed:
-            raise ValueError('A shared feature spans complete and incomplete genes')
+            raise ValueError('A shared feature spans retained and excluded genes')
         if roots <= allowed:
             selected.append(row)
     return dict(tool=tool, rows=selected, genes={g:genes[g] for g in allowed},
                 transcripts={t:r for t,r in transcripts.items() if owners(t) <= allowed},
-                records=model_records, excluded=len(genes)-len(allowed))
+                records=model_records, incomplete_excluded=incomplete_excluded,
+                confidence_excluded=confidence_excluded)
 
 
-def combine_models(sources, output, include_incomplete=False):
+def combine_models(sources, output, include_incomplete=False, confidence_threshold=0.1):
     """Merge a single selected model set, preserving native IDs, headers and sequences."""
-    datasets = [native_models(tool, path, include_incomplete) for tool,path in sources]
+    if not math.isfinite(confidence_threshold) or not 0 <= confidence_threshold <= 1:
+        raise ValueError('confidence-threshold must be between 0 and 1')
+    datasets = [native_models(tool, path, include_incomplete, confidence_threshold) for tool,path in sources]
     feature_ids, sequence_ids, merged_rows, records = set(), set(), [], []
     for data in datasets:
         current = {unquote(r['attrs']['ID']) for r in data['rows'] if 'ID' in r['attrs']}
@@ -270,7 +286,8 @@ def combine_models(sources, output, include_incomplete=False):
             proteins_file.write(f'>{protein_header}\n{aa}\n')
     return dict(genes=sum(len(d['genes']) for d in datasets),models=len(records),
                 cds_features=sum(r['fields'][2]=='CDS' for r in merged_rows),
-                carbon_a_incomplete_excluded=sum(d['excluded'] for d in datasets))
+                carbon_a_incomplete_excluded=sum(d['incomplete_excluded'] for d in datasets),
+                carbon_a_confidence_excluded=sum(d['confidence_excluded'] for d in datasets))
 
 
 def extra_args(text, reserved):
@@ -287,8 +304,9 @@ def run(a):
     for tool in ['tiberius', 'carbon_a']:
         (output/tool).mkdir()
     (output/'combined').mkdir()
-    report = dict(strategy='CTC', version='0.3.0', input=str(a.input.resolve()), min_length=a.min_length,
-                  cutoff_length=a.cutoff_length, include_incomplete=a.include_incomplete, status='running', components=[])
+    report = dict(strategy='CTC', version='0.4.0', input=str(a.input.resolve()), min_length=a.min_length,
+                  cutoff_length=a.cutoff_length, include_incomplete=a.include_incomplete,
+                  confidence_threshold=a.confidence_threshold, status='running', components=[])
     try:
         table = codon_table(a.codon_table)
         effective_table = output/'combined/codon_table.json'
@@ -350,7 +368,7 @@ def run(a):
                     shutil.move(str(gff.parent/source_name), str(dest/target))
             sources.append((tool, dest))
         merge_start = time.monotonic()
-        report['combined'] = combine_models(sources, output/'combined', a.include_incomplete)
+        report['combined'] = combine_models(sources, output/'combined', a.include_incomplete, a.confidence_threshold)
         report['cds_features'] = report['combined']['cds_features']
         report['merge_seconds'] = time.monotonic()-merge_start
         report['status'] = 'complete'
@@ -366,7 +384,9 @@ def run(a):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--include-incomplete', action='store_true', help='Also merge Carbon-A status=incomplete models; native tool outputs always retain them')
-    p.add_argument('--version', action='version', version='CTC 0.3.0')
+    p.add_argument('--confidence-threshold', type=float, default=0.1,
+                   help='Minimum Carbon-A confidence for combined outputs (inclusive; default: 0.1); NA is retained, 0 disables score filtering')
+    p.add_argument('--version', action='version', version='CTC 0.4.0')
     p.add_argument('--input', required=True, type=Path, help='FASTA or FASTA.gz')
     p.add_argument('--output', required=True, type=Path, help='New output directory')
     p.add_argument('--min-length', type=int, default=1000)
@@ -381,6 +401,8 @@ def main():
     a = p.parse_args()
     if not 1 <= a.min_length <= a.cutoff_length:
         p.error('Require 1 <= min-length <= cutoff-length')
+    if not math.isfinite(a.confidence_threshold) or not 0 <= a.confidence_threshold <= 1:
+        p.error('confidence-threshold must be between 0 and 1')
     try:
         result = run(a)
     except (ValueError, OSError, RuntimeError) as error:

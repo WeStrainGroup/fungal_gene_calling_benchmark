@@ -80,9 +80,9 @@ class CTCTests(unittest.TestCase):
                 [('gene1 status=complete','ATGCTGTAA','MS'),('gene2 status=incomplete','ATGCTG','MS'),('gene3','ATGCTGTAA','MS')])
             before={p:p.read_bytes() for d in [t,c] for p in d.iterdir()}
             stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out)
-            self.assertEqual(stats['models'],4);self.assertEqual(stats['carbon_a_incomplete_excluded'],1)
+            self.assertEqual(stats['models'],3);self.assertEqual(stats['carbon_a_confidence_excluded'],1);self.assertEqual(stats['carbon_a_incomplete_excluded'],1)
             self.assertFalse((out/'id_map.tsv').exists())
-            expected=['old1|tx1|b:0-9(+)','old2|tx2|a:29-38(+)','gene1','gene3']
+            expected=['old1|tx1|b:0-9(+)','old2|tx2|a:29-38(+)','gene1']
             self.assertEqual(list(ctc.fasta_index(out/'cds.fa')),expected)
             self.assertEqual(list(ctc.fasta_index(out/'proteins.fa')),expected)
             self.assertIn('>old1|tx1|b:0-9(+) description',(out/'proteins.fa').read_text())
@@ -91,9 +91,39 @@ class CTCTests(unittest.TestCase):
             self.assertNotIn('status=incomplete',(out/'prediction.gff3').read_text())
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
             stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out,include_incomplete=True)
-            self.assertEqual(stats['models'],5);self.assertEqual(stats['carbon_a_incomplete_excluded'],0)
+            self.assertEqual(stats['models'],4);self.assertEqual(stats['carbon_a_incomplete_excluded'],0)
             self.assertIn('gene2',ctc.fasta_index(out/'cds.fa'))
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
+
+    def test_confidence_thresholds_na_and_invalid_scores(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);out=root/'combined';out.mkdir()
+            scores=['0.0999','0.1','0.1001','NA','NA']
+            gff=''.join(model('x',f'g{i}',f't{i}',1+12*i,
+                f"status={'incomplete' if i==4 else 'complete'};confidence={score}")
+                for i,score in enumerate(scores))
+            c=native(root,'carbon_a',gff,[(f'g{i}','ATGCTGTAA','ML') for i in range(5)])
+            before={p:p.read_bytes() for p in c.iterdir()}
+            for threshold,partial,expected in [(.1,False,{'g1','g2','g3'}),
+                    (.1,True,{'g1','g2','g3','g4'}),(0,False,{'g0','g1','g2','g3'}),
+                    (1,True,{'g3','g4'})]:
+                stats=ctc.combine_models([('carbon_a',c)],out,partial,threshold)
+                self.assertEqual(set(ctc.fasta_index(out/'cds.fa')),expected)
+                self.assertEqual(set(ctc.fasta_index(out/'proteins.fa')),expected)
+                rows,_=ctc.read_gff(out/'prediction.gff3')
+                self.assertEqual({r['attrs']['ID'] for r in rows if r['fields'][2]=='gene'},expected)
+                self.assertEqual(stats['models']+stats['carbon_a_incomplete_excluded']+
+                    stats['carbon_a_confidence_excluded'],5)
+            self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
+            for bad in [-.1,1.1,float('nan'),float('inf')]:
+                with self.assertRaisesRegex(ValueError,'confidence-threshold'):
+                    ctc.combine_models([('carbon_a',c)],out,confidence_threshold=bad)
+            for bad in ['nan','inf','-0.1','1.1','bad',None]:
+                attrs='status=complete'+('' if bad is None else ';confidence='+bad)
+                (c/'prediction.gff3').write_text(model('x','g0','t0',1,attrs))
+                for filename,sequence in [('cds.fa','ATGCTGTAA'),('proteins.fa','ML')]:
+                    (c/filename).write_text('>g0\n'+sequence+'\n')
+                with self.assertRaises(ValueError):ctc.combine_models([('carbon_a',c)],out)
 
     def test_native_discontinuous_features_and_shared_references(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -117,7 +147,7 @@ class CTCTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);out=root/'combined';out.mkdir()
             t=native(root,'tiberius',model('x','g','tx'),[('g|tx|x:0-9(+)','ATGCTGTAA','ML')])
-            c=native(root,'carbon_a',model('y','g','mrna',1,'status=complete'),[('g','ATGCTGTAA','ML')])
+            c=native(root,'carbon_a',model('y','g','mrna',1,'status=complete;confidence=1'),[('g','ATGCTGTAA','ML')])
             with self.assertRaisesRegex(ValueError,'collide'):
                 ctc.combine_models([('tiberius',t),('carbon_a',c)],out)
 
@@ -142,7 +172,7 @@ p=pathlib.Path(args[args.index('--out')+1]) if tiberius else pathlib.Path(args[a
 p.parent.mkdir(parents=True,exist_ok=True)
 gene,tx=('gT','tT') if tiberius else ('gC','tC')
 seq=next(l[1:].split()[0] for l in f.read_text().splitlines() if l.startswith('>'))
-p.write_text('##gff-version 3\\n'+seq+'\\tmock\\tgene\\t1\\t9\\t.\\t+\\t.\\tID='+gene+';status=complete\\n'+seq+'\\tmock\\tmRNA\\t1\\t9\\t.\\t+\\t.\\tID='+tx+';Parent='+gene+'\\n'+seq+'\\tmock\\tCDS\\t1\\t9\\t.\\t+\\t0\\tID='+tx+'.cds;Parent='+tx+'\\n')
+p.write_text('##gff-version 3\\n'+seq+'\\tmock\\tgene\\t1\\t9\\t.\\t+\\t.\\tID='+gene+';status=complete;confidence=0.1\\n'+seq+'\\tmock\\tmRNA\\t1\\t9\\t.\\t+\\t.\\tID='+tx+';Parent='+gene+'\\n'+seq+'\\tmock\\tCDS\\t1\\t9\\t.\\t+\\t0\\tID='+tx+'.cds;Parent='+tx+'\\n')
 if tiberius:
  pathlib.Path(args[args.index('--codingseq')+1]).write_text('>gT|tT|chr:0-9(+) description\\nATGCTGTAA\\n')
 else:
@@ -161,6 +191,7 @@ else:
                 if label=='failure':command+=['--tiberius-args=--fail']
                 result=subprocess.run(command,capture_output=True,text=True)
                 report=json.loads((out/'combined/run.json').read_text())
+                self.assertEqual(report['confidence_threshold'],0.1)
                 if label=='failure':
                     self.assertNotEqual(result.returncode,0);self.assertEqual(report['status'],'failed')
                 else:
