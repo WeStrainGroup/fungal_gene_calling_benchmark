@@ -4,7 +4,6 @@ import argparse
 import csv
 import gzip
 import hashlib
-from itertools import product
 import json
 import math
 import os
@@ -37,107 +36,53 @@ def fasta(path):
 
 def codon_table(code=1):
     """Return an NCBI code that the native Carbon-A pipeline can represent."""
-    # NCBI genetic codes, as distributed in Biopython 1.88; TCAG codon order.
-    # https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
-    amino_acids = {
-        1: 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Standard
-        2: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG', # Vertebrate Mitochondrial
-        3: 'FFLLSSSSYY**CCWWTTTTPPPPHHQQRRRRIIMMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Yeast Mitochondrial
-        4: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Mold Mitochondrial
-        5: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG', # Invertebrate Mitochondrial
-        6: 'FFLLSSSSYYQQCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Ciliate Nuclear
-        9: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG', # Echinoderm Mitochondrial
-        10: 'FFLLSSSSYY**CCCWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Euplotid Nuclear
-        11: 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Bacterial
-        12: 'FFLLSSSSYY**CC*WLLLSPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Alternative Yeast Nuclear
-        13: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSGGVVVVAAAADDEEGGGG', # Ascidian Mitochondrial
-        14: 'FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG', # Alternative Flatworm Mitochondrial
-        15: 'FFLLSSSSYY*QCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Blepharisma Macronuclear
-        16: 'FFLLSSSSYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Chlorophycean Mitochondrial
-        21: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNNKSSSSVVVVAAAADDEEGGGG', # Trematode Mitochondrial
-        22: 'FFLLSS*SYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Scenedesmus obliquus Mitochondrial
-        23: 'FF*LSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Thraustochytrium Mitochondrial
-        24: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG', # Pterobranchia Mitochondrial
-        25: 'FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Candidate Division SR1
-        26: 'FFLLSSSSYY**CC*WLLLAPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Pachysolen tannophilus Nuclear
-        27: 'FFLLSSSSYYQQCCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Karyorelict Nuclear
-        28: 'FFLLSSSSYYQQCCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Condylostoma Nuclear
-        29: 'FFLLSSSSYYYYCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Mesodinium Nuclear
-        30: 'FFLLSSSSYYEECC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Peritrich Nuclear
-        31: 'FFLLSSSSYYEECCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Blastocrithidia Nuclear
-        32: 'FFLLSSSSYY*WCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Balanophoraceae Plastid
-        33: 'FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG', # Cephalodiscidae Mitochondrial
-    }
+    from Bio.Data import CodonTable
     code = int(code)
-    if code not in amino_acids:
+    if code not in CodonTable.unambiguous_dna_by_id:
         raise ValueError(f'Unknown or discontinued NCBI genetic code: {code}')
-    if code in {27, 28, 31}:
+    native = CodonTable.unambiguous_dna_by_id[code]
+    if set(native.stop_codons) & set(native.forward_table):
         raise ValueError(f'NCBI code {code} has context-dependent stop codons; Carbon-A requires a fixed codon map')
-    table = dict(zip((''.join(c) for c in product('TCAG', repeat=3)), amino_acids[code]))
-    unsupported = sorted(c for c,aa in table.items() if aa == '*' and c not in {'TAA','TAG','TGA'})
+    unsupported = sorted(set(native.stop_codons) - {'TAA','TAG','TGA'})
     if unsupported:
         raise ValueError(f'NCBI code {code} uses stop codons unsupported by Carbon-A: {", ".join(unsupported)}')
-    return table
+    return {**native.forward_table, **dict.fromkeys(native.stop_codons, '*')}
 
 
-def translate_cds(source, output, diagnostics, table, transcript_ids=None):
-    """Translate frame 1, retain defects, and remove only one terminal stop."""
-    iupac = dict(A='A', C='C', G='G', T='T', R='AG', Y='CT', S='GC', W='AT',
-                 K='GT', M='AC', B='CGT', D='AGT', H='ACT', V='ACG', N='ACGT')
+def translate_cds(source, output, diagnostics, code=1, phases=None):
+    """Translate joined CDS once, applying only its initial GFF phase."""
+    from Bio.Seq import Seq
     seen = set()
     summary = dict(records=0, internal_stops=0, unknown_residues=0, partial_codons=0)
     with output.open('w') as proteins, diagnostics.open('w') as report:
         writer = csv.writer(report, delimiter='\t', lineterminator='\n')
-        writer.writerow(['sequence', 'native_header', 'cds_bp', 'protein_aa', 'ambiguous_codons',
-                         'trailing_bases', 'internal_stops', 'unknown_residues'])
+        writer.writerow(['sequence', 'native_header', 'cds_bp', 'initial_phase', 'protein_aa',
+                         'ambiguous_codons', 'trailing_bases', 'internal_stops', 'unknown_residues'])
         for header, seq in fasta(source):
             name = header.split()[0]
-            protein_header = header
-            if transcript_ids is not None:
-                parts = name.split('|')
-                transcript = name if name in transcript_ids else (parts[1] if len(parts) > 1 else name)
-                if transcript not in transcript_ids or transcript in seen:
-                    raise ValueError(f'Unmatched or duplicate Tiberius CDS identifier: {name}')
-                seen.add(transcript)
-            seq = seq.upper().replace('U', 'T')
-            residues, ambiguous = [], 0
-            for i in range(0, len(seq)-2, 3):
-                codon = seq[i:i+3]
-                if codon in table:
-                    residues.append(table[codon])
-                else:
-                    ambiguous += 1
-                    possibilities = {table[''.join(c)] for c in product(*(iupac.get(b, '') for b in codon))}
-                    residues.append(next(iter(possibilities)) if len(possibilities) == 1 else 'X')
-            trailing = len(seq) % 3
-            if trailing:
-                residues.append('X')
-            protein = ''.join(residues)
+            if name in seen or (phases is not None and name not in phases):
+                raise ValueError(f'Duplicate or unmatched CDS identifier: {name}')
+            seen.add(name)
+            phase = 0 if phases is None else phases[name]
+            if phase not in {0, 1, 2} or phase > len(seq):
+                raise ValueError(f'Invalid initial CDS phase for {name}: {phase}')
+            coding = seq.upper().replace('U', 'T')[phase:]
+            trailing = len(coding) % 3
+            coding = coding[:len(coding)-trailing]
+            protein = str(Seq(coding).translate(table=int(code), cds=False, to_stop=False))
             if protein.endswith('*'):
                 protein = protein[:-1]
+            ambiguous = sum(any(b not in 'ACGT' for b in coding[i:i+3]) for i in range(0,len(coding),3))
             stops, unknown = protein.count('*'), protein.count('X')
-            proteins.write(f'>{protein_header}\n{protein}\n')
-            writer.writerow([name, header, len(seq), len(protein), ambiguous, trailing, stops, unknown])
+            proteins.write(f'>{header}\n{protein}\n')
+            writer.writerow([name, header, len(seq), phase, len(protein), ambiguous, trailing, stops, unknown])
             summary['records'] += 1
             summary['internal_stops'] += stops
             summary['unknown_residues'] += unknown
             summary['partial_codons'] += bool(trailing)
-    if transcript_ids is not None and seen != transcript_ids:
-        raise ValueError('Some native Tiberius CDS models have no matching FASTA record')
+    if phases is not None and seen != set(phases):
+        raise ValueError('Some selected models have no matching CDS FASTA record')
     return summary
-
-
-def cds_parents(gff):
-    ids = set()
-    with gff.open() as handle:
-        for line in handle:
-            if line.startswith('#') or not line.strip():
-                continue
-            fields = line.rstrip().split('\t')
-            if len(fields) == 9 and fields[2] == 'CDS':
-                attrs = dict(x.split('=', 1) for x in fields[8].split(';') if '=' in x)
-                ids.update(attrs['Parent'].split(','))
-    return ids
 
 
 def split_fasta(source, output, minimum, cutoff):
@@ -209,11 +154,16 @@ def fasta_index(path):
     return records
 
 
-def native_models(tool, directory, include_incomplete=False, confidence_threshold=0.1):
+def native_models(tool, directory, confidence_threshold=0.1):
     rows, features = read_gff(directory/'prediction.gff3')
     genes = {key:parts[0] for key,parts in features.items() if parts[0]['fields'][2] == 'gene'}
     transcripts = {key:parts[0] for key,parts in features.items() if parts[0]['fields'][2] in {'mRNA','transcript'}}
-    cds_ids = {p for row in rows if row['fields'][2] == 'CDS' for p in references(row)}
+    cds_rows = {}
+    for row in rows:
+        if row['fields'][2] == 'CDS':
+            for parent in references(row):
+                cds_rows.setdefault(parent, []).append(row)
+    cds_ids = set(cds_rows)
     if cds_ids != set(transcripts):
         raise ValueError(f'{tool}: CDS and transcript model sets differ')
     owner = {}
@@ -244,7 +194,15 @@ def native_models(tool, directory, include_incomplete=False, confidence_threshol
                 candidates = [original]
         if len(candidates) != 1 or candidates[0] not in transcripts or candidates[0] in model_records:
             raise ValueError(f'{tool}: ambiguous or unmatched native FASTA ID: {original}')
-        model_records[candidates[0]] = (original, record, proteins[original])
+        transcript = candidates[0]
+        strand = transcripts[transcript]['fields'][6]
+        if strand not in {'+', '-'}:
+            raise ValueError(f'{tool}: invalid CDS strand for {transcript}')
+        first = min(cds_rows[transcript], key=lambda r:int(r['fields'][3])) if strand == '+' else max(
+            cds_rows[transcript], key=lambda r:int(r['fields'][4]))
+        if first['fields'][7] not in {'0','1','2'}:
+            raise ValueError(f'{tool}: missing or invalid initial phase for {transcript}')
+        model_records[transcript] = (original, record, int(first['fields'][7]))
     if set(model_records) != cds_ids:
         raise ValueError(f'{tool}: missing FASTA records for native CDS models')
     allowed = set(genes)
@@ -260,7 +218,9 @@ def native_models(tool, directory, include_incomplete=False, confidence_threshol
             score = None if raw == 'NA' else float(raw)
             if score is not None and (not math.isfinite(score) or not 0 <= score <= 1):
                 raise ValueError(f'Carbon-A gene {key} has invalid confidence: {raw}')
-            if status == 'incomplete' and not include_incomplete:
+            if status == 'complete' and score is None:
+                raise ValueError(f'Carbon-A complete gene {key} lacks numeric confidence')
+            if status == 'incomplete':
                 allowed.remove(key)
                 incomplete_excluded += 1
             elif score is not None and score < confidence_threshold:
@@ -282,12 +242,13 @@ def native_models(tool, directory, include_incomplete=False, confidence_threshol
                 confidence_excluded=confidence_excluded)
 
 
-def combine_models(sources, output, include_incomplete=False, confidence_threshold=0.1):
-    """Merge a single selected model set, preserving native IDs, headers and sequences."""
+def combine_models(sources, output, confidence_threshold=0.1, code=1):
+    """Merge selected native GFF/CDS models and translate all retained CDS uniformly."""
     if not math.isfinite(confidence_threshold) or not 0 <= confidence_threshold <= 1:
         raise ValueError('confidence-threshold must be between 0 and 1')
-    datasets = [native_models(tool, path, include_incomplete, confidence_threshold) for tool,path in sources]
+    datasets = [native_models(tool, path, confidence_threshold) for tool,path in sources]
     feature_ids, sequence_ids, merged_rows, records = set(), set(), [], []
+    phases = {}
     for data in datasets:
         current = {unquote(r['attrs']['ID']) for r in data['rows'] if 'ID' in r['attrs']}
         if current & feature_ids:
@@ -299,21 +260,22 @@ def combine_models(sources, output, include_incomplete=False, confidence_thresho
                     raise ValueError(f'{attribute} points outside the selected model set')
         merged_rows.extend(data['rows'])
         for transcript in data['transcripts']:
-            original, cds, protein = data['records'][transcript]
+            original, cds, phase = data['records'][transcript]
             if original in sequence_ids:
                 raise ValueError('Native FASTA IDs collide between tools; CTC does not rename them')
             sequence_ids.add(original)
-            records.append((cds, protein))
+            records.append(cds)
+            phases[original] = phase
     with (output/'prediction.gff3').open('w') as handle:
         handle.write('##gff-version 3\n')
         for row in merged_rows:
             handle.write('\t'.join(row['fields'])+'\n')
     read_gff(output/'prediction.gff3')
-    with (output/'cds.fa').open('w') as cds_file, (output/'proteins.fa').open('w') as proteins_file:
-        for (cds_header, dna), (protein_header, aa) in records:
+    with (output/'cds.fa').open('w') as cds_file:
+        for cds_header, dna in records:
             cds_file.write(f'>{cds_header}\n{dna}\n')
-            proteins_file.write(f'>{protein_header}\n{aa}\n')
-    return dict(genes=sum(len(d['genes']) for d in datasets),models=len(records),
+    translation = translate_cds(output/'cds.fa', output/'proteins.fa', output/'translation.tsv', code, phases)
+    return dict(genes=sum(len(d['genes']) for d in datasets),models=len(records),translation=translation,
                 cds_features=sum(r['fields'][2]=='CDS' for r in merged_rows),
                 carbon_a_incomplete_excluded=sum(d['incomplete_excluded'] for d in datasets),
                 carbon_a_confidence_excluded=sum(d['confidence_excluded'] for d in datasets))
@@ -329,14 +291,16 @@ def extra_args(text, reserved):
 def run(a):
     started = time.monotonic()
     table = codon_table(a.codon_table)
+    from Bio import __version__ as biopython_version
     output = a.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     for tool in ['tiberius', 'carbon_a']:
         (output/tool).mkdir()
     (output/'combined').mkdir()
-    report = dict(strategy='CTC', version='0.5.0', input=str(a.input.resolve()), min_length=a.min_length,
-                  cutoff_length=a.cutoff_length, include_incomplete=a.include_incomplete,
-                  confidence_threshold=a.confidence_threshold, status='running', components=[])
+    report = dict(strategy='CTC', version='0.6.0', input=str(a.input.resolve()), min_length=a.min_length,
+                  cutoff_length=a.cutoff_length,
+                  confidence_threshold=a.confidence_threshold, translation_engine=f'Biopython {biopython_version}',
+                  status='running', components=[])
     try:
         effective_table = output/'combined/codon_table.json'
         effective_table.write_text(json.dumps(table, indent=2, sort_keys=True)+'\n')
@@ -360,7 +324,7 @@ def run(a):
             if tool == 'tiberius':
                 command = [str(python), '-m', 'tiberius.main', '--genome', str(dest/'input.fna'),
                     '--model', str(a.tiberius_model.resolve()), '--out', str(dest/'prediction.gff3'),
-                    '--codingseq', str(dest/'cds.fa'),
+                    '--codingseq', str(dest/'cds.fa'), '--protseq', str(dest/'proteins.fa'),
                     '--min_genome_seqlen', str(a.min_length)] + extra_args(a.tiberius_args,
                     {'--genome','--model','--out','--codingseq','--protseq','--min_genome_seqlen'})
                 gff = dest/'prediction.gff3'
@@ -387,17 +351,12 @@ def run(a):
                 gff = dest/'work_WARNING/prediction.gff'
             if not gff.is_file() or not gff.stat().st_size:
                 raise RuntimeError(f'Missing native GFF: {gff}')
-            if tool == 'tiberius':
-                translation_start = time.monotonic()
-                part['translation'] = translate_cds(dest/'cds.fa', dest/'proteins.fa',
-                    dest/'translation.tsv', table, cds_parents(gff))
-                part['translation_seconds'] = time.monotonic()-translation_start
-            else:
+            if tool == 'carbon_a':
                 for source_name, target in [('prediction.gff','prediction.gff3'),('prediction.fna','cds.fa'),('prediction.faa','proteins.fa')]:
                     shutil.move(str(gff.parent/source_name), str(dest/target))
             sources.append((tool, dest))
         merge_start = time.monotonic()
-        report['combined'] = combine_models(sources, output/'combined', a.include_incomplete, a.confidence_threshold)
+        report['combined'] = combine_models(sources, output/'combined', a.confidence_threshold, a.codon_table)
         report['cds_features'] = report['combined']['cds_features']
         report['merge_seconds'] = time.monotonic()-merge_start
         report['status'] = 'complete'
@@ -412,10 +371,9 @@ def run(a):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--include-incomplete', action='store_true', help='Also merge Carbon-A status=incomplete models; native tool outputs always retain them')
     p.add_argument('--confidence-threshold', type=float, default=0.1,
-                   help='Minimum Carbon-A confidence for combined outputs (inclusive; default: 0.1); NA is retained, 0 disables score filtering')
-    p.add_argument('--version', action='version', version='CTC 0.5.0')
+                   help='Minimum Carbon-A complete-model confidence for combined outputs (inclusive; default: 0.1); 0 disables score filtering, incomplete models are always excluded')
+    p.add_argument('--version', action='version', version='CTC 0.6.0')
     p.add_argument('--input', required=True, type=Path, help='FASTA or FASTA.gz')
     p.add_argument('--output', required=True, type=Path, help='New output directory')
     p.add_argument('--min-length', type=int, default=1000)
@@ -426,7 +384,7 @@ def main():
     p.add_argument('--carbon-a-path', required=True, type=Path, help='Python in the Carbon-A environment; its bin directory is placed first in PATH')
     p.add_argument('--carbon-a-model', required=True, type=Path, help='Carbon-A directory containing model weights and annotation_pipeline/')
     p.add_argument('--carbon-a-args', default='', help='Quoted additional native options; use --carbon-a-args="..."')
-    p.add_argument('--codon-table', type=int, default=1, help='NCBI genetic-code number shared by both branches (default: 1); Carbon-A cannot represent codes 2, 22, 23, 27, 28 or 31')
+    p.add_argument('--codon-table', type=int, default=1, help='NCBI code for combined proteins and native Carbon-A (default: 1); Tiberius native proteins use its own default; Carbon-A cannot represent codes 2, 22, 23, 27, 28 or 31')
     a = p.parse_args()
     if not 1 <= a.min_length <= a.cutoff_length:
         p.error('Require 1 <= min-length <= cutoff-length')
@@ -434,7 +392,7 @@ def main():
         p.error('confidence-threshold must be between 0 and 1')
     try:
         result = run(a)
-    except (ValueError, OSError, RuntimeError) as error:
+    except (ValueError, OSError, RuntimeError, ImportError) as error:
         p.exit(1, f'CTC: {error}\n')
     print(f"CTC complete: {a.output}/combined/prediction.gff3 ({result['elapsed_seconds']:.1f} s)")
 

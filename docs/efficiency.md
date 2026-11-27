@@ -90,4 +90,4 @@ Collection requires 20 successful cases for each of 17 species, passing hardware
 
 ## CTC timing
 
-CTC usage is maintained on its [dedicated page](https://app.notion.com/p/425a1ddc1d86801bb3defe76863fed06). Timing records identify the CTC version and confidence threshold; existing version-isolated jobs are unchanged. Measurements from CTC 0.3.0 do not include the later confidence-filtering step and must not be relabelled as current-version timings.
+CTC usage is maintained on its [dedicated page](https://app.notion.com/p/425a1ddc1d86801bb3defe76863fed06). Timing records identify the CTC version and confidence threshold; existing version-isolated jobs are unchanged. Current CTC timing includes native protein export, confidence filtering and unified translation of selected complete CDS. Existing measurements from earlier CTC versions must not be relabelled as current-version timings.

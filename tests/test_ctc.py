@@ -49,22 +49,19 @@ class CTCTests(unittest.TestCase):
             root=Path(tmp);source=root/'cds.fa'
             source.write_text('>g1|t1|chr:0-9(+)\nATGCTGTAA\n>t2\nATGTAANNN\n>t3\nATGA\n>t4\nATGAA\n>t5\nGCNTAA\n>t6\nATGTAATAA\n')
             for code,expected in [('1','ML'),('12','MS'),('26','MA')]:
-                table=ctc.codon_table(code)
-                summary=ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv',table,{'t1','t2','t3','t4','t5','t6'})
+                summary=ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv',int(code))
                 proteins=dict(ctc.fasta(root/'proteins.fa'))
                 self.assertEqual(proteins['g1|t1|chr:0-9(+)'],expected)
                 self.assertEqual(proteins['t2'],'M*X')
-                self.assertEqual(proteins['t3'],'MX')
-                self.assertEqual(proteins['t4'],'MX')
+                self.assertEqual(proteins['t3'],'M')
+                self.assertEqual(proteins['t4'],'M')
                 self.assertEqual(proteins['t5'],'A')
                 self.assertEqual(proteins['t6'],'M*')
                 self.assertEqual(summary['internal_stops'],2)
                 self.assertEqual(summary['partial_codons'],2)
-            custom=ctc.codon_table();custom['GCT']='S'
-            source.write_text('>ambiguous\nGCN\n')
-            ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv',custom)
-            self.assertEqual(dict(ctc.fasta(root/'proteins.fa'))['ambiguous'],'X')
-
+            source.write_text('>ambiguous\nRAY\n')
+            ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv')
+            self.assertEqual(dict(ctc.fasta(root/'proteins.fa'))['ambiguous'],'B')
 
     def test_ncbi_codes_and_native_limits(self):
         supported=[1,3,4,5,6,9,10,11,12,13,14,15,16,21,24,25,26,29,30,32,33]
@@ -80,12 +77,12 @@ class CTCTests(unittest.TestCase):
         for code in [0,7,8,17,34,-1]:
             with self.assertRaisesRegex(ValueError,'Unknown or discontinued'):ctc.codon_table(code)
 
-    def test_complete_selection_native_ids_and_optional_incomplete(self):
+    def test_complete_selection_native_ids_and_incomplete_exclusion(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);out=root/'combined';out.mkdir()
             t=native(root,'tiberius',model('b','old1','tx1')+model('a','old2','tx2',30),
                 [('old1|tx1|b:0-9(+) description','ATGTAATAA','M*'),('old2|tx2|a:29-38(+)','ATGNNNTAA','MX')])
-            c=native(root,'carbon_a',model('a','gene1','mrna1',1,'status=complete;confidence=NA')+
+            c=native(root,'carbon_a',model('a','gene1','mrna1',1,'status=complete;confidence=1')+
                 model('a','gene2','mrna2',12,'status=incomplete;confidence=1')+
                 model('a','gene3','mrna3',50,'status=complete;confidence=0.001'),
                 [('gene1 status=complete','ATGCTGTAA','MS'),('gene2 status=incomplete','ATGCTG','MS'),('gene3','ATGCTGTAA','MS')])
@@ -98,12 +95,12 @@ class CTCTests(unittest.TestCase):
             self.assertEqual(list(ctc.fasta_index(out/'proteins.fa')),expected)
             self.assertIn('>old1|tx1|b:0-9(+) description',(out/'proteins.fa').read_text())
             self.assertIn('M*',(out/'proteins.fa').read_text())
-            self.assertIn('confidence=NA',(out/'prediction.gff3').read_text())
+            self.assertIn('confidence=1',(out/'prediction.gff3').read_text())
             self.assertNotIn('status=incomplete',(out/'prediction.gff3').read_text())
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
-            stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out,include_incomplete=True)
-            self.assertEqual(stats['models'],4);self.assertEqual(stats['carbon_a_incomplete_excluded'],0)
-            self.assertIn('gene2',ctc.fasta_index(out/'cds.fa'))
+            stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out,confidence_threshold=0)
+            self.assertEqual(stats['models'],4);self.assertEqual(stats['carbon_a_incomplete_excluded'],1)
+            self.assertNotIn('gene2',ctc.fasta_index(out/'cds.fa'))
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
 
     def test_confidence_thresholds_na_and_invalid_scores(self):
@@ -111,14 +108,12 @@ class CTCTests(unittest.TestCase):
             root=Path(tmp);out=root/'combined';out.mkdir()
             scores=['0.0999','0.1','0.1001','NA','NA']
             gff=''.join(model('x',f'g{i}',f't{i}',1+12*i,
-                f"status={'incomplete' if i==4 else 'complete'};confidence={score}")
+                f"status={'incomplete' if i>=3 else 'complete'};confidence={score}")
                 for i,score in enumerate(scores))
             c=native(root,'carbon_a',gff,[(f'g{i}','ATGCTGTAA','ML') for i in range(5)])
             before={p:p.read_bytes() for p in c.iterdir()}
-            for threshold,partial,expected in [(.1,False,{'g1','g2','g3'}),
-                    (.1,True,{'g1','g2','g3','g4'}),(0,False,{'g0','g1','g2','g3'}),
-                    (1,True,{'g3','g4'})]:
-                stats=ctc.combine_models([('carbon_a',c)],out,partial,threshold)
+            for threshold,expected in [(.1,{'g1','g2'}),(0,{'g0','g1','g2'}),(1,set())]:
+                stats=ctc.combine_models([('carbon_a',c)],out,confidence_threshold=threshold)
                 self.assertEqual(set(ctc.fasta_index(out/'cds.fa')),expected)
                 self.assertEqual(set(ctc.fasta_index(out/'proteins.fa')),expected)
                 rows,_=ctc.read_gff(out/'prediction.gff3')
@@ -129,7 +124,7 @@ class CTCTests(unittest.TestCase):
             for bad in [-.1,1.1,float('nan'),float('inf')]:
                 with self.assertRaisesRegex(ValueError,'confidence-threshold'):
                     ctc.combine_models([('carbon_a',c)],out,confidence_threshold=bad)
-            for bad in ['nan','inf','-0.1','1.1','bad',None]:
+            for bad in ['NA','nan','inf','-0.1','1.1','bad',None]:
                 attrs='status=complete'+('' if bad is None else ';confidence='+bad)
                 (c/'prediction.gff3').write_text(model('x','g0','t0',1,attrs))
                 for filename,sequence in [('cds.fa','ATGCTGTAA'),('proteins.fa','ML')]:
@@ -153,6 +148,44 @@ class CTCTests(unittest.TestCase):
             self.assertEqual(len(features['shared']),2)
             self.assertEqual(features['exon'][0]['attrs']['Parent'],'a,b')
             self.assertEqual(features['exon'][0]['attrs']['Derives_from'],'shared')
+
+    def test_unified_translation_preserves_native_outputs_and_excludes_partial(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);out=root/'combined';out.mkdir()
+            t=native(root,'tiberius',model('x','gT','tT'),[('gT|tT|x:0-9(+)','ATGCTGTAA','ML')])
+            gff=model('y','gC','tC',1,'status=complete;confidence=1')
+            for tag,strand in [('p','+'),('m','-')]:
+                gff+=feature(tag,'gene',1,25,f'ID=g{tag};status=incomplete;confidence=NA',strand)
+                gff+=feature(tag,'mRNA',1,25,f'ID=t{tag};Parent=g{tag}',strand)
+                # The first CDS in transcript direction has phase 2, regardless of row order.
+                for start,end,phase in ([(1,5,'2'),(20,25,'0')] if strand=='+' else [(1,6,'0'),(21,25,'2')]):
+                    gff+=feature(tag,'CDS',start,end,f'ID=t{tag}.cds;Parent=t{tag}',strand,phase)
+            c=native(root,'carbon_a',gff,[('gC description','ATGGCNTAA','MX'),
+                ('gp partial','CCATGCTGTAA','MS'),('gm partial','CCATGCTGTAA','MS')])
+            before={p:p.read_bytes() for d in [t,c] for p in d.iterdir()}
+            stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out,code=12)
+            proteins=ctc.fasta_index(out/'proteins.fa')
+            self.assertEqual({k:v[1] for k,v in proteins.items()},
+                {'gT|tT|x:0-9(+)':'MS','gC':'MA'})
+            with (out/'translation.tsv').open() as handle:
+                checks={r['sequence']:r for r in csv.DictReader(handle,delimiter='\t')}
+            self.assertEqual(set(checks),{'gT|tT|x:0-9(+)','gC'})
+            self.assertEqual(stats['translation']['records'],2)
+            self.assertEqual(stats['carbon_a_incomplete_excluded'],2)
+            self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
+            self.assertEqual(ctc.fasta_index(out/'cds.fa'),{**ctc.fasta_index(t/'cds.fa'),'gC':ctc.fasta_index(c/'cds.fa')['gC']})
+
+    def test_translation_initial_phase_and_trailing_residues(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);source=root/'cds.fa'
+            source.write_text('>one\nAATGCTGTAAA\n>two\nCCATGCTGTAA\n')
+            stats=ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv',12,{'one':1,'two':2})
+            self.assertEqual(dict(ctc.fasta(root/'proteins.fa')),{'one':'MS','two':'MS'})
+            self.assertEqual(stats['partial_codons'],1)
+            with self.assertRaisesRegex(ValueError,'initial CDS phase'):
+                ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv',12,{'one':3,'two':2})
+            with self.assertRaisesRegex(ValueError,'unmatched'):
+                ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv',12,{'one':1})
 
     def test_native_collisions_are_not_silently_renamed(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -186,6 +219,7 @@ seq=next(l[1:].split()[0] for l in f.read_text().splitlines() if l.startswith('>
 p.write_text('##gff-version 3\\n'+seq+'\\tmock\\tgene\\t1\\t9\\t.\\t+\\t.\\tID='+gene+';status=complete;confidence=0.1\\n'+seq+'\\tmock\\tmRNA\\t1\\t9\\t.\\t+\\t.\\tID='+tx+';Parent='+gene+'\\n'+seq+'\\tmock\\tCDS\\t1\\t9\\t.\\t+\\t0\\tID='+tx+'.cds;Parent='+tx+'\\n')
 if tiberius:
  pathlib.Path(args[args.index('--codingseq')+1]).write_text('>gT|tT|chr:0-9(+) description\\nATGCTGTAA\\n')
+ pathlib.Path(args[args.index('--protseq')+1]).write_text('>gT|tT|chr:0-9(+) description\\nML\\n')
 else:
  table=json.loads(pathlib.Path(args[args.index('--codon-table')+1]).read_text())
  assert args[args.index('--min-record-length')+1]=='0'
@@ -210,8 +244,13 @@ else:
                     self.assertEqual({p.name for p in out.iterdir()},{'tiberius','carbon_a','combined'})
                     self.assertEqual(report['combined']['models'],sum(n>=1000 for n in lengths))
                     if report['routing']['tiberius']['records']:
-                        self.assertEqual((out/'tiberius/proteins.fa').read_text(),'>gT|tT|chr:0-9(+) description\nMS\n')
+                        self.assertEqual((out/'tiberius/proteins.fa').read_text(),'>gT|tT|chr:0-9(+) description\nML\n')
+                        self.assertEqual(ctc.fasta_index(out/'combined/proteins.fa')['gT|tT|chr:0-9(+)'][1],'MS')
+                    self.assertTrue((out/'combined/translation.tsv').exists())
+                    self.assertFalse((out/'tiberius/translation.tsv').exists())
                     self.assertNotEqual(subprocess.run(command,capture_output=True).returncode,0)
+                    rejected=subprocess.run(command+['--include-incomplete'],capture_output=True,text=True)
+                    self.assertIn('unrecognized arguments: --include-incomplete',rejected.stderr)
 
 
 if __name__=='__main__':unittest.main()
