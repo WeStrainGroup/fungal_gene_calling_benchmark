@@ -26,6 +26,9 @@ def main():
     row = cases[a.species_index]; species = row['species']
     source = a.inputs/species/'genome.fna'; code = a.inputs/species/'codon_table.json'
     assert hashlib.sha256(source.read_bytes()).hexdigest() == row['fasta_sha256']
+    from ctc import codon_table
+    genetic_code = int(row['genetic_code'])
+    assert codon_table(genetic_code) == json.loads(code.read_text()), 'Frozen genetic code differs'
     output = a.output/species; output.mkdir(parents=True, exist_ok=False)
     scripts = Path(__file__).resolve().parent
     subprocess.run([sys.executable, str(scripts/'check_efficiency_resources.py'),
@@ -70,7 +73,7 @@ def main():
         '--tiberius-path', str(Path(config['environments']['tiberius'])/'bin/python'),
         '--tiberius-model', config['tiberius_model'], '--tiberius-args=--batch_size 8',
         '--carbon-a-path', str(Path(config['environments']['carbon'])/'bin/python'),
-        '--carbon-a-model', config['carbon_dir'], '--codon-table', str(code),
+        '--carbon-a-model', config['carbon_dir'], '--codon-table', str(genetic_code),
         '--carbon-a-args=--accession benchmark --gpu-count 1 --batch-size 4 --attn-implementation sdpa '
         '--viterbi-backend cpu --min-record-length 0 --min-cds-length 96']
     load_start = os.getloadavg()[0]

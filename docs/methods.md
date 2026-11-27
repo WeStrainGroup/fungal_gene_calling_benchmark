@@ -93,9 +93,9 @@ Current figures use R/ggplot2, `theme_minimal()`, the accepted muted palette, sp
 | `prepare_new_inputs.py` | Fetch exact RefSeq DNA/GFF, verify MD5, exclude organelles and validate all current partitions. | Five added species frozen; official MD5 and all partition reconstruction checks passed. |
 | `prepare_benchmark.py` | Link reusable inputs and native predictions into one current view; write the 160-task list. | 17-species view ready; 180 existing cases reused without copying. |
 | `run_benchmark.py` | Run pilot or pending cases on selected cooperative GPU locks; score and validate on completion. | All 340 predictions complete; CPU scoring and independent validation passed on 2026-11-24. |
-| `ctc.py` | Length-based Tiberius/Carbon-A workflow; [usage and parameters](https://app.notion.com/p/425a1ddc1d86801bb3defe76863fed06). | v0.4.0; configurable Carbon-A confidence threshold (default 0.1); native IDs retained. |
-| `run_hybrid_efficiency.py`, `hybrid_efficiency_ais.sh` | Measure CTC on a frozen original assembly. | v0.4.0-ready; version and threshold recorded; existing deployed jobs unchanged. |
-| `tests/test_ctc.py` | Routing, translation, confidence boundaries, native-ID merging and CLI regression tests. | Eight CPU tests passed; predictor calls mocked. |
+| `ctc.py` | Length-based Tiberius/Carbon-A workflow; [usage and parameters](https://app.notion.com/p/425a1ddc1d86801bb3defe76863fed06). | v0.5.0; numeric NCBI codes with native Carbon-A compatibility checks; confidence threshold defaults to 0.1. |
+| `run_hybrid_efficiency.py`, `hybrid_efficiency_ais.sh` | Measure CTC on a frozen original assembly. | v0.5.0-ready; version and threshold recorded; existing deployed jobs unchanged. |
+| `tests/test_ctc.py` | Routing, translation, confidence boundaries, native-ID merging and CLI regression tests. | Nine CPU tests passed; predictor calls mocked. |
 | `run_predictor.sh` | One native predictor invocation, four tool choices. | Existing parameters preserved; Helixer CLI checked against v0.3.8. |
 | `prepare_efficiency.py` | Keep all original records >=1 kb; sample 50 frozen fragments per species/range in five equal-width length bins. | All 85 inputs prepared; 3,400 sampled fragments match frozen sequence hashes. |
 | `check_efficiency_resources.py` | Verify A100 40GB, BF16, 32 GiB memory, and either four physical cores (Slurm) or four-CPU quota (AIS). | Both platform modes record allocation evidence; AIS does not claim exclusive cores. |

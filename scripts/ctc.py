@@ -35,19 +35,48 @@ def fasta(path):
             yield header, ''.join(parts)
 
 
-def codon_table(path=None):
-    codons = [''.join(c) for c in product('TCAG', repeat=3)]
-    amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
-    table = dict(zip(codons, amino_acids))
-    if path is not None:
-        if str(path) in {'1','12','26'}:
-            table['CTG'] = {'1':'L','12':'S','26':'A'}[str(path)]
-        else:
-            table = json.loads(Path(path).read_text())
-    if (not isinstance(table, dict) or set(table) != set(codons) or
-        any(not isinstance(aa, str) or len(aa) != 1 or aa not in 'ACDEFGHIKLMNPQRSTVWYOU*'
-            for aa in table.values())):
-        raise ValueError('Codon table must map all 64 uppercase DNA codons to one amino acid or *')
+def codon_table(code=1):
+    """Return an NCBI code that the native Carbon-A pipeline can represent."""
+    # NCBI genetic codes, as distributed in Biopython 1.88; TCAG codon order.
+    # https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi
+    amino_acids = {
+        1: 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Standard
+        2: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSS**VVVVAAAADDEEGGGG', # Vertebrate Mitochondrial
+        3: 'FFLLSSSSYY**CCWWTTTTPPPPHHQQRRRRIIMMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Yeast Mitochondrial
+        4: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Mold Mitochondrial
+        5: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSSSVVVVAAAADDEEGGGG', # Invertebrate Mitochondrial
+        6: 'FFLLSSSSYYQQCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Ciliate Nuclear
+        9: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG', # Echinoderm Mitochondrial
+        10: 'FFLLSSSSYY**CCCWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Euplotid Nuclear
+        11: 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Bacterial
+        12: 'FFLLSSSSYY**CC*WLLLSPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Alternative Yeast Nuclear
+        13: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNKKSSGGVVVVAAAADDEEGGGG', # Ascidian Mitochondrial
+        14: 'FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNNKSSSSVVVVAAAADDEEGGGG', # Alternative Flatworm Mitochondrial
+        15: 'FFLLSSSSYY*QCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Blepharisma Macronuclear
+        16: 'FFLLSSSSYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Chlorophycean Mitochondrial
+        21: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIMMTTTTNNNKSSSSVVVVAAAADDEEGGGG', # Trematode Mitochondrial
+        22: 'FFLLSS*SYY*LCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Scenedesmus obliquus Mitochondrial
+        23: 'FF*LSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Thraustochytrium Mitochondrial
+        24: 'FFLLSSSSYY**CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG', # Pterobranchia Mitochondrial
+        25: 'FFLLSSSSYY**CCGWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Candidate Division SR1
+        26: 'FFLLSSSSYY**CC*WLLLAPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Pachysolen tannophilus Nuclear
+        27: 'FFLLSSSSYYQQCCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Karyorelict Nuclear
+        28: 'FFLLSSSSYYQQCCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Condylostoma Nuclear
+        29: 'FFLLSSSSYYYYCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Mesodinium Nuclear
+        30: 'FFLLSSSSYYEECC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Peritrich Nuclear
+        31: 'FFLLSSSSYYEECCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Blastocrithidia Nuclear
+        32: 'FFLLSSSSYY*WCC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG', # Balanophoraceae Plastid
+        33: 'FFLLSSSSYYY*CCWWLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSSKVVVVAAAADDEEGGGG', # Cephalodiscidae Mitochondrial
+    }
+    code = int(code)
+    if code not in amino_acids:
+        raise ValueError(f'Unknown or discontinued NCBI genetic code: {code}')
+    if code in {27, 28, 31}:
+        raise ValueError(f'NCBI code {code} has context-dependent stop codons; Carbon-A requires a fixed codon map')
+    table = dict(zip((''.join(c) for c in product('TCAG', repeat=3)), amino_acids[code]))
+    unsupported = sorted(c for c,aa in table.items() if aa == '*' and c not in {'TAA','TAG','TGA'})
+    if unsupported:
+        raise ValueError(f'NCBI code {code} uses stop codons unsupported by Carbon-A: {", ".join(unsupported)}')
     return table
 
 
@@ -299,19 +328,19 @@ def extra_args(text, reserved):
 
 def run(a):
     started = time.monotonic()
+    table = codon_table(a.codon_table)
     output = a.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     for tool in ['tiberius', 'carbon_a']:
         (output/tool).mkdir()
     (output/'combined').mkdir()
-    report = dict(strategy='CTC', version='0.4.0', input=str(a.input.resolve()), min_length=a.min_length,
+    report = dict(strategy='CTC', version='0.5.0', input=str(a.input.resolve()), min_length=a.min_length,
                   cutoff_length=a.cutoff_length, include_incomplete=a.include_incomplete,
                   confidence_threshold=a.confidence_threshold, status='running', components=[])
     try:
-        table = codon_table(a.codon_table)
         effective_table = output/'combined/codon_table.json'
         effective_table.write_text(json.dumps(table, indent=2, sort_keys=True)+'\n')
-        report['codon_table'] = dict(source=str(a.codon_table) if a.codon_table else 'NCBI 1',
+        report['codon_table'] = dict(source=f'NCBI {a.codon_table}',
             sha256=hashlib.sha256(effective_table.read_bytes()).hexdigest())
         split_start = time.monotonic()
         report['routing'] = split_fasta(a.input, output, a.min_length, a.cutoff_length)
@@ -386,7 +415,7 @@ def main():
     p.add_argument('--include-incomplete', action='store_true', help='Also merge Carbon-A status=incomplete models; native tool outputs always retain them')
     p.add_argument('--confidence-threshold', type=float, default=0.1,
                    help='Minimum Carbon-A confidence for combined outputs (inclusive; default: 0.1); NA is retained, 0 disables score filtering')
-    p.add_argument('--version', action='version', version='CTC 0.4.0')
+    p.add_argument('--version', action='version', version='CTC 0.5.0')
     p.add_argument('--input', required=True, type=Path, help='FASTA or FASTA.gz')
     p.add_argument('--output', required=True, type=Path, help='New output directory')
     p.add_argument('--min-length', type=int, default=1000)
@@ -397,7 +426,7 @@ def main():
     p.add_argument('--carbon-a-path', required=True, type=Path, help='Python in the Carbon-A environment; its bin directory is placed first in PATH')
     p.add_argument('--carbon-a-model', required=True, type=Path, help='Carbon-A directory containing model weights and annotation_pipeline/')
     p.add_argument('--carbon-a-args', default='', help='Quoted additional native options; use --carbon-a-args="..."')
-    p.add_argument('--codon-table', help='NCBI code 1/12/26 or 64-codon JSON shared by Carbon-A and Tiberius CDS translation; default: standard code (NCBI 1)')
+    p.add_argument('--codon-table', type=int, default=1, help='NCBI genetic-code number shared by both branches (default: 1); Carbon-A cannot represent codes 2, 22, 23, 27, 28 or 31')
     a = p.parse_args()
     if not 1 <= a.min_length <= a.cutoff_length:
         p.error('Require 1 <= min-length <= cutoff-length')

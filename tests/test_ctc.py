@@ -61,13 +61,24 @@ class CTCTests(unittest.TestCase):
                 self.assertEqual(summary['internal_stops'],2)
                 self.assertEqual(summary['partial_codons'],2)
             custom=ctc.codon_table();custom['GCT']='S'
-            (root/'custom.json').write_text(json.dumps(custom))
-            self.assertEqual(ctc.codon_table(root/'custom.json'),custom)
             source.write_text('>ambiguous\nGCN\n')
             ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv',custom)
             self.assertEqual(dict(ctc.fasta(root/'proteins.fa'))['ambiguous'],'X')
-            (root/'bad.json').write_text('{"ATG":"M"}')
-            with self.assertRaises(ValueError):ctc.codon_table(root/'bad.json')
+
+
+    def test_ncbi_codes_and_native_limits(self):
+        supported=[1,3,4,5,6,9,10,11,12,13,14,15,16,21,24,25,26,29,30,32,33]
+        for code in supported:
+            table=ctc.codon_table(code)
+            self.assertEqual(len(table),64)
+            self.assertTrue({c for c,a in table.items() if a=='*'} <= {'TAA','TAG','TGA'})
+        for code,codon,expected in [(3,'CTG','T'),(4,'TGA','W'),(6,'TAA','Q'),
+                (10,'TGA','C'),(25,'TGA','G'),(29,'TAA','Y'),(30,'TAG','E'),(32,'TAG','W')]:
+            self.assertEqual(ctc.codon_table(code)[codon],expected)
+        for code in [2,22,23,27,28,31]:
+            with self.assertRaisesRegex(ValueError,'Carbon-A'):ctc.codon_table(code)
+        for code in [0,7,8,17,34,-1]:
+            with self.assertRaisesRegex(ValueError,'Unknown or discontinued'):ctc.codon_table(code)
 
     def test_complete_selection_native_ids_and_optional_incomplete(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -159,7 +170,7 @@ class CTCTests(unittest.TestCase):
             path.write_text(feature('x','gene',1,9,'ID=g')+feature('x','mRNA',1,9,'ID=g'))
             with self.assertRaisesRegex(ValueError,'Duplicate'):ctc.read_gff(path)
 
-    def test_pipeline_empty_subsets_custom_table_and_failure(self):
+    def test_pipeline_empty_subsets_numeric_code_and_failure(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);binpath=root/'env/bin';binpath.mkdir(parents=True)
             mock=binpath/'python'
