@@ -80,14 +80,14 @@ def main():
             *command], env=env, stdout=log, stderr=subprocess.STDOUT)
     elapsed = time.monotonic()-start
     exit_code = proc.returncode
-    details_path = output/'ctc/run.json'
+    details_path = output/'ctc/combined/run.json'
     details = json.loads(details_path.read_text()) if details_path.exists() else {}
     counts = details.get('routing', {})
     valid = (details.get('status') == 'complete' and
         counts.get('skipped', {}).get('records') == 0 and
         sum(x['bp'] for x in counts.values()) == int(row['bp']) and
         sum(x['records'] for x in counts.values()) == int(row['records']) and
-        (output/'ctc/prediction.gff3').is_file())
+        (output/'ctc/combined/prediction.gff3').is_file())
     if not valid:
         exit_code = exit_code or 1
     split_seconds = details.get('split_seconds', 0)

@@ -9,6 +9,8 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
+from urllib.parse import unquote
 import subprocess
 import time
 
@@ -35,7 +37,12 @@ def fasta(path):
 def codon_table(path=None):
     codons = [''.join(c) for c in product('TCAG', repeat=3)]
     amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
-    table = dict(zip(codons, amino_acids)) if path is None else json.loads(path.read_text())
+    table = dict(zip(codons, amino_acids))
+    if path is not None:
+        if str(path) in {'1','12','26'}:
+            table['CTG'] = {'1':'L','12':'S','26':'A'}[str(path)]
+        else:
+            table = json.loads(Path(path).read_text())
     if (not isinstance(table, dict) or set(table) != set(codons) or
         any(not isinstance(aa, str) or len(aa) != 1 or aa not in 'ACDEFGHIKLMNPQRSTVWYOU*'
             for aa in table.values())):
@@ -62,8 +69,6 @@ def translate_cds(source, output, diagnostics, table, transcript_ids=None):
                 if transcript not in transcript_ids or transcript in seen:
                     raise ValueError(f'Unmatched or duplicate Tiberius CDS identifier: {name}')
                 seen.add(transcript)
-                name = 'tiberius_'+transcript
-                protein_header = name+' '+header
             seq = seq.upper().replace('U', 'T')
             residues, ambiguous = [], 0
             for i in range(0, len(seq)-2, 3):
@@ -106,11 +111,11 @@ def cds_parents(gff):
 
 
 def split_fasta(source, output, minimum, cutoff):
-    counts = {t:dict(records=0, bp=0) for t in ['tiberius', 'carbon', 'skipped']}
+    counts = {t:dict(records=0, bp=0) for t in ['tiberius', 'carbon_a', 'skipped']}
     seen = set()
     with (output/'tiberius/input.fna').open('w') as short, \
-         (output/'carbon/input.fna').open('w') as long, \
-         (output/'routing.tsv').open('w') as report:
+         (output/'carbon_a/input.fna').open('w') as long, \
+         (output/'combined/routing.tsv').open('w') as report:
         writer = csv.writer(report, delimiter='\t', lineterminator='\n')
         writer.writerow(['sequence', 'length_bp', 'tool'])
         for header, seq in fasta(source):
@@ -118,7 +123,7 @@ def split_fasta(source, output, minimum, cutoff):
             if name in seen:
                 raise ValueError(f'Duplicate FASTA identifier: {name}')
             seen.add(name)
-            tool = 'skipped' if len(seq) < minimum else ('tiberius' if len(seq) <= cutoff else 'carbon')
+            tool = 'skipped' if len(seq) < minimum else ('tiberius' if len(seq) <= cutoff else 'carbon_a')
             counts[tool]['records'] += 1
             counts[tool]['bp'] += len(seq)
             writer.writerow([name, len(seq), tool])
@@ -129,33 +134,143 @@ def split_fasta(source, output, minimum, cutoff):
     return counts
 
 
-def merge_gffs(sources, output):
-    """Namespace model IDs; leave coordinates, phase and other attributes intact."""
-    cds = 0
-    temporary = output.with_suffix('.tmp')
-    with temporary.open('w') as target:
-        target.write('##gff-version 3\n')
-        for tool, path in sources:
-            with path.open() as source:
-                for line in source:
-                    if line.startswith('##FASTA'):
-                        break
-                    if line.startswith('#') or not line.strip():
-                        continue
-                    fields = line.rstrip('\n').split('\t')
-                    if len(fields) != 9:
-                        raise ValueError(f'Malformed GFF row in {path}')
-                    attributes = []
-                    for attribute in fields[8].split(';'):
-                        key, sep, value = attribute.partition('=')
-                        if key in {'ID', 'Parent', 'Derives_from'}:
-                            value = ','.join(tool+'_'+x for x in value.split(','))
-                        attributes.append(key+sep+value)
-                    fields[8] = ';'.join(attributes)
-                    target.write('\t'.join(fields)+'\n')
-                    cds += fields[2] == 'CDS'
-    temporary.replace(output)
-    return cds
+def read_gff(path):
+    rows, features = [], {}
+    with path.open() as handle:
+        for line in handle:
+            if line.startswith('##FASTA'):
+                break
+            if line.startswith('#') or not line.strip():
+                continue
+            fields = line.rstrip('\n').split('\t')
+            if len(fields) != 9:
+                raise ValueError(f'Malformed GFF3 row in {path}')
+            attrs = dict(item.split('=', 1) for item in fields[8].split(';') if '=' in item)
+            row = dict(fields=fields, attrs=attrs, index=len(rows))
+            rows.append(row)
+            if 'ID' in attrs:
+                features.setdefault(unquote(attrs['ID']), []).append(row)
+    for key, parts in features.items():
+        signatures = {(r['fields'][0], r['fields'][2], r['fields'][6], r['attrs'].get('Parent')) for r in parts}
+        coordinates = {(r['fields'][3], r['fields'][4]) for r in parts}
+        if len(signatures) != 1 or len(coordinates) != len(parts):
+            raise ValueError(f'Duplicate independent feature ID: {key}')
+        if len(parts) > 1 and parts[0]['fields'][2] in {'gene', 'mRNA', 'transcript'}:
+            raise ValueError(f'Duplicate gene/transcript ID: {key}')
+    for row in rows:
+        for attribute in ['Parent', 'Derives_from']:
+            for ref in references(row, attribute):
+                if ref not in features:
+                    raise ValueError(f'Dangling {attribute}: {ref}')
+    return rows, features
+
+
+def references(row, attribute='Parent'):
+    return [unquote(x) for x in row['attrs'].get(attribute, '').split(',') if x]
+
+
+def fasta_index(path):
+    records = {}
+    for header, seq in fasta(path):
+        key = header.split()[0]
+        if key in records:
+            raise ValueError(f'Duplicate FASTA ID: {key}')
+        records[key] = (header, seq)
+    return records
+
+
+def native_models(tool, directory, include_incomplete=False):
+    rows, features = read_gff(directory/'prediction.gff3')
+    genes = {key:parts[0] for key,parts in features.items() if parts[0]['fields'][2] == 'gene'}
+    transcripts = {key:parts[0] for key,parts in features.items() if parts[0]['fields'][2] in {'mRNA','transcript'}}
+    cds_ids = {p for row in rows if row['fields'][2] == 'CDS' for p in references(row)}
+    if cds_ids != set(transcripts):
+        raise ValueError(f'{tool}: CDS and transcript model sets differ')
+    owner = {}
+    def owners(key, visiting=()):
+        if key in visiting:
+            raise ValueError('Cyclic GFF3 Parent references')
+        if key not in owner:
+            owner[key] = {key} if key in genes else set().union(
+                *(owners(p, visiting+(key,)) for p in references(features[key][0])))
+        return owner[key]
+    for key in features:
+        owners(key)
+    gene_transcripts = {}
+    for transcript in transcripts:
+        for gene in owners(transcript):
+            gene_transcripts.setdefault(gene, []).append(transcript)
+    cds, proteins = fasta_index(directory/'cds.fa'), fasta_index(directory/'proteins.fa')
+    if set(cds) != set(proteins):
+        raise ValueError(f'{tool}: CDS/protein FASTA IDs differ')
+    model_records = {}
+    for original, record in cds.items():
+        if tool == 'tiberius':
+            parts = original.split('|')
+            candidates = [original] if original in transcripts else parts[1:2]
+        else:
+            candidates = gene_transcripts.get(original, [])
+            if original in transcripts:
+                candidates = [original]
+        if len(candidates) != 1 or candidates[0] not in transcripts or candidates[0] in model_records:
+            raise ValueError(f'{tool}: ambiguous or unmatched native FASTA ID: {original}')
+        model_records[candidates[0]] = (original, record, proteins[original])
+    if set(model_records) != cds_ids:
+        raise ValueError(f'{tool}: missing FASTA records for native CDS models')
+    allowed = set(genes)
+    if tool == 'carbon_a':
+        for gene in genes.values():
+            if gene['attrs'].get('status') not in {'complete', 'incomplete'}:
+                raise ValueError('Carbon-A gene lacks an explicit complete/incomplete status')
+        if not include_incomplete:
+            allowed = {key for key,row in genes.items() if row['attrs']['status'] == 'complete'}
+    selected = []
+    for row in rows:
+        roots = owners(unquote(row['attrs']['ID'])) if 'ID' in row['attrs'] else set().union(
+            *(owners(p) for p in references(row)))
+        if not roots:
+            raise ValueError(f'{tool}: feature has no gene ancestor')
+        if roots & allowed and not roots <= allowed:
+            raise ValueError('A shared feature spans complete and incomplete genes')
+        if roots <= allowed:
+            selected.append(row)
+    return dict(tool=tool, rows=selected, genes={g:genes[g] for g in allowed},
+                transcripts={t:r for t,r in transcripts.items() if owners(t) <= allowed},
+                records=model_records, excluded=len(genes)-len(allowed))
+
+
+def combine_models(sources, output, include_incomplete=False):
+    """Merge a single selected model set, preserving native IDs, headers and sequences."""
+    datasets = [native_models(tool, path, include_incomplete) for tool,path in sources]
+    feature_ids, sequence_ids, merged_rows, records = set(), set(), [], []
+    for data in datasets:
+        current = {unquote(r['attrs']['ID']) for r in data['rows'] if 'ID' in r['attrs']}
+        if current & feature_ids:
+            raise ValueError('Native GFF IDs collide between tools; CTC does not rename them')
+        feature_ids.update(current)
+        for row in data['rows']:
+            for attribute in ['Parent','Derives_from']:
+                if any(ref not in current for ref in references(row,attribute)):
+                    raise ValueError(f'{attribute} points outside the selected model set')
+        merged_rows.extend(data['rows'])
+        for transcript in data['transcripts']:
+            original, cds, protein = data['records'][transcript]
+            if original in sequence_ids:
+                raise ValueError('Native FASTA IDs collide between tools; CTC does not rename them')
+            sequence_ids.add(original)
+            records.append((cds, protein))
+    with (output/'prediction.gff3').open('w') as handle:
+        handle.write('##gff-version 3\n')
+        for row in merged_rows:
+            handle.write('\t'.join(row['fields'])+'\n')
+    read_gff(output/'prediction.gff3')
+    with (output/'cds.fa').open('w') as cds_file, (output/'proteins.fa').open('w') as proteins_file:
+        for (cds_header, dna), (protein_header, aa) in records:
+            cds_file.write(f'>{cds_header}\n{dna}\n')
+            proteins_file.write(f'>{protein_header}\n{aa}\n')
+    return dict(genes=sum(len(d['genes']) for d in datasets),models=len(records),
+                cds_features=sum(r['fields'][2]=='CDS' for r in merged_rows),
+                carbon_a_incomplete_excluded=sum(d['excluded'] for d in datasets))
 
 
 def extra_args(text, reserved):
@@ -169,22 +284,26 @@ def run(a):
     started = time.monotonic()
     output = a.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
-    for tool in ['tiberius', 'carbon']:
+    for tool in ['tiberius', 'carbon_a']:
         (output/tool).mkdir()
-    report = dict(strategy='CTC', version='0.2.0', input=str(a.input.resolve()), min_length=a.min_length,
-                  cutoff_length=a.cutoff_length, status='running', components=[])
+    (output/'combined').mkdir()
+    report = dict(strategy='CTC', version='0.3.0', input=str(a.input.resolve()), min_length=a.min_length,
+                  cutoff_length=a.cutoff_length, include_incomplete=a.include_incomplete, status='running', components=[])
     try:
         table = codon_table(a.codon_table)
-        effective_table = output/'codon_table.json'
+        effective_table = output/'combined/codon_table.json'
         effective_table.write_text(json.dumps(table, indent=2, sort_keys=True)+'\n')
-        report['codon_table'] = dict(source=str(a.codon_table.resolve()) if a.codon_table else 'NCBI 1',
+        report['codon_table'] = dict(source=str(a.codon_table) if a.codon_table else 'NCBI 1',
             sha256=hashlib.sha256(effective_table.read_bytes()).hexdigest())
         split_start = time.monotonic()
         report['routing'] = split_fasta(a.input, output, a.min_length, a.cutoff_length)
         report['split_seconds'] = time.monotonic()-split_start
         sources = []
-        for tool in ['tiberius', 'carbon']:
+        for tool in ['tiberius', 'carbon_a']:
             if not report['routing'][tool]['records']:
+                (output/tool/'prediction.gff3').write_text('##gff-version 3\n')
+                (output/tool/'cds.fa').touch()
+                (output/tool/'proteins.fa').touch()
                 continue
             dest = output/tool
             env = os.environ.copy()
@@ -194,7 +313,7 @@ def run(a):
             if tool == 'tiberius':
                 command = [str(python), '-m', 'tiberius.main', '--genome', str(dest/'input.fna'),
                     '--model', str(a.tiberius_model.resolve()), '--out', str(dest/'prediction.gff3'),
-                    '--codingseq', str(dest/'native.cds.fa'),
+                    '--codingseq', str(dest/'cds.fa'),
                     '--min_genome_seqlen', str(a.min_length)] + extra_args(a.tiberius_args,
                     {'--genome','--model','--out','--codingseq','--protseq','--min_genome_seqlen'})
                 gff = dest/'prediction.gff3'
@@ -217,18 +336,22 @@ def run(a):
             part.update(elapsed_seconds=time.monotonic()-part_start, exit_code=completed.returncode)
             if completed.returncode:
                 raise RuntimeError(f'{tool} failed; see {dest}/run.log')
-            if tool == 'carbon' and not gff.is_file():
+            if tool == 'carbon_a' and not gff.is_file():
                 gff = dest/'work_WARNING/prediction.gff'
             if not gff.is_file() or not gff.stat().st_size:
                 raise RuntimeError(f'Missing native GFF: {gff}')
             if tool == 'tiberius':
                 translation_start = time.monotonic()
-                part['translation'] = translate_cds(dest/'native.cds.fa', dest/'proteins.fa',
+                part['translation'] = translate_cds(dest/'cds.fa', dest/'proteins.fa',
                     dest/'translation.tsv', table, cds_parents(gff))
                 part['translation_seconds'] = time.monotonic()-translation_start
-            sources.append((tool, gff))
+            else:
+                for source_name, target in [('prediction.gff','prediction.gff3'),('prediction.fna','cds.fa'),('prediction.faa','proteins.fa')]:
+                    shutil.move(str(gff.parent/source_name), str(dest/target))
+            sources.append((tool, dest))
         merge_start = time.monotonic()
-        report['cds_features'] = merge_gffs(sources, output/'prediction.gff3')
+        report['combined'] = combine_models(sources, output/'combined', a.include_incomplete)
+        report['cds_features'] = report['combined']['cds_features']
         report['merge_seconds'] = time.monotonic()-merge_start
         report['status'] = 'complete'
     except Exception as error:
@@ -236,13 +359,14 @@ def run(a):
         raise
     finally:
         report['elapsed_seconds'] = time.monotonic()-started
-        (output/'run.json').write_text(json.dumps(report, indent=2)+'\n')
+        (output/'combined/run.json').write_text(json.dumps(report, indent=2)+'\n')
     return report
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--version', action='version', version='CTC 0.2.0')
+    p.add_argument('--include-incomplete', action='store_true', help='Also merge Carbon-A status=incomplete models; native tool outputs always retain them')
+    p.add_argument('--version', action='version', version='CTC 0.3.0')
     p.add_argument('--input', required=True, type=Path, help='FASTA or FASTA.gz')
     p.add_argument('--output', required=True, type=Path, help='New output directory')
     p.add_argument('--min-length', type=int, default=1000)
@@ -253,7 +377,7 @@ def main():
     p.add_argument('--carbon-a-path', required=True, type=Path, help='Python in the Carbon-A environment; its bin directory is placed first in PATH')
     p.add_argument('--carbon-a-model', required=True, type=Path, help='Carbon-A directory containing model weights and annotation_pipeline/')
     p.add_argument('--carbon-a-args', default='', help='Quoted additional native options; use --carbon-a-args="..."')
-    p.add_argument('--codon-table', type=Path, help='64-codon JSON shared by Carbon-A and Tiberius CDS translation; default: standard code (NCBI 1)')
+    p.add_argument('--codon-table', help='NCBI code 1/12/26 or 64-codon JSON shared by Carbon-A and Tiberius CDS translation; default: standard code (NCBI 1)')
     a = p.parse_args()
     if not 1 <= a.min_length <= a.cutoff_length:
         p.error('Require 1 <= min-length <= cutoff-length')
@@ -261,7 +385,7 @@ def main():
         result = run(a)
     except (ValueError, OSError, RuntimeError) as error:
         p.exit(1, f'CTC: {error}\n')
-    print(f"CTC complete: {a.output}/prediction.gff3 ({result['elapsed_seconds']:.1f} s)")
+    print(f"CTC complete: {a.output}/combined/prediction.gff3 ({result['elapsed_seconds']:.1f} s)")
 
 
 if __name__ == '__main__':

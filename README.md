@@ -171,7 +171,7 @@ python ctc.py \
   --carbon-a-model /path/to/Carbon-A
 ```
 
-Records of 1–10 kb go to Tiberius; longer records go to Carbon-A. Carbon-A defaults to one GPU with its additional input-length filter disabled. The merged annotation is `ctc_out/prediction.gff3`; native outputs and `routing.tsv` are retained.
+Records of 1–10 kb go to Tiberius; longer records go to Carbon-A. Carbon-A defaults to one GPU with its additional input-length filter disabled. Outputs are organized as `tiberius/`, `carbon_a/` and `combined/`, each with `prediction.gff3`, `cds.fa` and `proteins.fa`. Native IDs and FASTA headers are preserved; no ID mapping file is produced.
 
 | Parameter | Required / default | Description |
 | --- | --- | --- |
@@ -181,19 +181,20 @@ Records of 1–10 kb go to Tiberius; longer records go to Carbon-A. Carbon-A def
 | `--cutoff-length` | `10000` | Eligible records ≤ this length go to Tiberius; longer records go to Carbon-A. |
 | `--tiberius-path` | Required | Python executable in the Tiberius environment. |
 | `--tiberius-model` | Required | Tiberius model directory. |
-| `--tiberius-args` | Empty | Additional native options, e.g. `--tiberius-args="--batch_size 8"`. |
+| `--tiberius-args` | Empty | Additional native options, e.g. `--tiberius-args "--batch_size 8"`. |
 | `--carbon-a-path` | Required | Python executable in the Carbon-A environment. |
 | `--carbon-a-model` | Required | Carbon-A directory containing model files and `annotation_pipeline/`. |
-| `--carbon-a-args` | Empty | Additional native options, e.g. `--carbon-a-args="--batch-size 4"`. |
-| `--codon-table` | Standard code (NCBI 1) | JSON mapping all 64 DNA codons to amino acids or `*`, shared by Carbon-A and Tiberius CDS translation. |
+| `--carbon-a-args` | Empty | Additional native options, e.g. `--carbon-a-args "--batch-size 4"`. |
+| `--codon-table` | `1` | NCBI code `1`, `12` or `26`, or a JSON file mapping all 64 DNA codons to amino acids or `*`. Shared by both branches. |
+| `--include-incomplete` | Off | Also merge Carbon-A models marked `status=incomplete`. |
 | `--version` | — | Show the CTC version. |
 | `--help` | — | Show all options. |
 
-CTC saves the effective mapping as `codon_table.json` and passes it to Carbon-A. Tiberius CDS are translated in frame 1 with the same mapping into `tiberius/proteins.fa`; this does not change Tiberius's gene prediction. Protein IDs use `tiberius_<transcript ID>` to match the merged GFF; the original FASTA header is retained as the description. Carbon-A keeps its native sequence outputs.
+By default, `combined/` contains all native Tiberius models and only Carbon-A models marked `status=complete`. Add `--include-incomplete` to include Carbon-A's incomplete models too. Both tool directories always retain all their models. No additional codon, confidence or CDS-length filter is applied by CTC.
 
-Only one terminal `*` is removed. Internal `*` and unknown `X` are retained and reported in `tiberius/translation.tsv`, without filtering models. An ambiguous codon yields its shared amino acid if all resolutions agree, otherwise `X`; a trailing partial codon yields `X`. CTC uses only the Python standard library.
+Tiberius CDS are translated in frame 1 using the selected code, preserving their original headers; Carbon-A uses the same code in its native pipeline. Only one terminal `*` is removed from Tiberius proteins; internal `*` and unknown `X` remain. Ambiguous codons give their shared amino acid if all resolutions agree, otherwise `X`; trailing partial codons give `X`. This translation does not change Tiberius's gene prediction.
 
-CTC 0.2.0 end-to-end timing includes splitting, prediction, Tiberius CDS translation and GFF merging. Measurements on the 17 assemblies are pending.
+Run details, routing and the effective codon table are stored under `combined/`; translation diagnostics remain under `tiberius/`. CTC uses only the Python standard library. CTC 0.3.0 end-to-end timing includes splitting, prediction, translation and the selected-model merge; measurements are pending.
 
 ## Reproduce
 

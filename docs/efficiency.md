@@ -87,3 +87,9 @@ Rscript scripts/plot_efficiency.R reproduced_runtime/summary.tsv reproduced_runt
 ```
 
 Collection requires 20 successful cases for each of 17 species, passing hardware receipts and nonempty native GFFs; it saves GFF hashes alongside the combined table. The final summary requires **1,020 successful observations with independent task IDs**. For each species/tool/condition, take the median of its three elapsed times, calculate Mb/min from that median, then report the mean and sample SD across 17 species (ddof=1). Each species has equal weight. Do not pool 51 runs as independent species, substitute missing runs with zero, or combine HPC preflight timings with AIS results. Peak process RSS uses the same median-then-mean convention. `species_medians.tsv` retains the 340 within-input values.
+
+## CTC timing
+
+CTC 0.3.0 runs the same native predictors on each original assembly, routing 1–10 kb records to Tiberius and longer records to Carbon-A. Its default combined output retains all Tiberius models and only Carbon-A `status=complete` models, with original IDs. There is no additional confidence or CDS-length filter at this merge step. The benchmark's frozen scoring rules remain separate.
+
+`run_hybrid_efficiency.py` measures splitting, native prediction, Tiberius CDS translation and selected GFF/CDS/protein output writing on the same A100/4-CPU/32-GiB allocation. The version is recorded in each timing row. Results from earlier CTC versions are not labelled as 0.3.0 end-to-end measurements. `hybrid_efficiency_ais.sh` uses a version-specific output directory and scripts deployed beside the wrapper; previously submitted jobs are not modified.
