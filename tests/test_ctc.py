@@ -32,6 +32,13 @@ def native(root, tool, gff, records):
     return directory
 
 
+def id_map(directory):
+    with (directory/'id_map.tsv').open() as handle:
+        rows=csv.DictReader(handle,delimiter='\t')
+        assert rows.fieldnames==['new_id','original_id']
+        return {r['new_id']:r['original_id'] for r in rows}
+
+
 class CTCTests(unittest.TestCase):
     def test_boundaries_and_duplicate_ids(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -89,18 +96,18 @@ class CTCTests(unittest.TestCase):
             before={p:p.read_bytes() for d in [t,c] for p in d.iterdir()}
             stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out)
             self.assertEqual(stats['models'],3);self.assertEqual(stats['carbon_a_confidence_excluded'],1);self.assertEqual(stats['carbon_a_incomplete_excluded'],1)
-            self.assertFalse((out/'id_map.tsv').exists())
-            expected=['old1|tx1|b:0-9(+)','old2|tx2|a:29-38(+)','gene1']
+            self.assertEqual(id_map(out),{'g1.t1':'carbon_a:gene1','g2.t1':'tiberius:old2|tx2|a:29-38(+)','g3.t1':'tiberius:old1|tx1|b:0-9(+)'})
+            expected=['g1.t1','g2.t1','g3.t1']
             self.assertEqual(list(ctc.fasta_index(out/'cds.fa')),expected)
             self.assertEqual(list(ctc.fasta_index(out/'proteins.fa')),expected)
-            self.assertIn('>old1|tx1|b:0-9(+) description',(out/'proteins.fa').read_text())
+            self.assertIn('>g3.t1\n',(out/'proteins.fa').read_text())
             self.assertIn('M*',(out/'proteins.fa').read_text())
             self.assertIn('confidence=1',(out/'prediction.gff3').read_text())
             self.assertNotIn('status=incomplete',(out/'prediction.gff3').read_text())
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
             stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out,confidence_threshold=0)
             self.assertEqual(stats['models'],4);self.assertEqual(stats['carbon_a_incomplete_excluded'],1)
-            self.assertNotIn('gene2',ctc.fasta_index(out/'cds.fa'))
+            self.assertNotIn('carbon_a:gene2',id_map(out).values())
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
 
     def test_confidence_thresholds_na_and_invalid_scores(self):
@@ -114,10 +121,12 @@ class CTCTests(unittest.TestCase):
             before={p:p.read_bytes() for p in c.iterdir()}
             for threshold,expected in [(.1,{'g1','g2'}),(0,{'g0','g1','g2'}),(1,set())]:
                 stats=ctc.combine_models([('carbon_a',c)],out,confidence_threshold=threshold)
-                self.assertEqual(set(ctc.fasta_index(out/'cds.fa')),expected)
-                self.assertEqual(set(ctc.fasta_index(out/'proteins.fa')),expected)
+                mapping=id_map(out)
+                self.assertEqual(set(mapping.values()),{'carbon_a:'+x for x in expected})
+                self.assertEqual(set(ctc.fasta_index(out/'cds.fa')),set(mapping))
+                self.assertEqual(set(ctc.fasta_index(out/'proteins.fa')),set(mapping))
                 rows,_=ctc.read_gff(out/'prediction.gff3')
-                self.assertEqual({r['attrs']['ID'] for r in rows if r['fields'][2]=='gene'},expected)
+                self.assertEqual(len({r['attrs']['ID'] for r in rows if r['fields'][2]=='gene'}),len(expected))
                 self.assertEqual(stats['models']+stats['carbon_a_incomplete_excluded']+
                     stats['carbon_a_confidence_excluded'],5)
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
@@ -142,12 +151,13 @@ class CTCTests(unittest.TestCase):
             gff+=feature('x','exon',20,25,'ID=exon;Parent=a,b;Derives_from=shared','-')
             t=native(root,'tiberius',gff,[('gene|a|x:0-30(-)','ATGCTGTAA','ML'),('gene|b|x:0-30(-)','ATGCTGTAA','ML')])
             ctc.combine_models([('tiberius',t)],out)
-            self.assertEqual((out/'prediction.gff3').read_text(),'##gff-version 3\n'+gff)
-            self.assertEqual((out/'cds.fa').read_bytes(),(t/'cds.fa').read_bytes())
             rows,features=ctc.read_gff(out/'prediction.gff3')
-            self.assertEqual(len(features['shared']),2)
-            self.assertEqual(features['exon'][0]['attrs']['Parent'],'a,b')
-            self.assertEqual(features['exon'][0]['attrs']['Derives_from'],'shared')
+            self.assertEqual(len(features['shared_cds1']),2)
+            self.assertEqual(features['shared_exon1'][0]['attrs']['Parent'],'g1.t1,g1.t2')
+            self.assertEqual(features['shared_exon1'][0]['attrs']['Derives_from'],'shared_cds1')
+            self.assertEqual(features['g1'][0]['attrs']['Name'],'Biological_name')
+            self.assertEqual(id_map(out),{'g1.t1':'tiberius:gene|a|x:0-30(-)','g1.t2':'tiberius:gene|b|x:0-30(-)'})
+            self.assertEqual([r['fields'][7] for r in features['shared_cds1']],['2','0'])
 
     def test_unified_translation_preserves_native_outputs_and_excludes_partial(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -166,14 +176,14 @@ class CTCTests(unittest.TestCase):
             stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out,code=12)
             proteins=ctc.fasta_index(out/'proteins.fa')
             self.assertEqual({k:v[1] for k,v in proteins.items()},
-                {'gT|tT|x:0-9(+)':'MS','gC':'MA'})
+                {'g1.t1':'MS','g2.t1':'MA'})
             with (out/'translation.tsv').open() as handle:
                 checks={r['sequence']:r for r in csv.DictReader(handle,delimiter='\t')}
-            self.assertEqual(set(checks),{'gT|tT|x:0-9(+)','gC'})
+            self.assertEqual(set(checks),{'g1.t1','g2.t1'})
             self.assertEqual(stats['translation']['records'],2)
             self.assertEqual(stats['carbon_a_incomplete_excluded'],2)
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
-            self.assertEqual(ctc.fasta_index(out/'cds.fa'),{**ctc.fasta_index(t/'cds.fa'),'gC':ctc.fasta_index(c/'cds.fa')['gC']})
+            self.assertEqual([seq for _,seq in ctc.fasta(out/'cds.fa')],['ATGCTGTAA','ATGGCNTAA'])
 
     def test_translation_initial_phase_and_trailing_residues(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -187,13 +197,38 @@ class CTCTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'unmatched'):
                 ctc.translate_cds(source,root/'proteins.fa',root/'check.tsv',12,{'one':1})
 
-    def test_native_collisions_are_not_silently_renamed(self):
+    def test_native_collisions_are_separated_in_combined_ids(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);out=root/'combined';out.mkdir()
             t=native(root,'tiberius',model('x','g','tx'),[('g|tx|x:0-9(+)','ATGCTGTAA','ML')])
             c=native(root,'carbon_a',model('y','g','mrna',1,'status=complete;confidence=1'),[('g','ATGCTGTAA','ML')])
-            with self.assertRaisesRegex(ValueError,'collide'):
-                ctc.combine_models([('tiberius',t),('carbon_a',c)],out)
+            ctc.combine_models([('tiberius',t),('carbon_a',c)],out)
+            self.assertEqual(id_map(out),{'g1.t1':'tiberius:g|tx|x:0-9(+)','g2.t1':'carbon_a:g'})
+            _,features=ctc.read_gff(out/'prediction.gff3')
+            self.assertEqual(set(features),{'g1','g1.t1','g1.t1.cds','g2','g2.t1','g2.t1.cds'})
+
+    def test_record_order_discontinuous_cds_and_exon_numbering(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);out=root/'combined';out.mkdir()
+            gff=model('a','late','late_tx')
+            gff+=feature('z','gene',1,30,'ID=early;Name=early','-')
+            gff+=feature('z','mRNA',1,30,'ID=early_tx;Parent=early','-')
+            for index,start,end,phase in [(1,1,3,'2'),(2,20,25,'0')]:
+                gff+=feature('z','CDS',start,end,f'ID=old_cds{index};Parent=early_tx','-',phase)
+                gff+=feature('z','exon',start,end,f'Parent=early_tx','-')
+            t=native(root,'tiberius',gff,[('late|late_tx|a:0-9(+)','ATGCTGTAA','ML'),
+                ('early|early_tx|z:0-30(-)','ATGCTGTAA','ML')])
+            ctc.combine_models([('tiberius',t)],out,record_order={'z':0,'a':1})
+            _,features=ctc.read_gff(out/'prediction.gff3')
+            self.assertEqual(features['g1'][0]['fields'][0],'z')
+            self.assertEqual(features['g1'][0]['attrs']['Name'],'g1')
+            self.assertEqual(len(features['g1.t1.cds']),2)
+            self.assertEqual(features['g1.t1.exon1'][0]['fields'][3:5],['20','25'])
+            self.assertEqual(features['g1.t1.exon2'][0]['fields'][3:5],['1','3'])
+            self.assertEqual(id_map(out)['g1.t1'],'tiberius:early|early_tx|z:0-30(-)')
+            before={p.name:p.read_bytes() for p in out.iterdir()}
+            ctc.combine_models([('tiberius',t)],out,record_order={'z':0,'a':1})
+            self.assertEqual(before,{p.name:p.read_bytes() for p in out.iterdir()})
 
     def test_invalid_references_and_duplicate_features_fail(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -245,7 +280,7 @@ else:
                     self.assertEqual(report['combined']['models'],sum(n>=1000 for n in lengths))
                     if report['routing']['tiberius']['records']:
                         self.assertEqual((out/'tiberius/proteins.fa').read_text(),'>gT|tT|chr:0-9(+) description\nML\n')
-                        self.assertEqual(ctc.fasta_index(out/'combined/proteins.fa')['gT|tT|chr:0-9(+)'][1],'MS')
+                        self.assertEqual(ctc.fasta_index(out/'combined/proteins.fa')['g1.t1'][1],'MS')
                     self.assertTrue((out/'combined/translation.tsv').exists())
                     self.assertFalse((out/'tiberius/translation.tsv').exists())
                     self.assertNotEqual(subprocess.run(command,capture_output=True).returncode,0)

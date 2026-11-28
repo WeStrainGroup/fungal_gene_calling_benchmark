@@ -7,6 +7,7 @@ import hashlib
 import json
 import math
 import os
+import re
 from pathlib import Path
 import shlex
 import shutil
@@ -238,45 +239,125 @@ def native_models(tool, directory, confidence_threshold=0.1):
             selected.append(row)
     return dict(tool=tool, rows=selected, genes={g:genes[g] for g in allowed},
                 transcripts={t:r for t,r in transcripts.items() if owners(t) <= allowed},
-                records=model_records, incomplete_excluded=incomplete_excluded,
+                records=model_records, owners=owner, incomplete_excluded=incomplete_excluded,
                 confidence_excluded=confidence_excluded)
 
 
-def combine_models(sources, output, confidence_threshold=0.1, code=1):
-    """Merge selected native GFF/CDS models and translate all retained CDS uniformly."""
+def rename_models(datasets, record_order):
+    """Assign gene/transcript IDs, then remap every GFF3 reference consistently."""
+    genes = [(i,key,row) for i,d in enumerate(datasets) for key,row in d['genes'].items()]
+    def location(row):
+        f = row['fields']
+        if record_order is not None:
+            if f[0] not in record_order:
+                raise ValueError(f'Predicted sequence absent from input FASTA: {f[0]}')
+            contig = record_order[f[0]]
+        else:
+            contig = f[0]
+        return contig, int(f[3]), int(f[4]), f[6]
+    genes.sort(key=lambda item:(location(item[2]),datasets[item[0]]['tool'],item[1]))
+    gene_rank = {(i,key):rank for rank,(i,key,_) in enumerate(genes,1)}
+    merged_rows, records, mapping, phases = [], [], [], {}
+    shared_counts = {}
+    for i,data in enumerate(datasets):
+        ids = {key:f'g{gene_rank[i,key]}' for key in data['genes']}
+        def roots(row):
+            if 'ID' in row['attrs']:
+                return data['owners'][unquote(row['attrs']['ID'])]
+            return set().union(*(data['owners'][p] for p in references(row)))
+        def rank(row):
+            return min(gene_rank[i,g] for g in roots(row))
+        transcripts = sorted(data['transcripts'], key=lambda t:(rank(data['transcripts'][t]),
+            location(data['transcripts'][t]),t))
+        counters = {}
+        transcript_rank = {}
+        for t in transcripts:
+            gene = rank(data['transcripts'][t])
+            counters[gene] = counters.get(gene,0)+1
+            ids[t] = f'g{gene}.t{counters[gene]}'
+            transcript_rank[t] = (gene,counters[gene])
+            original, (_,dna), phase = data['records'][t]
+            records.append((transcript_rank[t],ids[t],dna))
+            mapping.append((transcript_rank[t],ids[t],data['tool']+':'+original))
+            phases[ids[t]] = phase
+
+        # CDS segments with the same Parent set form one discontinuous feature.
+        groups = {}
+        row_ids = {}
+        for row in data['rows']:
+            old = unquote(row['attrs']['ID']) if 'ID' in row['attrs'] else None
+            if old in ids:
+                row_ids[row['index']] = ids[old]
+                continue
+            kind = row['fields'][2]
+            key = ('CDS',tuple(sorted(references(row)))) if kind == 'CDS' else ('feature',old) if old else ('row',row['index'])
+            groups.setdefault(key,[]).append(row)
+        def group_order(parts):
+            row = parts[0]
+            parents = references(row)
+            parent_rank = min((transcript_rank[p] for p in parents if p in transcript_rank),default=(rank(row),0))
+            start = min(int(r['fields'][3]) for r in parts)
+            end = max(int(r['fields'][4]) for r in parts)
+            coordinates = (-end,-start) if row['fields'][6] == '-' else (start,end)
+            return parent_rank,row['fields'][2],coordinates,row['attrs'].get('ID',''),row['index']
+        counters = {}
+        for parts in sorted(groups.values(),key=group_order):
+            row = parts[0]
+            parents = references(row)
+            kind = re.sub(r'[^A-Za-z0-9_]', '_', row['fields'][2]).lower()
+            if len(parents)>1:
+                prefix = f'shared_{kind}'
+                shared_counts[prefix] = shared_counts.get(prefix,0)+1
+                new = f'{prefix}{shared_counts[prefix]}'
+            else:
+                parent = ids.get(parents[0]) if parents else None
+                prefix = (parent or f'g{rank(row)}')+'.'+kind
+                counters[prefix] = counters.get(prefix,0)+1
+                new = prefix if kind == 'cds' else f'{prefix}{counters[prefix]}'
+            for row in parts:
+                row_ids[row['index']] = new
+                if 'ID' in row['attrs']:
+                    ids[unquote(row['attrs']['ID'])] = new
+        for row in data['rows']:
+            attrs = dict(row['attrs'])
+            old = unquote(attrs['ID']) if 'ID' in attrs else None
+            attrs['ID'] = row_ids[row['index']]
+            for attribute in ['Parent','Derives_from']:
+                if attribute in attrs:
+                    refs = references(row,attribute)
+                    if any(ref not in ids for ref in refs):
+                        raise ValueError(f'{attribute} points outside the selected model set')
+                    attrs[attribute] = ','.join(sorted({ids[ref] for ref in refs}))
+            if old is not None and unquote(attrs.get('Name','')) == old:
+                attrs['Name'] = attrs['ID']
+            fields = row['fields'][:]
+            fields[8] = ';'.join(f'{key}={value}' for key,value in attrs.items())
+            priority = 0 if fields[2]=='gene' else 1 if fields[2] in {'mRNA','transcript'} else 2
+            merged_rows.append(((rank(row),priority,location(row),fields[2],attrs['ID']),fields))
+    return [fields for _,fields in sorted(merged_rows)], sorted(records), sorted(mapping), phases
+
+
+def combine_models(sources, output, confidence_threshold=0.1, code=1, record_order=None):
+    """Select complete models, unify IDs and translate their native CDS."""
     if not math.isfinite(confidence_threshold) or not 0 <= confidence_threshold <= 1:
         raise ValueError('confidence-threshold must be between 0 and 1')
-    datasets = [native_models(tool, path, confidence_threshold) for tool,path in sources]
-    feature_ids, sequence_ids, merged_rows, records = set(), set(), [], []
-    phases = {}
-    for data in datasets:
-        current = {unquote(r['attrs']['ID']) for r in data['rows'] if 'ID' in r['attrs']}
-        if current & feature_ids:
-            raise ValueError('Native GFF IDs collide between tools; CTC does not rename them')
-        feature_ids.update(current)
-        for row in data['rows']:
-            for attribute in ['Parent','Derives_from']:
-                if any(ref not in current for ref in references(row,attribute)):
-                    raise ValueError(f'{attribute} points outside the selected model set')
-        merged_rows.extend(data['rows'])
-        for transcript in data['transcripts']:
-            original, cds, phase = data['records'][transcript]
-            if original in sequence_ids:
-                raise ValueError('Native FASTA IDs collide between tools; CTC does not rename them')
-            sequence_ids.add(original)
-            records.append(cds)
-            phases[original] = phase
+    datasets = [native_models(tool,path,confidence_threshold) for tool,path in sorted(sources)]
+    rows,records,mapping,phases = rename_models(datasets,record_order)
     with (output/'prediction.gff3').open('w') as handle:
         handle.write('##gff-version 3\n')
-        for row in merged_rows:
-            handle.write('\t'.join(row['fields'])+'\n')
+        for fields in rows:
+            handle.write('\t'.join(fields)+'\n')
     read_gff(output/'prediction.gff3')
-    with (output/'cds.fa').open('w') as cds_file:
-        for cds_header, dna in records:
-            cds_file.write(f'>{cds_header}\n{dna}\n')
-    translation = translate_cds(output/'cds.fa', output/'proteins.fa', output/'translation.tsv', code, phases)
+    with (output/'cds.fa').open('w') as handle:
+        for _,name,dna in records:
+            handle.write(f'>{name}\n{dna}\n')
+    with (output/'id_map.tsv').open('w') as handle:
+        writer = csv.writer(handle,delimiter='\t',lineterminator='\n')
+        writer.writerow(['new_id','original_id'])
+        writer.writerows((name,original) for _,name,original in mapping)
+    translation = translate_cds(output/'cds.fa',output/'proteins.fa',output/'translation.tsv',code,phases)
     return dict(genes=sum(len(d['genes']) for d in datasets),models=len(records),translation=translation,
-                cds_features=sum(r['fields'][2]=='CDS' for r in merged_rows),
+                cds_features=sum(r[2]=='CDS' for r in rows),
                 carbon_a_incomplete_excluded=sum(d['incomplete_excluded'] for d in datasets),
                 carbon_a_confidence_excluded=sum(d['confidence_excluded'] for d in datasets))
 
@@ -297,7 +378,7 @@ def run(a):
     for tool in ['tiberius', 'carbon_a']:
         (output/tool).mkdir()
     (output/'combined').mkdir()
-    report = dict(strategy='CTC', version='0.6.0', input=str(a.input.resolve()), min_length=a.min_length,
+    report = dict(strategy='CTC', version='0.7.0', input=str(a.input.resolve()), min_length=a.min_length,
                   cutoff_length=a.cutoff_length,
                   confidence_threshold=a.confidence_threshold, translation_engine=f'Biopython {biopython_version}',
                   status='running', components=[])
@@ -356,7 +437,9 @@ def run(a):
                     shutil.move(str(gff.parent/source_name), str(dest/target))
             sources.append((tool, dest))
         merge_start = time.monotonic()
-        report['combined'] = combine_models(sources, output/'combined', a.confidence_threshold, a.codon_table)
+        with (output/'combined/routing.tsv').open() as handle:
+            record_order = {r['sequence']:i for i,r in enumerate(csv.DictReader(handle,delimiter='\t'))}
+        report['combined'] = combine_models(sources, output/'combined', a.confidence_threshold, a.codon_table, record_order)
         report['cds_features'] = report['combined']['cds_features']
         report['merge_seconds'] = time.monotonic()-merge_start
         report['status'] = 'complete'
@@ -373,7 +456,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--confidence-threshold', type=float, default=0.1,
                    help='Minimum Carbon-A complete-model confidence for combined outputs (inclusive; default: 0.1); 0 disables score filtering, incomplete models are always excluded')
-    p.add_argument('--version', action='version', version='CTC 0.6.0')
+    p.add_argument('--version', action='version', version='CTC 0.7.0')
     p.add_argument('--input', required=True, type=Path, help='FASTA or FASTA.gz')
     p.add_argument('--output', required=True, type=Path, help='New output directory')
     p.add_argument('--min-length', type=int, default=1000)
