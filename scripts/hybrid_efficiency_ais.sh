@@ -15,5 +15,6 @@ export GNU_TIME=/ssd/wangxinyu/gnu_time
 export BENCHMARK_IMAGE=192.168.108.1:5000/pytorch/pytorch2.3-admin:cuda_12.4
 exec /ssd/wangxinyu/carbon_a_benchmark_20261117/runtime/bin/python \
   "$scripts/run_hybrid_efficiency.py" \
+  --ctc-script "${CTC_SCRIPT:?Set CTC_SCRIPT to the standalone ctc.py path}" \
   --inputs "$work/inputs" --metadata "$work/software.json" \
   --cases "$work/cases.tsv" --output "$work/ctc/0.8.0/round$round" --species-index "$index"

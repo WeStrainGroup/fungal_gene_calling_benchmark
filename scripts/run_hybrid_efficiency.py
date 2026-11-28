@@ -3,6 +3,7 @@
 import argparse
 import csv
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -17,6 +18,7 @@ def main():
         p.add_argument('--'+key, required=True, type=Path)
     p.add_argument('--species-index', required=True, type=int)
     p.add_argument('--config', type=Path)
+    p.add_argument('--ctc-script', required=True, type=Path, help='ctc.py in the standalone CTC checkout')
     a = p.parse_args()
     with a.cases.open() as handle:
         cases = [r for r in csv.DictReader(handle, delimiter='\t') if r['group'] == 'genome']
@@ -26,9 +28,11 @@ def main():
     row = cases[a.species_index]; species = row['species']
     source = a.inputs/species/'genome.fna'; code = a.inputs/species/'codon_table.json'
     assert hashlib.sha256(source.read_bytes()).hexdigest() == row['fasta_sha256']
-    from ctc import codon_table
+    ctc_script = a.ctc_script.resolve()
+    spec = importlib.util.spec_from_file_location('ctc', ctc_script)
+    ctc = importlib.util.module_from_spec(spec); spec.loader.exec_module(ctc)
     genetic_code = int(row['genetic_code'])
-    assert codon_table(genetic_code) == json.loads(code.read_text()), 'Frozen genetic code differs'
+    assert ctc.codon_table(genetic_code) == json.loads(code.read_text()), 'Frozen genetic code differs'
     output = a.output/species; output.mkdir(parents=True, exist_ok=False)
     scripts = Path(__file__).resolve().parent
     subprocess.run([sys.executable, str(scripts/'check_efficiency_resources.py'),
@@ -62,13 +66,14 @@ def main():
         assert packages == expected[tool]['packages'], tool
         observed[tool] = packages
     observed['script_sha256'] = {name:hashlib.sha256((scripts/name).read_bytes()).hexdigest()
-        for name in ['run_hybrid_efficiency.py','ctc.py','check_efficiency_resources.py']}
+        for name in ['run_hybrid_efficiency.py','check_efficiency_resources.py']}
+    observed['script_sha256']['ctc.py'] = hashlib.sha256(ctc_script.read_bytes()).hexdigest()
     observed['gnu_time_sha256'] = hashlib.sha256(Path(config['gnu_time']).read_bytes()).hexdigest()
     (output/'software.json').write_text(json.dumps(observed,indent=2)+'\n')
     env = dict(os.environ, LC_ALL='C', HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1',
         OPENBLAS_NUM_THREADS='4', OMP_NUM_THREADS='4', MKL_NUM_THREADS='4',
         TF_NUM_INTRAOP_THREADS='4', TF_NUM_INTEROP_THREADS='2', TF_FORCE_GPU_ALLOW_GROWTH='true')
-    command = [sys.executable, str(scripts/'ctc.py'), '--input', str(source),
+    command = [sys.executable, str(ctc_script), '--input', str(source),
         '--output', str(output/'ctc'), '--min-length', '1000', '--cutoff-length', '10000', '--confidence-threshold', '0.1',
         '--tiberius-path', str(Path(config['environments']['tiberius'])/'bin/python'),
         '--tiberius-model', config['tiberius_model'], '--tiberius-args=--batch_size 8',

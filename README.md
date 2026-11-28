@@ -153,11 +153,11 @@ Relative elapsed time is each tool’s mean time divided by the fastest tool’s
 
 ## Suggestion
 
-For complete-CDS prediction in fungal assemblies or individual contigs, we recommend a length-based combination: **Tiberius for sequences of 1–10 kb and Carbon-A for sequences >10 kb**. Across the tested 1–10 kb ranges, Tiberius achieved similar or higher mean complete-reference F1 than Carbon-A and took approximately one fifth of its mean runtime. Carbon-A achieved the highest mean F1 on longer inputs. Apply this choice to each sequence, rather than to an assembly’s median sequence length.
+For complete-CDS prediction in fungal assemblies or individual contigs, we recommend Tiberius for sequences of 1–10 kb and Carbon-A for sequences >10 kb. Across the tested 1–10 kb ranges, Tiberius achieved similar or higher mean complete-reference F1 than Carbon-A and took approximately one fifth of its mean runtime. Carbon-A achieved the highest mean F1 on longer inputs. Apply this choice to each sequence, rather than to an assembly’s median sequence length.
 
-If recovering truncated CDS is a priority and computational cost is less limiting, **Carbon-A is the preferred single-tool choice**: it achieved higher mean truncated-reference F1 than Helixer across all tested fragment ranges.
+[CTC: Combined Tiberius and Carbon-A](https://github.com/WeStrainGroup/combined_tiberius_carbon_a) implements this strategy. Both tools apply pretrained models to individual sequence records, allowing CTC to route contigs by length and combine selected complete models. Installation, parameters and output details are available in the [CTC README](https://github.com/WeStrainGroup/combined_tiberius_carbon_a#readme).
 
-[CTC: Combined Tiberius and Carbon-A](https://app.notion.com/p/425a1ddc1d86801bb3defe76863fed06) implements this length-based strategy. The current v0.8.0 reconstructs selected complete gene models and translates their CDS consistently. Usage, parameters and output details are maintained on its dedicated page; a separate repository is planned. The [current script](scripts/ctc.py) remains here until that migration.
+If recovering truncated CDS is a priority and computational cost is less limiting, Carbon-A is the preferred single-tool choice: it achieved higher mean truncated-reference F1 than Helixer across all tested fragment ranges.
 
 ## Reproduce
 
