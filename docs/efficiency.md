@@ -1,6 +1,6 @@
 # Runtime benchmark
 
-The current release contains **round one: 340 successful measurements**, covering 17 species × five input conditions × four tools. Two additional rounds have been submitted separately. Current figures are labelled as first-round results; they are not three-run medians.
+The current release contains all three rounds: 1,020 successful measurements covering 17 species × five input conditions × four tools. Each input is represented by its median elapsed time across three independent runs, followed by species-equal mean and sample SD across 17 species.
 
 ## Reproduce the current tables and figure
 
@@ -9,13 +9,15 @@ Run from the repository root with Python 3.10+ and R with ggplot2. No GPU, model
 ```bash
 python scripts/summarize_efficiency.py \
   --metrics results/efficiency/round1_metrics.tsv \
-  --expected-rounds 1 --output reproduced_runtime
+            results/efficiency/round2_metrics.tsv \
+            results/efficiency/round3_metrics.tsv \
+  --expected-rounds 3 --output reproduced_runtime
 Rscript scripts/plot_efficiency.R \
   reproduced_runtime/summary.tsv reproduced_runtime/figures
 python -m unittest discover -s tests -p 'test_efficiency*.py' -v
 ```
 
-The source table records one successful observation per species/tool/condition: input size, elapsed seconds, CPU seconds, maximum individual-process RSS, execution order, task ID, container hostname, host load and CPU throttling. The script checks all 340 combinations against the frozen input manifest and rejects failed, missing, duplicated or non-finite observations. `summary.tsv` contains mean and sample SD across 17 species. `assembly_time.md` is the one-decimal presentation table; TSVs retain full precision. Relative elapsed time is each tool's mean assembly time divided by the fastest tool's mean assembly time; the fastest is 1.0×.
+Each source table records one successful observation per species/tool/condition in that round: input size, elapsed seconds, CPU seconds, maximum individual-process RSS, execution order, task ID, container hostname, host load and CPU throttling. The script checks all 340 combinations in each of the three rounds against the frozen input manifest and rejects failed, missing, duplicated or non-finite observations, including reused task IDs across rounds. `species_medians.tsv` contains the 340 within-input medians; `summary.tsv` contains the resulting mean and sample SD across 17 species. `assembly_time.md` is the one-decimal presentation table; TSVs retain full precision. Relative elapsed time is each tool's mean assembly time divided by the fastest tool's mean assembly time; the fastest is 1.0×.
 
 The throughput figure uses Original → 10–100 kb → 5–10 kb → 2–5 kb → 1–2 kb, with independent y-axis scales and the established tool colors. SD describes variation between species, not uncertainty from repeated runs.
 
@@ -48,7 +50,7 @@ python scripts/prepare_efficiency.py --data data --output runtime_work
 
 ## Rerun timing on a GPU
 
-The measured allocation was one **A100-SXM4-40GB**, **4 CPU quota**, **32 GiB host RAM**, with an eight-hour limit per species task. AIS CPU cores, caches and memory bandwidth were shared. Each task runs five conditions × four tools serially. Allocate these resources through your scheduler; the runner verifies the actual device, BF16 support, memory limit and CPU allocation before timing.
+The measured allocation was one A100-SXM4-40GB, 4 CPU quota, 32 GiB host RAM, with an eight-hour limit per species task. AIS CPU cores, caches and memory bandwidth were shared. Each task runs five conditions × four tools serially. Allocate these resources through your scheduler; the runner verifies the actual device, BF16 support, memory limit and CPU allocation before timing.
 
 Install the frozen versions and obtain the authors' models following [Running the predictors](run_predictors.md). Package versions, source revisions and model SHA256 values are in `metadata/software.json`; the hardware block there describes the original accuracy runs, not this A100 runtime experiment. No models or proprietary platform image are bundled. The original AIS base image was `192.168.108.1:5000/pytorch/pytorch2.3-admin:cuda_12.4`; this private registry is not required for CPU summary reproduction or the configurable runner.
 
@@ -86,7 +88,9 @@ python scripts/summarize_efficiency.py \
 Rscript scripts/plot_efficiency.R reproduced_runtime/summary.tsv reproduced_runtime/figures
 ```
 
-Collection requires 20 successful cases for each of 17 species, passing hardware receipts and nonempty native GFFs; it saves GFF hashes alongside the combined table. The final summary requires **1,020 successful observations with independent task IDs**. For each species/tool/condition, take the median of its three elapsed times, calculate Mb/min from that median, then report the mean and sample SD across 17 species (ddof=1). Each species has equal weight. Do not pool 51 runs as independent species, substitute missing runs with zero, or combine HPC preflight timings with AIS results. Peak process RSS uses the same median-then-mean convention. `species_medians.tsv` retains the 340 within-input values.
+All three rounds passed collection, with 51 passing hardware receipts, consistent software/model checksums and 1,020 nonempty native GFFs. The retrieved first-round table matches the previously published table byte for byte.
+
+Collection requires 20 successful cases for each of 17 species, passing hardware receipts and nonempty native GFFs; it saves GFF hashes alongside the combined table. The final summary requires 1,020 successful observations with independent task IDs. For each species/tool/condition, take the median of its three elapsed times, calculate Mb/min from that median, then report the mean and sample SD across 17 species (ddof=1). Each species has equal weight. Do not pool 51 runs as independent species, substitute missing runs with zero, or combine HPC preflight timings with AIS results. Peak process RSS uses the same median-then-mean convention. `species_medians.tsv` retains the 340 within-input values.
 
 ## CTC timing
 

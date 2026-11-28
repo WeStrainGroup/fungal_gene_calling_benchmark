@@ -132,13 +132,13 @@ Bars show species-equal mean F1 ± sample SD within truncated-reference regions.
 
 ### Computational efficiency
 
-The first runtime round completed all 340 tool–species–input combinations successfully. Each run used one A100 40GB GPU, four CPUs and 32 GiB host memory. Original inputs contained all nuclear assembly records ≥1 kb. For each fragment range, 50 frozen records were sampled per species, with ten records from each of five equal-width length bins. The four tools received identical inputs and retained the frozen models and prediction settings. Timing includes model loading, native preprocessing, prediction, postprocessing and output writing, but excludes installation, transfer and validation.
+The runtime benchmark completed all 1,020 measurements: 17 species × five input conditions × four tools × three independent runs. Each run used one A100 40GB GPU, a four-CPU quota and 32 GiB host memory; physical CPU cores were shared. Original inputs contained all nuclear assembly records ≥1 kb. For each fragment range, 50 frozen records were sampled per species, with ten records from each of five equal-width length bins. The four tools received identical inputs and retained the frozen models and prediction settings. Timing includes model loading, native preprocessing, prediction, postprocessing and output writing, but excludes installation, transfer and validation.
 
 ANNEVO had the highest mean throughput in every input condition, whereas Carbon-A had the lowest. For original assemblies, Carbon-A’s mean elapsed time was about nine times that of ANNEVO and about three times that of Tiberius or Helixer. All four tools achieved higher throughput on longer inputs. Because each fragment set contained 50 records rather than a fixed number of bases, this trend also reflects larger total inputs and the amortization of fixed costs such as model loading.
 
-![Runtime throughput: first round](figures/efficiency/throughput.png)
+![Runtime throughput: medians of three runs](figures/efficiency/throughput.png)
 
-Bars show the species-equal mean throughput (Mb/min), with sample SD across 17 species. These are first-round results, with one observation per species, tool and condition. Panel y-axis scales differ. Two additional rounds are in progress; the final summary will first take each input’s median across three runs, then calculate the mean and SD across species.
+Bars show species-equal mean throughput (Mb/min) and sample SD across 17 species. For each species, tool and input condition, throughput is calculated from the median elapsed time of three runs; the mean and SD are then calculated across species. Panel y-axis scales differ. SD describes between-species variation, not variation among the three repeats.
 
 | Tool | Time per original assembly (min, mean ± SD) | Relative elapsed time |
 | --- | ---: | ---: |
@@ -147,7 +147,7 @@ Bars show the species-equal mean throughput (Mb/min), with sample SD across 17 s
 | Helixer | 3.3 ± 2.1 | 2.8× |
 | Carbon-A | 11.0 ± 12.5 | 9.1× |
 
-Relative elapsed time is each tool’s mean time divided by the fastest tool’s mean time; 1.0× is the fastest. Values are calculated before rounding and displayed to one decimal place. Shared CPU resources and a single observation per input limit interpretation of small timing differences.
+Relative elapsed time is each tool’s mean time divided by the fastest tool’s mean time; 1.0× is the fastest. Values are calculated before rounding and displayed to one decimal place. Three-run medians reduce sensitivity to run-to-run fluctuations, but shared CPU resources still limit interpretation of small timing differences.
 
 [Runtime methods](docs/efficiency.md) and [current summary](results/efficiency/summary.tsv).
 
@@ -183,17 +183,19 @@ These commands use the published tables in `results/` and write PNG/PDF files to
 
 ### Reproduce runtime summaries
 
-The repository includes all 340 first-round timing observations. Recalculate the species means, SDs and relative elapsed times, then redraw the figure:
+The repository includes all 1,020 timing observations. Recalculate each input’s three-run median, then the species means, SDs and relative elapsed times:
 
 ```bash
 python scripts/summarize_efficiency.py \
   --metrics results/efficiency/round1_metrics.tsv \
-  --expected-rounds 1 --output reproduced_runtime
+            results/efficiency/round2_metrics.tsv \
+            results/efficiency/round3_metrics.tsv \
+  --expected-rounds 3 --output reproduced_runtime
 Rscript scripts/plot_efficiency.R reproduced_runtime/summary.tsv reproduced_runtime/figures
 python -m unittest discover -s tests -p 'test_efficiency*.py' -v
 ```
 
-Python 3.10+ and R/ggplot2 are sufficient; no GPU or model download is needed to reproduce these summaries. [Runtime methods](docs/efficiency.md) also describe reconstructing the 85 exact inputs from the v1.2 data release, configuring locally installed predictors, rerunning timing, and collecting three rounds. Exact elapsed times depend on hardware and host load.
+Python 3.10+ and R/ggplot2 are sufficient; no GPU or model download is needed to reproduce these summaries. [Runtime methods](docs/efficiency.md) also describe reconstructing the 85 exact inputs from the v1.2 data release, configuring locally installed predictors, rerunning timing, and collecting independent rounds. Exact elapsed times depend on hardware and host load.
 
 ### Recalculate scores
 
