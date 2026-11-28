@@ -1,0 +1,11 @@
+{
+  "retained_files_verified": 1179,
+  "reconstructed_files_verified": 68,
+  "all_original_files_verified": 1247,
+  "native_prediction_gffs": 340,
+  "fragment_fastas_reconstructed_and_sha256_verified": 68,
+  "runtime_fastas_sha256_verified": 85,
+  "sampled_records_identical": 3400,
+  "archive_sha256": "8a1d06505b621169335672197f9179dc927c19116b9ed6a5b740e297603d39f2",
+  "reconstruction_tests_passed": 6
+}

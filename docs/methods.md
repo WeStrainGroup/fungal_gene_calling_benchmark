@@ -91,6 +91,8 @@ Current figures use R/ggplot2, `theme_minimal()`, the accepted muted palette, sp
 | --- | --- | --- |
 | `install_helixer.sh` | Install fixed Helixer, HelixerPost, GeenuFF and fungi model in isolation. | Installed; 33 official tests and model MD5 passed. |
 | `prepare_new_inputs.py` | Fetch exact RefSeq DNA/GFF, verify MD5, exclude organelles and validate all current partitions. | Five added species frozen; official MD5 and all partition reconstruction checks passed. |
+| `reconstruct_fragments.py` | Restore the 68 omitted fragment FASTAs from original assemblies and frozen coordinate maps; verify source, map, sequence and whole-file SHA256. | Exact-byte reconstruction checked against the original frozen FASTAs; existing mismatched files are rejected. |
+| `tests/test_reconstruct_fragments.py` | Check coordinates, order, exact formatting, corrupted inputs and safe handling of existing files. | Six regression tests passed. |
 | `prepare_benchmark.py` | Link reusable inputs and native predictions into one current view; write the 160-task list. | 17-species view ready; 180 existing cases reused without copying. |
 | `run_benchmark.py` | Run pilot or pending cases on selected cooperative GPU locks; score and validate on completion. | All 340 predictions complete; CPU scoring and independent validation passed on 2026-11-24. |
 | `run_hybrid_efficiency.py`, `hybrid_efficiency_ais.sh` | Measure CTC on a frozen original assembly. | Uses the [standalone CTC repository](https://github.com/WeStrainGroup/combined_tiberius_carbon_a) via `--ctc-script`; version and source checksum recorded; frozen deployed jobs unchanged. |

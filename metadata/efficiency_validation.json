@@ -1,8 +1,8 @@
 {
-  "archive_sha256": "6ae0b161b1b86e0b4ff57522f5f11d153e46526722979d60a7fc1160e4052741",
+  "archive_sha256": "8a1d06505b621169335672197f9179dc927c19116b9ed6a5b740e297603d39f2",
   "fasta_hashes_verified": 85,
   "sampled_records_verified": 3400,
-  "source": "GitHub v1.2 release archive",
+  "source": "Compact v1.3 archive; frozen fragment FASTAs reconstructed byte-identically and all 85 runtime input hashes reverified.",
   "temporary_files_removed_on_exit": true,
   "rounds_reported": 3,
   "successful_cases": 1020,

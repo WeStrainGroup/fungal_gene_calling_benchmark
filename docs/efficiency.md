@@ -23,16 +23,18 @@ The throughput figure uses Original → 10–100 kb → 5–10 kb → 2–5 kb �
 
 ## Reconstruct the exact inputs
 
-Use the existing [v1.2 data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v1.2), shared with the accuracy benchmark. It contains the frozen assemblies, random fragments, coordinate maps and genetic codes; no new cutting or reference download is needed.
+Use the [v1.3 data release](https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/tag/v1.3), shared with the accuracy benchmark. The compact archive contains frozen assemblies, coordinate maps and genetic codes. Restore the omitted fragment FASTAs from these maps and verify their original checksums before preparing runtime inputs; no new random cutting or reference download is needed.
 
 ```bash
 mkdir -p data_download
-curl -L --fail -o data_download/fungal_benchmark_data_v1.2.tar.gz \
-  https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/download/v1.2/fungal_benchmark_data_v1.2.tar.gz
+curl -L --fail -o data_download/fungal_benchmark_data_v1.3.tar.gz \
+  https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/download/v1.3/fungal_benchmark_data_v1.3.tar.gz
 curl -L --fail -o data_download/SHA256SUMS \
-  https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/download/v1.2/SHA256SUMS
+  https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/download/v1.3/SHA256SUMS
 (cd data_download && sha256sum -c SHA256SUMS)
-tar -xzf data_download/fungal_benchmark_data_v1.2.tar.gz
+tar -xzf data_download/fungal_benchmark_data_v1.3.tar.gz
+python scripts/reconstruct_fragments.py --data data
+(cd data && sha256sum -c SHA256SUMS)
 python scripts/prepare_efficiency.py --data data --output runtime_work
 ```
 

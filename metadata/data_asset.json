@@ -1,10 +1,10 @@
 {
-  "version": "1.2",
-  "filename": "fungal_benchmark_data_v1.2.tar.gz",
-  "url": "https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/download/v1.2/fungal_benchmark_data_v1.2.tar.gz",
-  "bytes": 1699029544,
-  "sha256": "6ae0b161b1b86e0b4ff57522f5f11d153e46526722979d60a7fc1160e4052741",
-  "files": 1247,
+  "version": "v1.3",
+  "filename": "fungal_benchmark_data_v1.3.tar.gz",
+  "url": "https://github.com/WeStrainGroup/fungal_gene_calling_benchmark/releases/download/v1.3/fungal_benchmark_data_v1.3.tar.gz",
+  "bytes": 916667388,
+  "sha256": "8a1d06505b621169335672197f9179dc927c19116b9ed6a5b740e297603d39f2",
+  "files": 1179,
   "species": 17,
   "cases": 340,
   "conditions": [
@@ -13,5 +13,9 @@
     "5-10kb",
     "2-5kb",
     "1-2kb"
-  ]
+  ],
+  "reconstructed_files": 68,
+  "files_after_reconstruction": 1247,
+  "packaging": "compact; omit only the 68 fragment FASTAs",
+  "reconstruct_command": "python scripts/reconstruct_fragments.py --data data"
 }
