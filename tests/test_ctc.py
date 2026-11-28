@@ -102,7 +102,8 @@ class CTCTests(unittest.TestCase):
             self.assertEqual(list(ctc.fasta_index(out/'proteins.fa')),expected)
             self.assertIn('>g3.t1\n',(out/'proteins.fa').read_text())
             self.assertIn('M*',(out/'proteins.fa').read_text())
-            self.assertIn('confidence=1',(out/'prediction.gff3').read_text())
+            self.assertNotIn('confidence=',(out/'prediction.gff3').read_text())
+            self.assertNotIn('Name=',(out/'prediction.gff3').read_text())
             self.assertNotIn('status=incomplete',(out/'prediction.gff3').read_text())
             self.assertTrue(all(p.read_bytes()==data for p,data in before.items()))
             stats=ctc.combine_models([('tiberius',t),('carbon_a',c)],out,confidence_threshold=0)
@@ -153,9 +154,9 @@ class CTCTests(unittest.TestCase):
             ctc.combine_models([('tiberius',t)],out)
             rows,features=ctc.read_gff(out/'prediction.gff3')
             self.assertEqual(len(features['shared_cds1']),2)
-            self.assertEqual(features['shared_exon1'][0]['attrs']['Parent'],'g1.t1,g1.t2')
-            self.assertEqual(features['shared_exon1'][0]['attrs']['Derives_from'],'shared_cds1')
-            self.assertEqual(features['g1'][0]['attrs']['Name'],'Biological_name')
+            self.assertEqual(features['shared_cds1'][0]['attrs']['Parent'],'g1.t1,g1.t2')
+            self.assertFalse(any(r['fields'][2]=='exon' for r in rows))
+            self.assertTrue(all(set(r['attrs']) <= {'ID','Parent'} for r in rows))
             self.assertEqual(id_map(out),{'g1.t1':'tiberius:gene|a|x:0-30(-)','g1.t2':'tiberius:gene|b|x:0-30(-)'})
             self.assertEqual([r['fields'][7] for r in features['shared_cds1']],['2','0'])
 
@@ -207,7 +208,7 @@ class CTCTests(unittest.TestCase):
             _,features=ctc.read_gff(out/'prediction.gff3')
             self.assertEqual(set(features),{'g1','g1.t1','g1.t1.cds','g2','g2.t1','g2.t1.cds'})
 
-    def test_record_order_discontinuous_cds_and_exon_numbering(self):
+    def test_record_order_discontinuous_cds_and_exon_removal(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);out=root/'combined';out.mkdir()
             gff=model('a','late','late_tx')
@@ -221,10 +222,9 @@ class CTCTests(unittest.TestCase):
             ctc.combine_models([('tiberius',t)],out,record_order={'z':0,'a':1})
             _,features=ctc.read_gff(out/'prediction.gff3')
             self.assertEqual(features['g1'][0]['fields'][0],'z')
-            self.assertEqual(features['g1'][0]['attrs']['Name'],'g1')
+            self.assertEqual(features['g1'][0]['attrs'],{'ID':'g1'})
             self.assertEqual(len(features['g1.t1.cds']),2)
-            self.assertEqual(features['g1.t1.exon1'][0]['fields'][3:5],['20','25'])
-            self.assertEqual(features['g1.t1.exon2'][0]['fields'][3:5],['1','3'])
+            self.assertFalse(any('exon' in key for key in features))
             self.assertEqual(id_map(out)['g1.t1'],'tiberius:early|early_tx|z:0-30(-)')
             before={p.name:p.read_bytes() for p in out.iterdir()}
             ctc.combine_models([('tiberius',t)],out,record_order={'z':0,'a':1})
@@ -282,6 +282,7 @@ else:
                         self.assertEqual((out/'tiberius/proteins.fa').read_text(),'>gT|tT|chr:0-9(+) description\nML\n')
                         self.assertEqual(ctc.fasta_index(out/'combined/proteins.fa')['g1.t1'][1],'MS')
                     self.assertTrue((out/'combined/translation.tsv').exists())
+                    self.assertFalse((out/'combined/gff3_map.tsv').exists())
                     self.assertFalse((out/'tiberius/translation.tsv').exists())
                     self.assertNotEqual(subprocess.run(command,capture_output=True).returncode,0)
                     rejected=subprocess.run(command+['--include-incomplete'],capture_output=True,text=True)

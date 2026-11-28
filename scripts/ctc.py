@@ -7,7 +7,6 @@ import hashlib
 import json
 import math
 import os
-import re
 from pathlib import Path
 import shlex
 import shutil
@@ -237,7 +236,8 @@ def native_models(tool, directory, confidence_threshold=0.1):
             raise ValueError('A shared feature spans retained and excluded genes')
         if roots <= allowed:
             selected.append(row)
-    return dict(tool=tool, rows=selected, genes={g:genes[g] for g in allowed},
+    core = [r for r in selected if r['fields'][2] in {'gene','mRNA','transcript','CDS'}]
+    return dict(tool=tool, rows=core, auxiliary_rows_omitted=len(selected)-len(core), genes={g:genes[g] for g in allowed},
                 transcripts={t:r for t,r in transcripts.items() if owners(t) <= allowed},
                 records=model_records, owners=owner, incomplete_excluded=incomplete_excluded,
                 confidence_excluded=confidence_excluded)
@@ -289,48 +289,26 @@ def rename_models(datasets, record_order):
             if old in ids:
                 row_ids[row['index']] = ids[old]
                 continue
-            kind = row['fields'][2]
-            key = ('CDS',tuple(sorted(references(row)))) if kind == 'CDS' else ('feature',old) if old else ('row',row['index'])
+            key = ('CDS',tuple(sorted(references(row))))
             groups.setdefault(key,[]).append(row)
-        def group_order(parts):
-            row = parts[0]
-            parents = references(row)
-            parent_rank = min((transcript_rank[p] for p in parents if p in transcript_rank),default=(rank(row),0))
-            start = min(int(r['fields'][3]) for r in parts)
-            end = max(int(r['fields'][4]) for r in parts)
-            coordinates = (-end,-start) if row['fields'][6] == '-' else (start,end)
-            return parent_rank,row['fields'][2],coordinates,row['attrs'].get('ID',''),row['index']
-        counters = {}
-        for parts in sorted(groups.values(),key=group_order):
-            row = parts[0]
-            parents = references(row)
-            kind = re.sub(r'[^A-Za-z0-9_]', '_', row['fields'][2]).lower()
+        for parents,parts in sorted((key[1],parts) for key,parts in groups.items()):
             if len(parents)>1:
-                prefix = f'shared_{kind}'
-                shared_counts[prefix] = shared_counts.get(prefix,0)+1
-                new = f'{prefix}{shared_counts[prefix]}'
+                shared_counts['cds'] = shared_counts.get('cds',0)+1
+                new = f"shared_cds{shared_counts['cds']}"
             else:
-                parent = ids.get(parents[0]) if parents else None
-                prefix = (parent or f'g{rank(row)}')+'.'+kind
-                counters[prefix] = counters.get(prefix,0)+1
-                new = prefix if kind == 'cds' else f'{prefix}{counters[prefix]}'
+                new = ids[parents[0]]+'.cds'
             for row in parts:
                 row_ids[row['index']] = new
-                if 'ID' in row['attrs']:
-                    ids[unquote(row['attrs']['ID'])] = new
         for row in data['rows']:
-            attrs = dict(row['attrs'])
-            old = unquote(attrs['ID']) if 'ID' in attrs else None
-            attrs['ID'] = row_ids[row['index']]
-            for attribute in ['Parent','Derives_from']:
-                if attribute in attrs:
-                    refs = references(row,attribute)
-                    if any(ref not in ids for ref in refs):
-                        raise ValueError(f'{attribute} points outside the selected model set')
-                    attrs[attribute] = ','.join(sorted({ids[ref] for ref in refs}))
-            if old is not None and unquote(attrs.get('Name','')) == old:
-                attrs['Name'] = attrs['ID']
+            attrs = {'ID':row_ids[row['index']]}
+            parents = references(row)
+            if parents:
+                if any(parent not in ids for parent in parents):
+                    raise ValueError('Parent points outside the selected model set')
+                attrs['Parent'] = ','.join(sorted({ids[parent] for parent in parents}))
             fields = row['fields'][:]
+            if fields[2] == 'transcript':
+                fields[2] = 'mRNA'
             fields[8] = ';'.join(f'{key}={value}' for key,value in attrs.items())
             priority = 0 if fields[2]=='gene' else 1 if fields[2] in {'mRNA','transcript'} else 2
             merged_rows.append(((rank(row),priority,location(row),fields[2],attrs['ID']),fields))
@@ -358,6 +336,7 @@ def combine_models(sources, output, confidence_threshold=0.1, code=1, record_ord
     translation = translate_cds(output/'cds.fa',output/'proteins.fa',output/'translation.tsv',code,phases)
     return dict(genes=sum(len(d['genes']) for d in datasets),models=len(records),translation=translation,
                 cds_features=sum(r[2]=='CDS' for r in rows),
+                auxiliary_rows_omitted=sum(d['auxiliary_rows_omitted'] for d in datasets),
                 carbon_a_incomplete_excluded=sum(d['incomplete_excluded'] for d in datasets),
                 carbon_a_confidence_excluded=sum(d['confidence_excluded'] for d in datasets))
 
@@ -378,7 +357,7 @@ def run(a):
     for tool in ['tiberius', 'carbon_a']:
         (output/tool).mkdir()
     (output/'combined').mkdir()
-    report = dict(strategy='CTC', version='0.7.0', input=str(a.input.resolve()), min_length=a.min_length,
+    report = dict(strategy='CTC', version='0.8.0', input=str(a.input.resolve()), min_length=a.min_length,
                   cutoff_length=a.cutoff_length,
                   confidence_threshold=a.confidence_threshold, translation_engine=f'Biopython {biopython_version}',
                   status='running', components=[])
@@ -456,7 +435,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--confidence-threshold', type=float, default=0.1,
                    help='Minimum Carbon-A complete-model confidence for combined outputs (inclusive; default: 0.1); 0 disables score filtering, incomplete models are always excluded')
-    p.add_argument('--version', action='version', version='CTC 0.7.0')
+    p.add_argument('--version', action='version', version='CTC 0.8.0')
     p.add_argument('--input', required=True, type=Path, help='FASTA or FASTA.gz')
     p.add_argument('--output', required=True, type=Path, help='New output directory')
     p.add_argument('--min-length', type=int, default=1000)

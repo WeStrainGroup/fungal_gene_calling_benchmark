@@ -157,7 +157,7 @@ For complete-CDS prediction in fungal assemblies or individual contigs, we recom
 
 If recovering truncated CDS is a priority and computational cost is less limiting, **Carbon-A is the preferred single-tool choice**: it achieved higher mean truncated-reference F1 than Helixer across all tested fragment ranges.
 
-[CTC: Combined Tiberius and Carbon-A](https://app.notion.com/p/425a1ddc1d86801bb3defe76863fed06) implements this length-based strategy. Usage, parameters and output details are maintained on its dedicated page; a separate repository is planned. The [current script](scripts/ctc.py) remains here until that migration.
+[CTC: Combined Tiberius and Carbon-A](https://app.notion.com/p/425a1ddc1d86801bb3defe76863fed06) implements this length-based strategy. The current v0.8.0 reconstructs selected complete gene models and translates their CDS consistently. Usage, parameters and output details are maintained on its dedicated page; a separate repository is planned. The [current script](scripts/ctc.py) remains here until that migration.
 
 ## Reproduce
 
